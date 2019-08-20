@@ -1,0 +1,21 @@
+@import url("MaterialFox/userChrome.css");
+/* @import url("ShadowFox/userChrome.css"); */
+
+#navigator-toolbox {
+    position: relative;
+    z-index: 2;
+    background-color: var(--lwt-accent-color);
+    color: var(--lwt-text-color);
+    -moz-window-dragging: no-drag;
+    box-shadow: 0 0 10px 10px #00000070 !important;
+}
+#content-deck {
+    position: relative;
+    z-index: 4;
+    margin-top: -70px;
+    box-shadow: 0 -1px #000;
+}
+#navigator-toolbox:hover ~ #content-deck,
+#navigator-toolbox:focus-within ~ #content-deck {
+    z-index: 0;
+}

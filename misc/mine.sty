@@ -1,0 +1,308 @@
+\ProvidesPackage{mine}[2017/09/28 my own package]
+
+%-------------------------------------------------------------------------
+%-------------		MAIN		------------------------------------------
+\RequirePackage{eso-pic,graphicx,hyperref,amsmath,amsthm,marginnote,siunitx,etoolbox,lmodern,csvsimple,booktabs,ifluatex}
+\ifluatex
+\relax
+\else
+\usepackage{fp}
+\fi
+
+\RequirePackage[nottoc]{tocbibind}
+\RequirePackage[margin=1in,a4paper]{geometry}
+\hypersetup{colorlinks=true}
+
+%-------------------------------------------------------------------------
+%-----------		BACKGROUND, LAYOUT		------------------------------
+
+\newcommand{\designl}{
+	\newpage
+	\AddToShipoutPicture{
+		\setlength{\unitlength}{1mm}
+		\linethickness{0.25mm}
+		\put(20,5){\line(0,1){287}}
+		\put(20,5){\line(1,0){185}}
+		\put(20,292){\line(1,0){185}}
+		\put(205,5){\line(0,1){287}}
+		}
+	\newgeometry{left=25mm,top=20mm,bottom=20mm,right=1in,marginpar=25mm,marginparsep=5mm,a4paper}
+	}
+\newcommand{\normall}{
+	\newpage
+	\restoregeometry
+	\ClearShipoutPicture}
+
+%-------------------------------------------------------------------------
+%--------------		UNIT SETUP		--------------------------------------
+
+\DeclareSIUnit\degf{{\degree}F}
+\DeclareSIUnit\inch{in}
+\DeclareSIUnit\psi{psi}
+\DeclareSIUnit\kpsi{\kilo\psi}
+\DeclareSIUnit\pound{lb}
+\DeclareSIUnit\feet{ft}
+
+\newcommand\degc{\si{\degreeCelsius}}
+\newcommand\degree{\si{\degree}}
+
+\newcommand\un[1]{\text{ #1}}
+\def\deg{\si{\degree}}
+
+%------------------------------------------------------------------------
+%---------------      UNIT CONVERTER     --------------------------------
+
+\def\cnvrt(#1 #2 #3){
+	\directlua{
+		% Length------------------------------
+		m		=1
+		cm		=0.01
+		mm		=0.001
+		km		=1000
+		inch	=0.0254
+		ft		=0.3048
+		yd		=0.9144
+		mi		=1609.344
+		
+		% Pressure-----------------------------
+		pa		=1
+		atm		=101325
+		bar		=100000
+		kpa		=1000
+		mpa		=1000000
+		mmhg	=133.33
+		psi		=6894.757
+		kpsi	=6894757		
+		
+		% Power---------------------------------
+		w		=1
+		kw		=1000
+		hp		=745.6999
+		ftlbpm	=0.022597
+		btupm	=17.58427		
+		
+		% Energy------------------------------
+		j		=1
+		kj		=1000
+		ev		=1.602177e-19
+		ftp		=1.355818
+		btu		=1055.056
+
+		% Force---------------------------------
+		N		=1
+		lb		=0.453592
+		kn		=1000
+		lbf		=0.453592
+
+		% Mass, Weight--------------------------
+		kg		=1
+		lb		=0.453592
+		g		=0.001
+		mton	=1000
+		ston	=907.1847
+		lton	=1016.047
+		ou		=0.2835
+		st		=6.350293
+
+		% Speed---------------------------------
+		mps		=1
+		cmps	=0.01
+		kmph	=0.277778
+		ftps	=0.3048
+		ftpm	=0.00508
+		mph		=0.447
+		kn		=0.5144
+		ma		=340.3
+		
+		% Angle--------------------------------
+		deg		=1
+		rad		=57.29578
+		gra		=0.9
+		
+		% Volume---------------------------------
+		l		=1
+		ml		=0.001
+		cc		=0.001
+		m3		=1000
+		gal		=3.785412
+		in3		=0.016387
+		ft3		=28.31685
+		yd3		=764.5549
+		galuk	=4.54609
+
+		tex.sprint(#1/#2*(#3))
+	}
+}
+\newcommand\con[1]{\cnvrt(#1)}
+
+% \con{from_unit to_unit expression/number}
+
+%------------------------------------------------------------------------
+%---------------      CALCULATOR      -----------------------------------
+
+% Simple Calculator:
+\newcommand\calcs[1]{
+\ifluatex
+\directlua{tex.sprint(#1)}
+\else
+\FPeval{\res}{#1}
+\res
+\fi
+}
+
+% In Equation (align) Calculator:
+\NewDocumentCommand\calcx{O{res}mO{\relax}}
+	{
+		&=
+		\ifluatex
+			#2\\
+			\renewcommand\times{*}
+			\renewcommand\frac[2]{((##1)/(##2))}
+			\renewcommand\cdot{*}
+			\renewcommand\pi{math.pi}
+			\renewcommand\cos[1]{math.cos(#1)}
+			\renewcommand\sin[1]{math.sin(#1)}
+			\renewcommand\tan[1]{math.tan(#1)}
+			\renewcommand\sqrt[1]{math.sqrt(#1)}
+			\ifstrequal{#1}{res}
+				{
+				\ifstrequal{#3}{0}
+					{
+					\directlua{tex.sprint(#2)}
+					}
+					{
+					\directlua{res=#2 token.set_macro("res",res,"global")}
+					\SI[per-mode=symbol,round-precision=3,round-mode=	places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+				{
+				\ifstrequal{#3}{0}
+					{\directlua{#1=#2 token.set_macro("#1",#1,"global")}}
+					{
+					\directlua{#1=#2
+						token.set_macro("#1",#1,"global")
+						token.set_macro("res",#1,"global")}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+		\else
+			\ifstrequal{#1}{res}
+				{
+				\ifstrequal{#3}{0}
+					{
+					\FPeval{#1}{#2}
+					\FPprint{#1}
+					}
+					{
+					\FPeval{#1}{#2}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+				{
+				\ifstrequal{#3}{0}
+					\FPeval{#1}{#2}
+				{
+					\FPeval{#1}{#2}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{#1}{#3}
+					}
+				}
+		\fi
+	}
+
+% Main Calculator:
+\NewDocumentCommand\calc{O{res}mO{\relax}}
+	{
+		\ifluatex
+			#2\\
+			\renewcommand\times{*}
+			\renewcommand\frac[2]{((##1)/(##2))}
+			\renewcommand\cdot{*}
+			\renewcommand\pi{math.pi}
+			\renewcommand\cos[1]{math.cos(#1)}
+			\renewcommand\sin[1]{math.sin(#1)}
+			\renewcommand\tan[1]{math.tan(#1)}
+			\renewcommand\sqrt[1]{math.sqrt(#1)}
+			\ifstrequal{#1}{res}
+				{
+				\ifstrequal{#3}{0}
+					{
+					\directlua{tex.sprint(#2)}
+					}
+					{
+					\directlua{res=#2 token.set_macro("res",res,"global")}
+					\SI[per-mode=symbol,round-precision=3,round-mode=	places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+				{
+				\ifstrequal{#3}{0}
+					{\directlua{#1=#2 token.set_macro("#1",#1,"global")}}
+					{
+					\directlua{#1=#2
+						token.set_macro("#1",#1,"global")
+						token.set_macro("res",#1,"global")}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+		\else
+			\ifstrequal{#1}{res}
+				{
+				\ifstrequal{#3}{0}
+					{
+					\FPeval{#1}{#2}
+					\FPprint{#1}
+					}
+					{
+					\FPeval{#1}{#2}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{\res}{#3}
+					}
+				}
+				{
+				\ifstrequal{#3}{0}
+					\FPeval{#1}{#2}
+				{
+					\FPeval{#1}{#2}
+					\SI[per-mode=symbol,round-precision=3,round-mode=places,zero-decimal-to-integer=true]{#1}{#3}
+					}
+				}
+		\fi
+	}		
+
+	%\calc[variable]{expression}[units]
+
+%---------------------------------------------------------------------------
+%---------------       EQUATION      --------------------------------
+
+% Equation (align)
+\newcommand\asr[1]{
+	\begin{align*}
+	#1
+	\end{align*}
+	}
+	
+\newcommand\eq[1]{
+	\begin{align}
+	\begin{split}
+	#1
+	\end{split}
+	\end{align}
+}
+
+%----------------------------------------------------------------------
+%----------------------  EXCEL TABLE (booktabs)   ------------------------------------
+
+\newcommand\xl[2][0]
+{
+\ifstrequal{#1}{a}{
+#2
+}
+{\resizebox{\textwidth}{!}{
+#2
+}
+}}
+
+% \csv[round digits]{header row entries}{column number macros to be printed}{file}[additional params]
+
+\let\sup\textsuperscript
+\let\sub\textsubscript
+
+\endinput
