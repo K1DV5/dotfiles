@@ -66,7 +66,7 @@
         " disable swapfiles
         set noswapfile
         " add the ginit path as environment variable
-        let $MYGVIMRC = "C:/Users/Kidus\ III/AppData/Local/nvim/ginit.vim"
+        let $MYGVIMRC = substitute($MYVIMRC, 'init.vim', 'ginit.vim', '')
         " keep windows the same size when adding/removing
         set noequalalways
         " hide the ~'s at the end of files

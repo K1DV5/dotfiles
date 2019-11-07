@@ -3,7 +3,7 @@
 " Builtins:
 	"set font
 	" silent! Guifont! Hack NF:h11
-    " Guifont! Consolas NF:h11
+    Guifont! Consolas NF:h11
 	" increase the space between lines
 	call GuiLinespace(1)
     " disable the gui tabline
