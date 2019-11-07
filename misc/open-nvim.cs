@@ -1,4 +1,4 @@
-/* -{csc /out:C:\Programs\.bin\open-nvim.exe /win32icon:nvim.ico %f} */
+/* -{csc /out:D:\K1DV5\DevPrograms\.bin\open-nvim.exe /win32icon:open-nvim.ico %f} */
 
 /*
 This app receives a file name as a command line arg and
@@ -40,7 +40,7 @@ namespace openFile
 
                 // Using clipboard
                 /* var prevClip = Clipboard.GetText(); */
-                Clipboard.SetText("call win_gotoid(1000)|e " + args[0].Replace(@"\s*", @"\ "));
+                Clipboard.SetText("silent! call win_gotoid(1000)|e " + args[0].Replace(@"\s*", @"\ "));
                 SetForegroundWindow(nvim[0].MainWindowHandle);
                 SendKeys.SendWait("{ESC}:^r+={ENTER}");
                 /* Clipboard.SetText(prevClip); */

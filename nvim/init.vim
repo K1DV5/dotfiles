@@ -34,7 +34,6 @@
         "S_insert_mode
         "S_visual_mode
         "S_with_leader_key
-            "SS_linting
 
     "C_AUTOCOMMANDS
 "----------------------------------------------------------------
@@ -73,7 +72,7 @@
         " hide the ~'s at the end of files
         set fillchars=eob:\ ,diff:\  "make it disappear
         " keep some lines visible at top/bottom when scrolling
-        set scrolloff=3
+        " set scrolloff=3
         " read only the first and last lines
         set modelines=1
         "print info on cmdline
@@ -86,6 +85,8 @@
         set diffopt+=vertical
         " some filetype specific features
         filetype plugin indent on
+        " default sql variant
+        let g:sql_type_default = 'mysql'
 
     "S_performance:
         " hide buffers when not shown in window
@@ -99,13 +100,14 @@
         " disable node.js
         let g:loaded_node_provider = 1
         " set python path
-        let g:python3_host_prog = 'D:\K1DV5\DevPrograms\Python\python'
-        let g:python_host_prog = 'D:\K1DV5\DevPrograms\Python\python'
+        let g:python3_host_prog = 'D:\DevPrograms\Python\python'
+        let g:python_host_prog = 'D:\DevPrograms\Python\python'
         " disable builtin plugins
         let g:loaded_gzip = 1
         let g:loaded_zipPlugin = 1
         let g:loaded_2html_plugin = 1
         let g:loaded_tarPlugin = 1
+        let loaded_netrwPlugin = 1
 
 
 "C_PLUGINS:
@@ -116,14 +118,14 @@
         Plug 'tpope/vim-surround'
         Plug 'neoclide/coc.nvim', {'branch': 'release'}
         Plug 'Shougo/context_filetype.vim'
-        Plug 'mhinz/vim-signify'
-        Plug 'tpope/vim-fugitive', {'on': 'Gstatus'}
+        " Plug 'mhinz/vim-signify'
+        Plug 'tpope/vim-fugitive'
         Plug 'vim-python/python-syntax', {'for': 'python'}
         Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}
         Plug 'vim-airline/vim-airline'
         Plug 'ryanoasis/vim-devicons'
         Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
-        Plug 'D:/K1DV5/Documents/Code/.dotfiles/nvim/terminal-pane'
+        Plug substitute($MYVIMRC, 'init.vim', 'terminal-pane', 'g')
         Plug 'mtth/scratch.vim'
         Plug 'majutsushi/tagbar', {'on': 'TagbarToggle'}
         Plug 'zefei/vim-wintabs'
@@ -135,14 +137,21 @@
         Plug 'pangloss/vim-javascript'
         Plug 'mxw/vim-jsx'
         Plug 'StanAngeloff/php.vim'
+        Plug 'mattn/emmet-vim'
+        Plug 'mustache/vim-mustache-handlebars'
+        " Plug 'lambdalisue/gina.vim'
+        Plug 'aserebryakov/vim-todo-lists'
         call plug#end()
 
     "S_coc:
         let g:coc_snippet_next = '<tab>'
+        call coc#add_extension('coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-git', 'coc-powershell', 'coc-texlab')
 
     "S_airline:
         "show tab line at top
         let g:airline#extensions#tabline#enabled = 1
+        " show git info
+        let g:airline#extensions#branch#enabled = 1
         "use devicons/powerline fonts (airline)
         let g:airline_powerline_fonts = 1
         " make label areas rectangular
@@ -213,29 +222,6 @@
         " set default shell to powershell
         let g:term_default_shell = 'powershell'
 
-    "S_autopairs:
-        "disable the next pair map
-        let g:AutoPairsShortcutJump = '<M-p>'
-
-    "S_FZF:
-        " split just below the current buffer
-        let g:fzf_layout = { 'window': 'bel 12split enew' }
-        " Customize fzf colors to match the color scheme
-        let g:fzf_colors =
-        \ { 'fg':      ['fg', 'Normal'],
-        \ 'bg':      ['bg', 'Normal'],
-        \ 'hl':      ['fg', 'Comment'],
-        \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-        \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-        \ 'hl+':     ['fg', 'Statement'],
-        \ 'info':    ['fg', 'PreProc'],
-        \ 'border':  ['fg', 'Ignore'],
-        \ 'prompt':  ['fg', 'Conditional'],
-        \ 'pointer': ['fg', 'Exception'],
-        \ 'marker':  ['fg', 'Keyword'],
-        \ 'spinner': ['fg', 'Label'],
-        \ 'header':  ['fg', 'Comment'] }
-
     "S_signify:
         " work only with git
         let g:signify_vcs_list = ['git']
@@ -243,6 +229,16 @@
         let g:signify_sign_show_text = 0
         " hide numbers
         " let g:signify_sign_show_count = 0
+
+    "S_undotree:
+        " the layout
+        let g:undotree_WindowLayout = 3
+        " short timestamps
+        let g:undotree_ShortIndicators = 1
+        " width
+        let g:undotree_SplitWidth = 29
+        " autofocus
+        let g:undotree_SetFocusWhenToggle = 1
 
     "S_colorscheme:
         " Use colors that suit a dark background
@@ -288,7 +284,7 @@
         endif
     endfunction
 
-    " what to do at startup
+    " what to do at startup, and exit
     function! EntArgs(event)
         if a:event == 'enter'
             if argc() == 0
@@ -306,6 +302,8 @@
             if argc() == 0
                 silent call DelTerms()
                 call SaveSession('')
+            else
+                argd *
             endif
         endif
     endfunction
@@ -315,15 +313,15 @@
         wincmd k
         let s:ext_part = expand('%:e')
         silent update!
-        let l:hidden = ['tex', 'texw', 'ahk', 'html', 'htm', 'md', 'pmd']
+        let l:hidden = ['tex', 'texw', 'html', 'htm', 'md', 'pmd']
         let l:cwd = getcwd()
         cd %:h
         if index(l:hidden, s:ext_part) != -1
-            setlocal makeprg=python\ D:\\K1DV5\\Documents\\Code\\.dotfiles\\misc\\do.py
+            setlocal makeprg=python\ D:\\Documents\\Code\\.dotfiles\\misc\\do.py
             execute 'make' substitute('"'.expand('%:p').'"', 'Kidus III', 'K1DV5', 'g')
             echo "Done."
         else
-            call Term('python D:/K1DV5/Documents/Code/.dotfiles/misc/do.py '.expand('%:t'))
+            call Term('python D:/Documents/Code/.dotfiles/misc/do.py '.expand('%:t'))
             norm i
         endif
         execute 'cd' l:cwd
@@ -336,7 +334,7 @@
         endif
         " location before jump
         let temp_alt = bufnr('%')
-        if a:where == 0
+        if a:where == 0 && exists('w:alt_file')
             " stored by this func
             let alt_file_index = index(w:wintabs_buflist, w:alt_file)
             " stored by vim
@@ -388,7 +386,9 @@
     " show git status
     function! GitStat()
         if &filetype == 'gitcommit' || &filetype == 'fugitive'
-            wincmd c
+            let l:to_be_closed = bufnr()
+            call win_gotoid(1000)
+            execute 'bdelete' l:to_be_closed
         else
             try
                 Gstatus
@@ -396,16 +396,6 @@
                 edit
                 Gstatus
             endtry
-        endif
-    endfunction
-
-    " open outline view (if supported)
-    function! Outline() abort
-        let l:bufname = expand('%')
-        if l:bufname =~ 'contents.*vimtex'
-            hide
-        elseif expand('%:e') == 'tex' || expand('%:e') == 'texw'
-            VimtexTocOpen
         endif
     endfunction
 
@@ -445,16 +435,14 @@
             else
                 return "\<c-p>"
             endif
-        " elseif coc#expandableOrJumpable()
-        "     return "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" 
         else
             return "\<tab>"
         endif
     endfunction
-	function! s:check_back_space() abort
-	  let col = col('.') - 1
-	  return !col || getline('.')[col - 1]  =~# '\s'
-	endfunction
+    function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~# '\s'
+    endfunction
 
     " NERDTree jumping and closing
     function! NERDhandle(toggle) abort
@@ -463,8 +451,8 @@
         else
             let l:nerd_bufwins = filter(copy(nvim_list_wins()), 'bufname(winbufnr(v:val)) =~ "^NERD_tree_"')
             if l:nerd_bufwins != []
-                if bufname(@%) =~ '^NERD_tree_'
-                    call win_gotoid(1000)
+                if &filetype == 'nerdtree'
+                    execute "norm \<c-w>l"
                 else
                     call win_gotoid(l:nerd_bufwins[0])
                 endif
@@ -474,9 +462,9 @@
         endif
     endfunction
 
-    python import vim
-    python from docal import eqn
     function! Latexify(display) abort
+python import vim
+python from docal import eqn
 python << EOF
 cline = vim.eval("getline('.')")
 disp = False if int(vim.eval('a:display')) == 0 else True
@@ -578,12 +566,14 @@ EOF
 
     " LSP mappings
     function! LSP()
-        let l:filetypes = ['python', 'css', 'html', 'json', 'js']
+        let l:filetypes = ['python', 'css', 'html', 'json', 'js', 'javascript.jsx']
         if index(l:filetypes, &filetype) != -1
             nmap <buffer> gd <Plug>(coc-definition)
             nmap <buffer> <f2> <Plug>(coc-rename)
             nmap <buffer> gm <Plug>(coc-references)
+            nmap <buffer> <expr> K CocActionAsync('doHover')
             noremap <buffer> gh <cmd>call CocAction('doHover')<enter>
+            setlocal formatexpr=CocAction('formatSelected')
             " augroup Hover
             "     autocmd!
             "     autocmd CursorHold <buffer> nested call CocActionAsync("doHover")
@@ -592,12 +582,49 @@ EOF
         endif
     endfunction
 
+    function! GridNav() abort
+        let rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
+        let lengths = map(copy(rows), 'strlen(v:val)')
+        let first = nr2char(getchar())
+        let height = nvim_win_get_height(0)
+        if stridx(rows[0], first) != -1
+            " start 2d
+            let fline = stridx(rows[0], first)*1.0 / lengths[0]
+            let lines = height*1.0/len(rows[0]) + height - 1
+            " start from the top for the line num
+            norm H
+            let line = float2nr(round(lines*fline)) + line('.')
+            " for the col num
+            let second = nr2char(getchar())
+            let row = filter(copy(rows), 'stridx(v:val, "'.(second == '"'? '\\"': second).'") != -1')
+            let rowlen = len(row[0])
+            let fcol = len(row) ? stridx(row[0], second)*1.0 / rowlen : 0
+            let width = strlen(getline(line))
+            let cols = width*1.0/rowlen + width
+            let col = float2nr(round(cols*fcol)) + 1
+            call cursor(line, col)
+            echo 'line: '.line.', col: '.col
+        elseif stridx(rows[1], first) != -1
+            let fline = stridx(rows[1], first)*1.0 / lengths[1]
+            let lines = height*1.0/lengths[1] + height - 1
+            norm H
+            let line = float2nr(round(lines*fline)) + line('.')
+            call cursor(line, 1)
+            echo 'line: '.line
+        elseif stridx(rows[2], first) != -1
+            let fcol = stridx(rows[2], first)*1.0 / lengths[2]
+            let width = strlen(getline('.'))
+            let cols = width*1.0/lengths[2] + width
+            let col = float2nr(round(cols*fcol)) + 1
+            call cursor(line('.'), col)
+            echo 'col: '.col
+        endif
+    endfunction
+
 "C_SESSIONS:
 
-    " when working with sessions, do not store global and local values and folds
-    set ssop=buffers,curdir,globals,tabpages
-    " disable other options if wanted
-    command! NoSaveSession set ssop=buffers,curdir
+    " store globals as well for wintabs active positions
+    set ssop=buffers,curdir,globals
     "restore and resume commands with optional session names
     command! -nargs=? Resume call ResumeSession("<args>")
     command! -nargs=? Pause call SaveSession("<args>")
@@ -645,9 +672,8 @@ EOF
         nnoremap <s-bs> <esc><c-i>
         " toggle tagbar
         noremap <c-t> <cmd>TagbarToggle<cr>
-        " for sneak
-        " map f <Plug>Sneak_s
-        " map F <Plug>Sneak_S
+	" window navigation
+	noremap s <cmd>call GridNav()<cr>
 
     "S_command_mode:
         " paste on command line
@@ -684,8 +710,6 @@ EOF
         smap <expr> <tab> Itab(0)
         " refresh completion
         inoremap <silent><expr> <c-space> coc#refresh()
-        " confirm completion
-        inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 
     "S_visual_mode:
         " escape quick
@@ -702,8 +726,6 @@ EOF
         let mapleader = ','
         " show git status
         noremap <leader>g <cmd>call GitStat()<cr>
-        " open outline view (if supported)
-        nmap <leader>o <cmd>call Outline()<cr>
         " open terminal pane
         noremap <leader>t <cmd>call SwitchTerm(0.3)<cr>
         " closing current buffer
@@ -747,10 +769,8 @@ EOF
         noremap <leader>ir <cmd>call PurgeUnusedImagesTex()<cr>
         " using leader [shift] tab for switching windows
         noremap <leader><tab> <cmd>call SwitchWin()<cr>
-
-        "SS_clipboard:
-            " use system clipboard
-            noremap <leader>c "+
+        " use system clipboard
+        noremap <leader>c "+
 
 "C_AUTOCOMMANDS:
 
@@ -771,17 +791,16 @@ EOF
         autocmd FileType python setlocal colorcolumn=79 omnifunc=python3complete#Complete formatprg=autopep8\ -
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <c-space> <esc><cmd>call Latexify(0)<cr>A
+        " use emmet for html
+        autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " close tagbar when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
             \| wincmd L
             \| silent! execute 'TagbarClose'
             \| execute 'vertical resize' &columns/2
             \| endif
-        " remove line numbers from the terminal windows
-        autocmd TermOpen * setlocal nonumber norelativenumber
-        " change the line numbers based on mode
-        autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &modifiable | set relativenumber | endif
-        autocmd BufLeave,FocusLost,InsertEnter,WinLeave * if &modifiable | set norelativenumber | endif
+        " remove line numbers from the terminal windows and offsets
+        autocmd TermOpen * setlocal nonumber norelativenumber nowrap
         " set lsp mappings for supported filetypes
         autocmd FileType * call LSP()
         " wipeout netrw buffers when hidden

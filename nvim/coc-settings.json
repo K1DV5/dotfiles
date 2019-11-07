@@ -1,3 +1,5 @@
 {
-    "suggest.timeout": 4000
+    "suggest.timeout": 4000,
+    "git.enableGutters": false,
+    "emmet.excludeLanguages": ["javascript", "javascript.jsx"]
 }
