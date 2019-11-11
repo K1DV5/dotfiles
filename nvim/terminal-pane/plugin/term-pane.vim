@@ -1,6 +1,6 @@
-" term plugin
+" term-pane plugin
 " Written by K1DV5
-" https://github.com/K1DV5/term.nvim
+" depends on zefei/vim-wintabs
 "
 " Constant(s):
 let s:default_shell = exists('term_default_shell')? g:term_default_shell : &shell
@@ -47,31 +47,29 @@ function! s:ToggleTerm(size) abort
 	let l:term_height = s:TermHeight(a:size)
 	" if in terminal pane
 	if &buftype == 'terminal'
-		" if different height from the wanted
-		if winheight(0) < l:term_height
-            " maximize
+		if winheight(0) < l:term_height " maximize
 			execute 'resize' l:term_height
 		else
 			let g:term_current_buf = bufnr('%')
 			hide
 		endif
 	else
-        if s:GoToTerm()
-            return
+        if !s:GoToTerm()
+            " terminal buffers
+            let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
+            " if last opened terminal is hidden but exists
+            if exists('g:term_current_buf') && buflisted(g:term_current_buf)
+                execute 'belowright' l:term_height.'split +buffer\' g:term_current_buf
+            elseif len(l:tbuflist) " choose one of the others
+                execute 'belowright' l:term_height.'split +buffer\' l:tbuflist[0]
+            else " create a new one
+                execute 'belowright' l:term_height.'split term://'.s:default_shell
+            endif
+            " bring other terminal buffers into this window
+            let w:wintabs_buflist = l:tbuflist
+            call wintabs#init()
         endif
-        " terminal buffers
-        let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
-		" if last opened terminal is hidden but exists
-		if exists('g:term_current_buf') && buflisted(g:term_current_buf)
-            execute 'belowright sbuffer +resize\' l:term_height g:term_current_buf
-		elseif len(l:tbuflist) " choose one of the others
-            execute 'belowright sbuffer +resize\' l:term_height l:tbuflist[0]
-        else " create a new one
-            execute 'belowright' l:term_height.'sp term://'.s:default_shell
-		endif
-        " bring other terminal buffers into this window
-        let w:wintabs_buflist = l:tbuflist
-        call wintabs#init()
+        norm G
 	endif
 endfunction
 
@@ -81,18 +79,17 @@ function! s:NewTerm(cmd) abort
     " new terminal
 	let l:term_height = s:TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
-	let l:tbuflist = filter(copy(nvim_list_bufs()),
-		\'getbufvar(v:val, "&buftype") == "terminal" && buflisted(v:val)')
-	" terminal buffer numbers that contain the cmd name
+	let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
+    " same command terminal buffers
 	let l:buflist = filter(copy(l:tbuflist), 
-		\'substitute(bufname(v:val), "\\", "/", "g")
-		\=~ substitute(cmd, "\\", "/", "g")."$"')
+        \'substitute(bufname(v:val), "\\", "/", "g") =~ substitute(cmd, "\\", "/", "g")."$"')
+    echo l:buflist
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
         execute 'terminal' cmd 
     else
         " create a new terminal in split
-        execute 'belowright' l:term_height.'sp term://'.cmd 	
+        execute 'belowright' l:term_height.'split term://'.cmd 	
         " bring other terminal buffers into this window
         let w:wintabs_buflist = l:tbuflist
         call wintabs#init()
