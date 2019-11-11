@@ -112,3 +112,23 @@ function! Term(cmd)
         call s:NewTerm(a:cmd)
     endif
 endfunction
+
+" delete all terminal buffers or the current one
+function! DelTerms()
+    if &buftype == 'terminal'
+        " delete the current one
+        if len(w:wintabs_buflist) > 1
+            let other = filter(copy(w:wintabs_buflist), bufnr().' != v:val')[0]
+            execute 'buffer' other
+            bdelete! #
+        else " just delete it
+            bdelete!
+        endif
+    else
+        let l:terms = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
+        if len(l:terms) > 0
+            execute 'bdelete!' join(l:terms)
+        endif
+    endif
+endfunction
+
