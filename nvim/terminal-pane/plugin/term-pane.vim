@@ -59,16 +59,17 @@ function! s:ToggleTerm(size) abort
         if s:GoToTerm()
             return
         endif
+        " terminal buffers
+        let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
 		" if last opened terminal is hidden but exists
 		if exists('g:term_current_buf') && buflisted(g:term_current_buf)
             execute 'belowright sbuffer +resize\' l:term_height g:term_current_buf
-		else
-            " create a new terminal in split
+		elseif len(l:tbuflist) " choose one of the others
+            execute 'belowright sbuffer +resize\' l:term_height l:tbuflist[0]
+        else " create a new one
             execute 'belowright' l:term_height.'sp term://'.s:default_shell
 		endif
         " bring other terminal buffers into this window
-        let l:tbuflist = filter(copy(nvim_list_bufs()),
-            \'getbufvar(v:val, "&buftype") == "terminal" && buflisted(v:val)')
         let w:wintabs_buflist = l:tbuflist
         call wintabs#init()
 	endif
