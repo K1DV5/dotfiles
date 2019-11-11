@@ -5,21 +5,10 @@
 " Constant(s):
 let s:default_shell = exists('term_default_shell')? g:term_default_shell : &shell
 
-
 " define command
-command! -nargs=1 T call Term("<args>", 0)
-" open big terminal window
-noremap <leader>T <cmd>call SwitchTerm(&lines - &winheight - 4)<cr>
-" open file in normal window
-noremap gf <cmd>call ViewFile(expand('<cfile>'))<cr>
+command! -nargs=1 T call Term("<args>")
 
-function! ViewFile(file) abort
-	execute 'resize' l:term_height
-	wincmd k
-	execute 'view' fnameescape(a:file)
-endfunction
-
-function! TermHeight(size) abort
+function! s:TermHeight(size) abort
 	" if the size is less than 1, it will be taken as the fraction of the file
 	" window
 	if a:size > 1
@@ -35,100 +24,84 @@ function! TermHeight(size) abort
 	return l:term_height
 endfunction
 
-function! SwitchTerm(size) abort
+" find and go to terminal pane, return success
+function! s:GoToTerm() abort
+	" terminal windows
+	let l:tbufwins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&buftype") == "terminal"')
+    " if there is a terminal window
+    if l:tbufwins != []
+        " go to that window
+        call win_gotoid(l:tbufwins[0])
+        return 1
+    endif
+    return 0
+endfunction
+
+function! s:ToggleTerm(size) abort
+    " a:size - number | float - the desired size of the pane
 	" work only if buffer is a normal file
 	if !buflisted(@%)
+        echo "Not a file buffer, aborting..."
 		return
 	endif
-    " if a terminal window is open
-        " if it is less than the argument:size high, maximize to the max
-        " else hide the terminal window
-    " else bring the hidden terminal window, making it the argument:size high
-	let l:term_height = TermHeight(a:size)
+	let l:term_height = s:TermHeight(a:size)
 	" if in terminal pane
 	if &buftype == 'terminal'
 		" if different height from the wanted
 		if winheight(0) < l:term_height
+            " maximize
 			execute 'resize' l:term_height
 		else
 			let g:term_current_buf = bufnr('%')
 			hide
 		endif
 	else
-		" if last opened terminal is hidden
+        if s:GoToTerm()
+            return
+        endif
+		" if last opened terminal is hidden but exists
 		if exists('g:term_current_buf') && buflisted(g:term_current_buf)
-			let l:binary = split(bufname(g:term_current_buf), ':')[-1]
-			call Term(l:binary, 1)
+            execute 'belowright sbuffer +resize\' l:term_height g:term_current_buf
 		else
-			call Term(s:default_shell, 1)
+            " create a new terminal in split
+            execute 'belowright' l:term_height.'sp term://'.s:default_shell
 		endif
-		" if we end up in terminal pane and its a different height than wanted
-		if &buftype == 'terminal' && winheight(0) < l:term_height
-			execute 'resize' l:term_height
-		endif
+        " bring other terminal buffers into this window
+        let l:tbuflist = filter(copy(nvim_list_bufs()),
+            \'getbufvar(v:val, "&buftype") == "terminal" && buflisted(v:val)')
+        let w:wintabs_buflist = l:tbuflist
+        call wintabs#init()
 	endif
 endfunction
 
-function! Term(binary, ...)
+function! Term(cmd)
+    " a:cmd - string | number | float - the cmd name or the desired win height
+    " if a:cmd is a number
+    if index([v:t_number, v:t_float], type(a:cmd)) != -1
+        call s:ToggleTerm(a:cmd)
+        return
+    endif
     " new terminal
-	let l:term_height = TermHeight(0.3)
+	let l:term_height = s:TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
 	let l:tbuflist = filter(copy(nvim_list_bufs()),
 		\'getbufvar(v:val, "&buftype") == "terminal" && buflisted(v:val)')
-	" terminal buffer numbers that contain the name
+	" terminal buffer numbers that contain the cmd name
 	let l:buflist = filter(copy(l:tbuflist), 
 		\'substitute(bufname(v:val), "\\", "/", "g")
-		\=~ substitute(a:binary, "\\", "/", "g")."$"')
-	" if no additional args are not given, delete existing with the same name
-	if a:0 == 0 && len(l:buflist) > 0
+		\=~ substitute(a:cmd, "\\", "/", "g")."$"')
+    if &buftype == 'terminal' || s:GoToTerm()
+        " open a new terminal
+        execute 'terminal' a:cmd 
+    else
+        " create a new terminal in split
+        execute 'belowright' l:term_height.'sp term://'.a:cmd 	
+        " bring other terminal buffers into this window
+        let w:wintabs_buflist = l:tbuflist
+        call wintabs#init()
+    endif
+	" if the cmd has argumets, delete existing with the same cmd
+	if len(split(a:cmd, ' \+')) > 1 && len(l:buflist) > 0
 		execute 'bdelete!' join(l:buflist)
-	endif
-	" terminal window buffer ids
-	let l:tbufwins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&buftype") == "terminal"')
-	" if no optional args are given
-	if a:0 == 0
-		" if there is a terminal window
-		if l:tbufwins != []
-			" go to that window
-			call win_gotoid(l:tbufwins[0])
-			" open a new terminal
-			execute 'terminal' a:binary 
-		else
-			" create a new terminal in split
-			execute 'belowright' l:term_height.'sp term://'.a:binary 	
-			" bring other terminal buffers into this window
-			let w:wintabs_buflist = l:tbuflist
-			call wintabs#init()
-		endif
-	else
-		if l:tbufwins != []
-			" if not in the terminal window already
-			if index(l:tbufwins, nvim_get_current_win()) == -1
-				" go there
-				call win_gotoid(l:tbufwins[0])
-			else
-				" remember this window as the current terminal
-				let g:term_current_buf = bufnr('%')
-				if a:1 == 0
-					execute 'terminal' a:binary
-				else
-					hide
-				endif
-			endif
-		elseif l:tbufwins == [] && l:buflist != []
-			execute 'belowright sb +resize\' l:term_height 'term://*'.a:binary
-			let w:wintabs_buflist = l:tbuflist
-			call wintabs#init()
-		elseif a:1 == 0
-			execute 'belowright' l:term_height.'sp term://'.a:binary
-			let w:wintabs_buflist = l:tbuflist
-			call wintabs#init()
-		elseif l:tbuflist != []
-			execute 'belowright sb +resize\' l:term_height tbuflist[0]
-			let w:wintabs_buflist = l:tbuflist
-			call wintabs#init()
-		else
-			execute 'belowright' l:term_height.'sp term://'.a:binary
-		endif
 	endif
 endfunction
