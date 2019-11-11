@@ -6,7 +6,7 @@
 let s:default_shell = exists('term_default_shell')? g:term_default_shell : &shell
 
 " define command
-command! -nargs=1 T call Term("<args>")
+command! -nargs=? T call Term("<args>")
 
 function! s:TermHeight(size) abort
 	" if the size is less than 1, it will be taken as the fraction of the file
@@ -74,13 +74,9 @@ function! s:ToggleTerm(size) abort
 	endif
 endfunction
 
-function! Term(cmd)
-    " a:cmd - string | number | float - the cmd name or the desired win height
-    " if a:cmd is a number
-    if index([v:t_number, v:t_float], type(a:cmd)) != -1
-        call s:ToggleTerm(a:cmd)
-        return
-    endif
+function! s:NewTerm(cmd) abort
+    " a:cmd may be an empty string
+    let cmd = len(a:cmd) ? a:cmd : s:default_shell
     " new terminal
 	let l:term_height = s:TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
@@ -89,19 +85,29 @@ function! Term(cmd)
 	" terminal buffer numbers that contain the cmd name
 	let l:buflist = filter(copy(l:tbuflist), 
 		\'substitute(bufname(v:val), "\\", "/", "g")
-		\=~ substitute(a:cmd, "\\", "/", "g")."$"')
+		\=~ substitute(cmd, "\\", "/", "g")."$"')
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
-        execute 'terminal' a:cmd 
+        execute 'terminal' cmd 
     else
         " create a new terminal in split
-        execute 'belowright' l:term_height.'sp term://'.a:cmd 	
+        execute 'belowright' l:term_height.'sp term://'.cmd 	
         " bring other terminal buffers into this window
         let w:wintabs_buflist = l:tbuflist
         call wintabs#init()
     endif
 	" if the cmd has argumets, delete existing with the same cmd
-	if len(split(a:cmd, ' \+')) > 1 && len(l:buflist) > 0
+	if len(split(cmd, ' \+')) > 1 && len(l:buflist) > 0
 		execute 'bdelete!' join(l:buflist)
 	endif
+endfunction
+
+function! Term(cmd)
+    " a:cmd - string | number | float - the cmd name or the desired win height
+    " if a:cmd is a number
+    if index([v:t_number, v:t_float], type(a:cmd)) != -1
+        call s:ToggleTerm(a:cmd)
+    else
+        call s:NewTerm(a:cmd)
+    endif
 endfunction
