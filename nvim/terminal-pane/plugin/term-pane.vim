@@ -20,10 +20,12 @@ function! ViewFile(file) abort
 endfunction
 
 function! TermHeight(size) abort
+	" if the size is less than 1, it will be taken as the fraction of the file
+	" window
 	if a:size > 1
 		let l:term_height = a:size
 	else
-		if bufname(@%) =~ '^term://'
+		if &buftype == 'terminal'
 			let l:alt_window_id = nvim_list_wins()[index(nvim_list_wins(), bufwinid(@%)) - 1]
 			let l:term_height = float2nr((winheight(l:alt_window_id) + winheight(0) + 1) * a:size)
 		else
@@ -34,29 +36,17 @@ function! TermHeight(size) abort
 endfunction
 
 function! SwitchTerm(size) abort
+	" work only if buffer is a normal file
+	if !buflisted(@%)
+		return
+	endif
     " if a terminal window is open
         " if it is less than the argument:size high, maximize to the max
         " else hide the terminal window
     " else bring the hidden terminal window, making it the argument:size high
 	let l:term_height = TermHeight(a:size)
-	" work only if buffer is a normal file
-	if !buflisted(@%)
-		return
-	endif
-	" if the size is less than 1, it will be taken as the fraction of the file
-	" window
-	if a:size > 1
-		let l:term_height = a:size
-	else
-		if bufname(@%) =~ '^term://'
-			let l:alt_window_id = nvim_list_wins()[index(nvim_list_wins(), bufwinid(@%)) - 1]
-			let l:term_height = float2nr((winheight(l:alt_window_id) + winheight(0) + 1) * a:size)
-		else
-			let l:term_height = float2nr(winheight(0) * a:size) 
-		endif
-	endif	
 	" if in terminal pane
-	if bufname('%') =~ '^term://'
+	if &buftype == 'terminal'
 		" if different height from the wanted
 		if winheight(0) < l:term_height
 			execute 'resize' l:term_height
@@ -73,17 +63,18 @@ function! SwitchTerm(size) abort
 			call Term(s:default_shell, 1)
 		endif
 		" if we end up in terminal pane and its a different height than wanted
-		if bufname('%') =~ '^term://' && winheight(0) < l:term_height
+		if &buftype == 'terminal' && winheight(0) < l:term_height
 			execute 'resize' l:term_height
 		endif
 	endif
 endfunction
 
 function! Term(binary, ...)
+    " new terminal
 	let l:term_height = TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
 	let l:tbuflist = filter(copy(nvim_list_bufs()),
-		\'bufname(v:val) =~ "^term://" && buflisted(v:val)')
+		\'getbufvar(v:val, "&buftype") == "terminal" && buflisted(v:val)')
 	" terminal buffer numbers that contain the name
 	let l:buflist = filter(copy(l:tbuflist), 
 		\'substitute(bufname(v:val), "\\", "/", "g")
@@ -93,7 +84,7 @@ function! Term(binary, ...)
 		execute 'bdelete!' join(l:buflist)
 	endif
 	" terminal window buffer ids
-	let l:tbufwins = filter(copy(nvim_list_wins()), 'bufname(winbufnr(v:val)) =~ "^term://"')
+	let l:tbufwins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&buftype") == "terminal"')
 	" if no optional args are given
 	if a:0 == 0
 		" if there is a terminal window
