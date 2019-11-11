@@ -125,7 +125,7 @@
         Plug 'vim-airline/vim-airline'
         Plug 'ryanoasis/vim-devicons'
         Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
-        Plug substitute($MYVIMRC, 'init.vim', 'terminal-pane', 'g')
+        Plug substitute($MYVIMRC, 'init.vim', 'terminal-pane', '')
         Plug 'mtth/scratch.vim'
         Plug 'majutsushi/tagbar', {'on': 'TagbarToggle'}
         Plug 'zefei/vim-wintabs'
@@ -274,10 +274,10 @@
 
     " delete all terminal buffers
     function! DelTerms()
-        if bufname('%') =~ '^term://'
+        if &buftype == 'terminal'
             bdelete!
         else
-            let l:terms = filter(copy(nvim_list_bufs()), 'bufname(v:val) =~ "^term://"')
+            let l:terms = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
             if len(l:terms) > 0
                 execute 'bdelete!' join(l:terms)
             endif
@@ -727,7 +727,9 @@ EOF
         " show git status
         noremap <leader>g <cmd>call GitStat()<cr>
         " open terminal pane
-        noremap <leader>t <cmd>call SwitchTerm(0.3)<cr>
+        noremap <leader>t <cmd>call Term(0.3)<cr>
+        " open big terminal window
+        noremap <leader>T <cmd>call Term(1)<cr>
         " closing current buffer
         noremap <leader>bb <cmd>WintabsClose<cr>
         " save file if changed and source if it is a vim file
