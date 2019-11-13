@@ -2,45 +2,9 @@
 " https://github.com/K1DV5/nvimrc
 " Released under the MIT License
 
-"----------------------------------------------------------------
-"CONTENTS: (jump there using "*")
+" C_BUILTINS: {{{
 
-    "C_BUILTINS
-        "S_miscellaneous
-        "S_performance
-
-    "C_PLUGINS (Use this macro at the top of config titles):
-            " jyygg/C_PLUGIN}P>>$x€kb€kb€kb}
-        "S_management
-        "S_ale
-        "S_airline
-        "S_devicons
-        "S_nerdtree
-        "S_wintabs
-        "S_tagbar
-        "S_python_syntax
-        "S_scratch
-        "S_term
-        "S_autopairs
-        "S_FZF
-        "S_sneak
-        "S_signify
-        "S_colorscheme
-
-    "C_FUNCTIONS
-    "C_SESSIONS
-    "C_MAPPINGS
-        "S_normal_mode
-        "S_insert_mode
-        "S_visual_mode
-        "S_with_leader_key
-
-    "C_AUTOCOMMANDS
-"----------------------------------------------------------------
-
-"C_BUILTINS:
-
-    "S_miscellaneous:
+    "S_miscellaneous: {{{
         "make search case insensitive
         set ignorecase
         " continue wrapped lines with the same indent
@@ -70,7 +34,7 @@
         " keep windows the same size when adding/removing
         set noequalalways
         " hide the ~'s at the end of files
-        set fillchars=eob:\ ,diff:\  "make it disappear
+        set fillchars=eob:\ ,diff:\ ,fold:\  "make it disappear
         " keep some lines visible at top/bottom when scrolling
         " set scrolloff=3
         " read only the first and last lines
@@ -87,8 +51,13 @@
         filetype plugin indent on
         " default sql variant
         let g:sql_type_default = 'mysql'
+        " fold text
+        set foldtext=MyFold()
+        " allow expressions in modelines
+        set modelineexpr
+        "}}}
 
-    "S_performance:
+    "S_performance: {{{
         " hide buffers when not shown in window
         set hidden
         " Donâ€™t update screen during macro and script execution
@@ -108,11 +77,13 @@
         let g:loaded_2html_plugin = 1
         let g:loaded_tarPlugin = 1
         let loaded_netrwPlugin = 1
+        "}}}
 
+    "}}}
 
-"C_PLUGINS:
+" C_PLUGINS: {{{
 
-    "S_management:
+    "S_management: {{{
         call plug#begin()
         Plug 'tpope/vim-commentary'
         Plug 'tpope/vim-surround'
@@ -142,12 +113,14 @@
         " Plug 'lambdalisue/gina.vim'
         Plug 'aserebryakov/vim-todo-lists'
         call plug#end()
+        " }}}
 
-    "S_coc:
+    "S_coc: {{{
         let g:coc_snippet_next = '<tab>'
         call coc#add_extension('coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-git', 'coc-powershell', 'coc-texlab')
+        " }}}
 
-    "S_airline:
+    "S_airline: {{{
         "show tab line at top
         let g:airline#extensions#tabline#enabled = 1
         " show git info
@@ -159,14 +132,16 @@
         let g:airline_right_sep=''
         let g:airline_left_alt_sep = '|'
         let g:airline_right_alt_sep = '|'
+        " }}}
 
-    "S_devicons:
+    "S_devicons: {{{
         "folder icons
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
+        " }}}
 
-    "S_nerdtree:
+    "S_nerdtree: {{{
         " remove "press ... for help"
         let g:NERDTreeMinimalUI = 1
         " Improve NERDTree arrow
@@ -179,8 +154,9 @@
         let g:NERDTreeShowHidden = 1
         let g:NERDTreeShowGitStatus = 1
         let g:NERDTreeUpdateOnWrite = 1
+        " }}}
 
-    "S_wintabs:
+    "S_wintabs: {{{
         " also contains wintabs powerline
         " customize tabline buffers separators
         let g:wintabs_powerline_sep_buffer_transition = " "
@@ -189,23 +165,26 @@
         " let g:wintabs_powerline_sep_vimtab = "|"
         " change the buffer labels
         let g:wintabs_ui_buffer_name_format = " %o %t "
+        " }}}
 
-    "S_tagbar:
+    "S_tagbar: {{{
         " zoom as much as needed for full tag display
         let g:tagbar_zoomwidth = 0
         " open and closed tags indicators
         let g:tagbar_iconchars = ['ï‘ ', 'ï‘¼']
         " sort by appearance order
         let g:tagbar_sort = 0
+        " }}}
 
-    "S_python_syntax:
+    "S_python_syntax: {{{
         " enable all highlighting
         let g:python_highlight_all = 1
         let g:python_highlight_operators = 0
         let g:python_highlight_space_errors = 0
         let g:python_highlight_indent_errors = 0
+        " }}}
 
-    "S_scratch:
+    "S_scratch: {{{
         " split vertically
         let g:scratch_horizontal = 0
         " open on the right side
@@ -217,20 +196,23 @@
         " don't hide the scratch buffer on InsertLeave or window leave
         let g:scratch_insert_autohide = 0
         let g:scratch_autohide = 0
+        " }}}
 
-    "S_term:
+    "S_term: {{{
         " set default shell to powershell
         let g:term_default_shell = 'powershell'
+        " }}}
 
-    "S_signify:
+    "S_signify: {{{
         " work only with git
         let g:signify_vcs_list = ['git']
         " show only colors
         let g:signify_sign_show_text = 0
         " hide numbers
         " let g:signify_sign_show_count = 0
+        " }}}
 
-    "S_undotree:
+    "S_undotree: {{{
         " the layout
         let g:undotree_WindowLayout = 3
         " short timestamps
@@ -239,17 +221,21 @@
         let g:undotree_SplitWidth = 29
         " autofocus
         let g:undotree_SetFocusWhenToggle = 1
+        " }}}
 
-    "S_colorscheme:
+    "S_colorscheme: {{{
         " Use colors that suit a dark background
         set background=dark
         " Change colorscheme
         colorscheme codedark
+        " }}}
 
-"C_FUNCTIONS:
+    "}}}
 
-    " to resume a session
-    function! ResumeSession(file)
+" C_FUNCTIONS: {{{
+
+    function! ResumeSession(file) "{{{
+        " to resume a session
         if a:file == ""
             let l:session_file = '~/AppData/Local/nvim/Session'
         else
@@ -261,9 +247,10 @@
             echo 'No Session File'
         endtry
     endfunction
+    " }}}
 
-    " to save a session
-    function! SaveSession(file)
+    function! SaveSession(file) "{{{
+        " to save a session
         if a:file == ""
             let l:session_file = '~/AppData/Local/nvim/Session'
         else
@@ -271,21 +258,10 @@
         endif
         execute 'mksession!' fnameescape(l:session_file.'.vim')
     endfunction
+    " }}}
 
-    " delete all terminal buffers
-    function! DelTerms()
-        if &buftype == 'terminal'
-            bdelete!
-        else
-            let l:terms = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
-            if len(l:terms) > 0
-                execute 'bdelete!' join(l:terms)
-            endif
-        endif
-    endfunction
-
-    " what to do at startup, and exit
-    function! EntArgs(event)
+    function! EntArgs(event) "{{{
+        " what to do at startup, and exit
         if a:event == 'enter'
             if argc() == 0
                 call ResumeSession('')
@@ -307,28 +283,31 @@
             endif
         endif
     endfunction
+    " }}}
 
-    " auto figure out what to do
-    function! Please_Do()
+    function! Please_Do() "{{{
+        " auto figure out what to do
         wincmd k
         let s:ext_part = expand('%:e')
         silent update!
         let l:hidden = ['tex', 'texw', 'html', 'htm', 'md', 'pmd']
         let l:cwd = getcwd()
         cd %:h
+        let script = 'D:/Documents/Code/.dotfiles/misc/do.py'
         if index(l:hidden, s:ext_part) != -1
-            setlocal makeprg=python\ D:\\Documents\\Code\\.dotfiles\\misc\\do.py
-            execute 'make' substitute('"'.expand('%:p').'"', 'Kidus III', 'K1DV5', 'g')
+            execute 'setlocal makeprg=python' script
+            execute 'make' expand('%:p')
             echo "Done."
         else
-            call Term('python D:/Documents/Code/.dotfiles/misc/do.py '.expand('%:t'))
+            call Term('python '.script.' '.expand('%:t'))
             norm i
         endif
         execute 'cd' l:cwd
     endfunction
+    " }}}
 
-    " switch buffers without collateral damage
-    function! SwitchTaB(where)
+    function! SwitchTaB(where) "{{{
+        " switch buffers without collateral damage
         if &filetype == 'nerdtree'
             NERDTreeClose
         endif
@@ -353,18 +332,20 @@
         endif
         let w:alt_file = temp_alt
     endfunction
+    " }}}
 
-    " switch windows, works with autocmd WinLeave to save the win id
-    function! SwitchWin() abort
+    function! SwitchWin() abort "{{{
+        " switch windows, works with autocmd WinLeave to save the win id
         " let temp_alt_win = win_getid()
         if !(exists('g:init_alt_win') && win_getid() != g:init_alt_win && win_gotoid(g:init_alt_win))
             execute "norm! \<c-w>w"
         endif
         " let g:init_alt_win = temp_alt_win
     endfunction
+    " }}}
 
-    " substitute in visual selection
-    function! Subs(where) abort
+    function! Subs(where) abort "{{{
+        " substitute in visual selection
         if a:where == 'all'
             silent norm y
             let l:oldt = @"
@@ -382,9 +363,10 @@
             execute "'<,'>s/".l:subs[0]."/".l:subs[1]."/g"
         endif
     endfunction
+    " }}}
 
-    " show git status
-    function! GitStat()
+    function! GitStat() "{{{
+        " show git status
         if &filetype == 'gitcommit' || &filetype == 'fugitive'
             let l:to_be_closed = bufnr()
             call win_gotoid(1000)
@@ -398,9 +380,10 @@
             endtry
         endif
     endfunction
+    " }}}
 
-    " follow help links with enter
-    function! CRFunc() abort
+    function! CRFunc() abort "{{{
+        " follow help links with enter
         let l:supported = ['vim', 'help', 'python']
         if index(l:supported, &filetype) != -1
             norm K
@@ -408,10 +391,11 @@
             execute "norm! \<cr>"
         endif
     endfunction
+    " }}}
 
-    " Syntax highlighting based on the context range (modified from
-    " brotchie/python-sty)
-    function! ContextSyntax(host, guest, start, end)
+    function! ContextSyntax(host, guest, start, end) "{{{
+        " Syntax highlighting based on the context range (modified from
+        " brotchie/python-sty)
         execute 'setfiletype' a:host
         let b:current_syntax = ''
         unlet b:current_syntax
@@ -425,9 +409,10 @@
         execute 'syntax region GuestCode matchgroup=Snip start="'.a:start.'" end="'.a:end.'" containedin=@Host contains=@Guest'
         hi link Snip SpecialComment
     endfunction
+    " }}}
 
-    " when pressing tab in insert mode...
-    function! Itab(direction) abort
+    function! Itab(direction) abort "{{{
+        " when pressing tab in insert mode...
         if pumvisible()
             if a:direction == 1 "without shift
                 " call coc#_select_confirm()
@@ -443,9 +428,10 @@
         let col = col('.') - 1
         return !col || getline('.')[col - 1]  =~# '\s'
     endfunction
+    " }}}
 
-    " NERDTree jumping and closing
-    function! NERDhandle(toggle) abort
+    function! NERDhandle(toggle) abort "{{{
+        " NERDTree jumping and closing
         if a:toggle
             NERDTreeToggle
         else
@@ -461,8 +447,10 @@
             endif
         endif
     endfunction
+    " }}}
 
-    function! Latexify(display) abort
+    function! Latexify(display) abort "{{{
+        " convert to latex, requires pip install docal
 python import vim
 python from docal import eqn
 python << EOF
@@ -477,9 +465,10 @@ for e in eq[:-1]:
     vim.command(f"call append('.', '{e}')")
 EOF
     endfunction
+    " }}}
 
-    " automate itemize and enumerate in latex
-    function! ItemizeEnum() abort
+    function! ItemizeEnum() abort "{{{
+        " automate itemize and enumerate in latex
         norm "xdipk
         let items = reverse(split(expand(@x), "\n"))
         let type = trim(items[-1]) == '.' ? 'enumerate' : 'itemize'
@@ -494,10 +483,11 @@ EOF
         call append('.', '\begin{'.type.'}')
         norm }
     endfunction
+    " }}}
 
-    " automate the saving to file and writing figure environments for
-    " clipboard images to latex
-    function! InsertClipFigTex() abort
+    function! InsertClipFigTex() abort "{{{
+        " automate the saving to file and writing figure environments for
+        " clipboard images to latex
         if &filetype == 'tex'
             let relpath = 'res'
             let imgpath = expand('%:h').'/'.relpath
@@ -538,9 +528,10 @@ EOF
             echoerr 'Not a tex file'
         endif
     endfunction
+    " }}}
 
-    " purge/delete unused images in the tex
-    function! PurgeUnusedImagesTex() abort
+    function! PurgeUnusedImagesTex() abort "{{{
+        " purge/delete unused images in the tex
         if &filetype == 'tex'
             let relpath = 'res'
             let imgpath = expand('%:h').'/'.relpath
@@ -563,9 +554,10 @@ EOF
             endif
         endif
     endfunction
+    " }}}
 
-    " LSP mappings
-    function! LSP()
+    function! LSP() abort "{{{
+        " LSP mappings
         let l:filetypes = ['python', 'css', 'html', 'json', 'js', 'javascript.jsx']
         if index(l:filetypes, &filetype) != -1
             nmap <buffer> gd <Plug>(coc-definition)
@@ -581,57 +573,67 @@ EOF
             " augroup END
         endif
     endfunction
+    " }}}
 
-    function! GridNav() abort
-        let rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm']
-        let lengths = map(copy(rows), 'strlen(v:val)')
-        let first = nr2char(getchar())
-        let height = nvim_win_get_height(0)
-        if stridx(rows[0], first) != -1
-            " start 2d
-            let fline = stridx(rows[0], first)*1.0 / lengths[0]
-            let lines = height*1.0/len(rows[0]) + height - 1
-            " start from the top for the line num
-            norm H
-            let line = float2nr(round(lines*fline)) + line('.')
-            " for the col num
-            let second = nr2char(getchar())
-            let row = filter(copy(rows), 'stridx(v:val, "'.(second == '"'? '\\"': second).'") != -1')
-            let rowlen = len(row[0])
-            let fcol = len(row) ? stridx(row[0], second)*1.0 / rowlen : 0
-            let width = strlen(getline(line))
-            let cols = width*1.0/rowlen + width
-            let col = float2nr(round(cols*fcol)) + 1
-            call cursor(line, col)
-            echo 'line: '.line.', col: '.col
-        elseif stridx(rows[1], first) != -1
-            let fline = stridx(rows[1], first)*1.0 / lengths[1]
-            let lines = height*1.0/lengths[1] + height - 1
-            norm H
-            let line = float2nr(round(lines*fline)) + line('.')
-            call cursor(line, 1)
-            echo 'line: '.line
-        elseif stridx(rows[2], first) != -1
-            let fcol = stridx(rows[2], first)*1.0 / lengths[2]
-            let width = strlen(getline('.'))
-            let cols = width*1.0/lengths[2] + width
-            let col = float2nr(round(cols*fcol)) + 1
-            call cursor(line('.'), col)
-            echo 'col: '.col
-        endif
+    function! GridNav() abort "{{{
+        " navigate using the keyboard as grid copy of the screen
+        let rows = ['1234567890-=', 'qwertyuiop[]', 'asdfghjkl;', 'zxcvbnm,./']
+        let char = nr2char(getchar())
+        let char = char == '"'? '\\"': char
+        let row = filter(copy(rows), 'stridx(v:val, "'.char.'") != -1')[0]
+        " vertical fraction
+        let fline = index(rows, row)*1.0 / len(rows)
+        let theight = &lines - &lines / len(rows)
+        let lines = theight*1.0/len(rows) + theight
+        let line = &lines / (len(rows) * 2) + float2nr(round(lines*fline))
+        " horizontal fraction
+        let fcol = stridx(row, char)*1.0 / len(row)
+        let twidth = &columns - &columns / len(row)
+        let cols = twidth*1.0/len(row) + twidth
+        let col = &columns / (len(row) * 2) + float2nr(round(cols*fcol))
+        " find the win
+        let wins = nvim_list_wins()
+        for winid in wins
+            let winheight = nvim_win_get_height(winid)
+            let winwidth = nvim_win_get_width(winid)
+            let pos = nvim_win_get_position(winid)
+            if pos[0] <= (line + 1) && (line + 1) <= (pos[0] + winheight) && pos[1] <= (col + 2) && (col + 2) <= (pos[1] + winwidth)
+                break
+            endif
+        endfor
+        call win_gotoid(winid)
+        norm H
+        let line = line('.') + line - pos[0]
+        let col = col - pos[1]
+        call cursor(line, col)
+        echo 'line: '.line.', col: '.col
     endfunction
+    " }}}
 
-"C_SESSIONS:
+    function! MyFold(...) abort "{{{
+        " better folding
+        let other = a:0 ? '\|'.a:1 : ''
+        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'.other
+        let fold_line = repeat('   ', v:foldlevel - 1) . 'ï‘  ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
+        return fold_line
+        " }}}, keep the markers balanced
+    endfunction
+    " }}}
+
+    "}}}
+
+" C_SESSIONS: {{{
 
     " store globals as well for wintabs active positions
     set ssop=buffers,curdir,globals
     "restore and resume commands with optional session names
     command! -nargs=? Resume call ResumeSession("<args>")
     command! -nargs=? Pause call SaveSession("<args>")
+    "}}}
 
-"C_MAPPINGS:
+" C_MAPPINGS: {{{
 
-    "S_normal_mode:
+    "S_normal_mode: {{{
         " do what needs to be done
         noremap <c-p> <cmd>call Please_Do()<cr>
         " move lines up down
@@ -672,10 +674,11 @@ EOF
         nnoremap <s-bs> <esc><c-i>
         " toggle tagbar
         noremap <c-t> <cmd>TagbarToggle<cr>
-	" window navigation
-	noremap s <cmd>call GridNav()<cr>
+        " window navigation
+        noremap s <cmd>call GridNav()<cr>
+        "}}}
 
-    "S_command_mode:
+    "S_command_mode: {{{
         " paste on command line
         cnoremap <c-v> <c-r>*
         cnoremap <c-h> <cmd>norm h<cr>
@@ -684,8 +687,9 @@ EOF
         cnoremap <c-l> <cmd>norm l<cr>
         " go normal
         cnoremap kj <esc>
+        "}}}
 
-    "S_insert_mode:
+    "S_insert_mode: {{{
         " escape quick
         imap kj <esc>
         " move one line up and down
@@ -710,8 +714,9 @@ EOF
         smap <expr> <tab> Itab(0)
         " refresh completion
         inoremap <silent><expr> <c-space> coc#refresh()
+        "}}}
 
-    "S_visual_mode:
+    "S_visual_mode: {{{
         " escape quick
         vnoremap kj <esc>
         vnoremap KJ <esc>
@@ -721,8 +726,9 @@ EOF
         vnoremap /c <cmd>call Subs('all')<cr>
         " change something in current selection (sep by double space)
         vnoremap /w <cmd>call Subs('within')<cr>
+        "}}}
 
-    "S_with_leader_key:
+    "S_with_leader_key: {{{
         let mapleader = ','
         " show git status
         noremap <leader>g <cmd>call GitStat()<cr>
@@ -773,8 +779,10 @@ EOF
         noremap <leader><tab> <cmd>call SwitchWin()<cr>
         " use system clipboard
         noremap <leader>c "+
+        "}}}
+    "}}}
 
-"C_AUTOCOMMANDS:
+" C_AUTOCOMMANDS: {{{
 
     " define in an autogroup for re-sourcing
     augroup theautocmds
@@ -809,3 +817,12 @@ EOF
         autocmd FileType netrw setlocal bufhidden=wipe
     augroup END
 
+    "}}}
+
+" C_OVERRIDES: {{{
+    " change the highlighting
+    hi! link Folded Boolean
+    hi! link FoldColumn Boolean
+    "}}}
+
+" vim:foldmethod=marker:foldlevel=0:foldcolumn=3:foldtext=MyFold('\:')
