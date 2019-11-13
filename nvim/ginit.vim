@@ -2,10 +2,10 @@
 
 " Builtins:
 	"set font
-	" silent! Guifont! Hack NF:h11
-    Guifont! Consolas NF:h11
+	" silent! Guifont! Hack NF:h10.5
+    Guifont! Consolas NF:h10.5
 	" increase the space between lines
-	call GuiLinespace(1)
+	" call GuiLinespace(1)
     " disable the gui tabline
     GuiTabline 0
     " disable the gui popup menu
