@@ -664,6 +664,8 @@ EOF
         noremap <s-tab> <cmd>call SwitchTaB(-1)<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
+        " do the same thing as normal mode in terminal for do
+        tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
         " toggle nerdtree
         noremap <s-a-n> <cmd>call NERDhandle(1)<cr>
         noremap <a-n> <cmd>call NERDhandle(0)<cr>

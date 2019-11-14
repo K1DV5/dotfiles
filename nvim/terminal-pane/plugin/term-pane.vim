@@ -83,7 +83,6 @@ function! s:NewTerm(cmd) abort
     " same command terminal buffers
 	let l:buflist = filter(copy(l:tbuflist), 
         \'substitute(bufname(v:val), "\\", "/", "g") =~ substitute(cmd, "\\", "/", "g")."$"')
-    echo l:buflist
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
         execute 'terminal' cmd 
