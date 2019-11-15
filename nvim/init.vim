@@ -662,8 +662,8 @@ EOF
         "using [shift] tab for switching buffers
         noremap <tab> <cmd>call SwitchTaB(0)<cr>
         noremap <s-tab> <cmd>call SwitchTaB(-1)<cr>
-        " to return to normal mode in terminal
-        tnoremap kj <C-\><C-n>
+        " to return to normal mode in terminal and rename it
+        tnoremap kj <C-\><C-n><cmd>call RenameTerm()<cr>
         " do the same thing as normal mode in terminal for do
         tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
         " toggle nerdtree
@@ -736,10 +736,12 @@ EOF
         noremap <leader>g <cmd>call GitStat()<cr>
         " open terminal pane
         noremap <leader>t <cmd>call Term(0.3)<cr>
+        tnoremap <leader>t <cmd>call Term(0.3)<cr>
         " open big terminal window
         noremap <leader>T <cmd>call Term(1)<cr>
         " closing current buffer
-        noremap <leader>bb <cmd>WintabsClose<cr>
+        noremap <expr> <leader>bb &buftype == 'terminal'? '<cmd>call DelTerms()<cr>' : '<cmd>WintabsClose<cr>'
+        tnoremap <leader>bb <cmd>call DelTerms()<cr>
         " save file if changed and source if it is a vim file
         noremap <expr> <leader>bu &filetype == 'vim' ? '<cmd>update! \| source %<cr>' : '<cmd>update!<cr>'
         " delete terminal buffers
@@ -802,7 +804,7 @@ EOF
         " highlight 78th column for python files
         autocmd FileType python setlocal colorcolumn=79 omnifunc=python3complete#Complete formatprg=autopep8\ -
         " highlight where lines should end and map for inline equations for latex
-        autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <c-space> <esc><cmd>call Latexify(0)<cr>A
+        autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " close tagbar when help opens
@@ -813,6 +815,8 @@ EOF
             \| endif
         " remove line numbers from the terminal windows and offsets
         autocmd TermOpen * setlocal nonumber norelativenumber nowrap
+        " rename with the current process
+        autocmd TermEnter * call RenameTerm()
         " set lsp mappings for supported filetypes
         autocmd FileType * call LSP()
         " wipeout netrw buffers when hidden

@@ -116,15 +116,31 @@ function! DelTerms()
         if len(w:wintabs_buflist) > 1
             let other = filter(copy(w:wintabs_buflist), bufnr().' != v:val')[0]
             execute 'buffer' other
-            bdelete! #
+            bwipeout! #
         else " just delete it
-            bdelete!
+            bwipeout!
         endif
     else
         let l:terms = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
         if len(l:terms) > 0
-            execute 'bdelete!' join(l:terms)
+            execute 'bwipeout!' join(l:terms)
         endif
     endif
 endfunction
 
+" use the current process in the terminal as the buffer name
+function! RenameTerm()
+    let pid = jobpid(&channel)
+    let child = pid
+    while child
+        let ch = nvim_get_proc_children(child)
+        if len(ch) == 1
+            let child = ch[0]
+        else
+            break
+        endif
+    endwhile
+    let name = substitute(nvim_get_proc(child)['name'], '.exe', '', '')
+    execute 'file '.name
+    " execute 'bwipeout!' bufnr(@#)
+endfunction
