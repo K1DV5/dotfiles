@@ -662,8 +662,8 @@ EOF
         "using [shift] tab for switching buffers
         noremap <tab> <cmd>call SwitchTaB(0)<cr>
         noremap <s-tab> <cmd>call SwitchTaB(-1)<cr>
-        " to return to normal mode in terminal and rename it
-        tnoremap kj <C-\><C-n><cmd>call RenameTerm()<cr>
+        " to return to normal mode in terminal
+        tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
         tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
         " toggle nerdtree
@@ -815,8 +815,6 @@ EOF
             \| endif
         " remove line numbers from the terminal windows and offsets
         autocmd TermOpen * setlocal nonumber norelativenumber nowrap
-        " rename with the current process
-        autocmd TermEnter * call RenameTerm()
         " set lsp mappings for supported filetypes
         autocmd FileType * call LSP()
         " wipeout netrw buffers when hidden

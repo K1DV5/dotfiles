@@ -51,6 +51,7 @@ function! s:ToggleTerm(size) abort
 			execute 'resize' l:term_height
 		else
 			let g:term_current_buf = bufnr('%')
+            call s:RenameTerm()
 			hide
 		endif
 	else
@@ -129,7 +130,12 @@ function! DelTerms()
 endfunction
 
 " use the current process in the terminal as the buffer name
-function! RenameTerm()
+function! s:RenameTerm()
+    let current_name = bufname()
+    let cmd_part = substitute(current_name, 'term:\/\/.*\/\/\d\+:', '', '')
+    if cmd_part =~ ' ' " dont rename one with a space
+        return
+    endif
     let pid = jobpid(&channel)
     let child = pid
     while child
@@ -141,6 +147,13 @@ function! RenameTerm()
         endif
     endwhile
     let name = substitute(nvim_get_proc(child)['name'], '.exe', '', '')
-    execute 'file '.name
+    if name == cmd_part " to prevent unnecessary unlisted buffer creation
+        return
+    endif
+    let begin = 'term://'
+    let dirstart = len(begin)
+    let dir_part = current_name[dirstart: stridx(current_name, '//', dirstart) - 1]
+    let new_name = begin.dir_part.'//'.child.':'.name
+    execute 'file '.new_name
     " execute 'bwipeout!' bufnr(@#)
 endfunction
