@@ -117,7 +117,7 @@
 
     "S_coc: {{{
         let g:coc_snippet_next = '<tab>'
-        call coc#add_extension('coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-git', 'coc-powershell', 'coc-texlab')
+        call coc#add_extension('coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-powershell', 'coc-texlab')
         " }}}
 
     "S_airline: {{{

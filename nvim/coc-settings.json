@@ -1,5 +1,4 @@
 {
     "suggest.timeout": 4000,
-    "git.enableGutters": false,
     "tsserver.implicitProjectConfig.checkJs": true
 }
