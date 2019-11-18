@@ -51,7 +51,6 @@ function! s:ToggleTerm(size) abort
 			execute 'resize' l:term_height
 		else
 			let g:term_current_buf = bufnr('%')
-            call s:RenameTerm()
 			hide
 		endif
 	else
@@ -65,6 +64,8 @@ function! s:ToggleTerm(size) abort
                 execute 'belowright' l:term_height.'split +buffer\' l:tbuflist[0]
             else " create a new one
                 execute 'belowright' l:term_height.'split term://'.s:default_shell
+                tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
+                tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
             endif
             " bring other terminal buffers into this window
             let w:wintabs_buflist = l:tbuflist
@@ -94,6 +95,8 @@ function! s:NewTerm(cmd) abort
         let w:wintabs_buflist = l:tbuflist
         call wintabs#init()
     endif
+    tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
+    tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
 	" if the cmd has argumets, delete existing with the same cmd
 	if len(split(cmd, ' \+')) > 1 && len(l:buflist) > 0
 		execute 'bdelete!' join(l:buflist)
@@ -130,7 +133,7 @@ function! DelTerms()
 endfunction
 
 " use the current process in the terminal as the buffer name
-function! s:RenameTerm()
+function! RenameTerm(timer)
     let current_name = bufname()
     let cmd_part = substitute(current_name, 'term:\/\/.*\/\/\d\+:', '', '')
     if cmd_part =~ ' ' " dont rename one with a space
