@@ -30,7 +30,7 @@
         " disable swapfiles
         set noswapfile
         " add the ginit path as environment variable
-        let $MYGVIMRC = substitute($MYVIMRC, 'init.vim', 'ginit.vim', '')
+        let $MYGVIMRC = stdpath('config').'/ginit.vim'
         " keep windows the same size when adding/removing
         set noequalalways
         " hide the ~'s at the end of files
@@ -93,10 +93,12 @@
         Plug 'tpope/vim-fugitive'
         Plug 'vim-python/python-syntax', {'for': 'python'}
         Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}
+        " Plug 'Xuyuanp/nerdtree-git-plugin'
+        Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
         Plug 'vim-airline/vim-airline'
         Plug 'ryanoasis/vim-devicons'
         Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
-        Plug substitute($MYVIMRC, 'init.vim', 'terminal-pane', '')
+        Plug stdpath('config').'/terminal-pane'
         Plug 'mtth/scratch.vim'
         Plug 'majutsushi/tagbar', {'on': 'TagbarToggle'}
         Plug 'zefei/vim-wintabs'
