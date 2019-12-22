@@ -200,8 +200,9 @@ def latex():
 def markdown():
     run(['pandoc', FILE_NAME, '-o', NAME_PART + '.htm'])
     startfile(NAME_PART + '.htm')
-    sleep(1.5)
-    remove(NAME_PART + '.htm')
+    if '-del' in LINE_1:
+        sleep(1.5)
+        remove(NAME_PART + '.htm')
 
 
 def pweave():
@@ -251,10 +252,14 @@ def main():
     if '-{' in LINE_1:
         b_ind = LINE_1.find('-{') + len('-{')
         e_ind = LINE_1.find('}', b_ind)
-        commands = LINE_1[b_ind: e_ind].replace('%f', FILE_NAME).split('|')
+        commands = LINE_1[b_ind: e_ind].replace('%f', FILE_NAME).replace('%n', NAME_PART).split('|')
+        returncode = 0
         for command in commands:
             print(f'$ {command}')
-            run(command.strip(), shell=True)
+            returncode = run(command.strip(), shell=True).returncode
+            if returncode:
+                print('\nPREVIOUS COMMAND EXITED WITH ' + str(returncode))
+                break
     elif FILE_NAME.endswith('.py'):
         python()
     elif FILE_NAME.endswith('.tex'):

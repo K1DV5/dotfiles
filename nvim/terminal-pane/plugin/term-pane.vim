@@ -136,7 +136,7 @@ endfunction
 function! RenameTerm(timer)
     let current_name = bufname()
     let cmd_part = substitute(current_name, 'term:\/\/.*\/\/\d\+:', '', '')
-    if cmd_part =~ ' ' " dont rename one with a space
+    if cmd_part =~ ' ' || &buftype != 'terminal' " dont rename one with a space or a normal file
         return
     endif
     let pid = jobpid(&channel)
