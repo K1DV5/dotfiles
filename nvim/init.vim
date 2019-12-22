@@ -293,13 +293,12 @@
         let l:hidden = ['tex', 'texw', 'html', 'htm', 'md', 'pmd']
         let l:cwd = getcwd()
         cd %:h
-        let script = 'D:/Documents/Code/.dotfiles/misc/do.py'
         if index(l:hidden, s:ext_part) != -1
-            execute 'setlocal makeprg=python\' script
+            execute 'setlocal makeprg=do'
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
-            call Term('python '.script.' '.expand('%:t'))
+            call Term('do '.expand('%:t'))
             norm i
         endif
         execute 'cd' l:cwd
