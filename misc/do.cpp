@@ -184,6 +184,14 @@ int latex(string line_1, string filename, string namepart, string dirname) {
     strftime(mbstr, sizeof(mbstr), "%Y%m%d%a", localtime(&t));
     string formatted_time = mbstr;
     string new_name = namepart + "-" + formatted_time + "-" + version + ".pdf";
+    /* delete the previous pdfs */
+    for(auto& file: fs::directory_iterator(dirname.length() ? dirname : ".")) {
+        fs::path p = file.path();
+        string file_beginning = p.stem().string().substr(0, namepart.length() + 1);
+        if (p.extension() == ".pdf" && file_beginning == namepart + "-" && p.stem() != new_name) {
+                fs::remove(p);
+        }
+    }
     /* move the output pdf here and rename */
     fs::path old_name = temp / (namepart + string(".pdf"));
     fs::rename(old_name, new_name);
@@ -204,6 +212,10 @@ int javascript(string line_1, string filename) {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc == 1) {
+        _color_print({{"Error: no file given", "red"}});
+        return 1;
+    }
     const fs::path file = argv[1];
     /* the filder location */
     string dirname = file.parent_path().string();
@@ -215,7 +227,6 @@ int main(int argc, char *argv[]) {
     string extension = file.extension().string();
     /* cd to that dir */
     _chdir(dirname.c_str());
-
     /* read first line */
     ifstream infile(filename);
     string line_1;
