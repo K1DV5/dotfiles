@@ -28,7 +28,6 @@ void _color_print(vector<pair<string, string>> pairs) {
     CONSOLE_SCREEN_BUFFER_INFO info;
     GetConsoleScreenBufferInfo(hConsole, &info);
     int current_attrib = info.wAttributes;
-    cout << endl;
     for (auto& pair: pairs) {
         int color = pair.second == "default" ? current_attrib : colors[pair.second];
         SetConsoleTextAttribute(hConsole, color);
@@ -95,6 +94,7 @@ int _exec_cmd(string cmd) {
     string executable = cmd.substr(0, first_space);
     string args = cmd.substr(first_space, string::npos);
     _color_print({{"$ ", "cyan"}, {executable, "yellow"}, {args, "default"}});
+    /* return the exit code */
     return system(cmd.c_str());
 }
 
@@ -137,30 +137,28 @@ int python(string line_1, string filename) {
 
 /* latex handler */
 int latex(string line_1, string filename, string namepart, string dirname) {
+    /* select the engine */
     string engine = "pdflatex";
     if (line_1.find(" -lua") != string::npos) {
         engine = "lualatex";
     } else if (line_1.find(" -xe") != string::npos) {
         engine = "xelatex";
     }
-
     /* create temp dir */
     fs::path temp = getenv("TMP");
     temp /= ".latexTmp";
     string temp_folder = temp.string();
     fs::create_directory(temp_folder);
-
     /* create the command */
     string shell_escape = line_1.find(" se") == string::npos ? "" : "--shell_escape ";
     string args = " -output-directory=" + temp_folder + " " + shell_escape + namepart;
     string typeset_cmd = engine + args;
-
+    /* test the first run */
     int first = _exec_cmd(engine + " -interaction=nonstopmode" + args);
     if (first != 0) {
         return first;
     }
-
-    /* typeset */
+    /* additional ops */
     string version = "alpha";
     if (line_1.find(" -rel") != string::npos) {
         version = "release";
@@ -169,11 +167,10 @@ int latex(string line_1, string filename, string namepart, string dirname) {
         for(auto& file: fs::directory_iterator(dirname)) {
             fs::path p = file.path();
             if (p.extension() == ".bib") {
-                fs::copy(p, p.filename());
+                fs::copy_file(p, p.filename().string(), fs::copy_options::overwrite_existing);
             }
         }
-        string bib_cmd = "bibtex " + namepart;
-        _exec_cmd(bib_cmd);
+        _exec_cmd(string("bibtex ") + namepart);
         _chdir(dirname.c_str());
         _exec_cmd(typeset_cmd);
         _exec_cmd(typeset_cmd);
@@ -181,14 +178,12 @@ int latex(string line_1, string filename, string namepart, string dirname) {
         version = "beta";
         _exec_cmd(typeset_cmd);
     }
-
     /* prepare new name with timestamp */
     time_t t = time(nullptr);
     char mbstr[100];
     strftime(mbstr, sizeof(mbstr), "%Y%m%d%a", localtime(&t));
     string formatted_time = mbstr;
     string new_name = namepart + "-" + formatted_time + "-" + version + ".pdf";
-
     /* move the output pdf here and rename */
     fs::path old_name = temp / (namepart + string(".pdf"));
     fs::rename(old_name, new_name);
@@ -240,10 +235,12 @@ int main(int argc, char *argv[]) {
         returncode = javascript(line_1, filename);
     } else if (extension == ".tex") {
         returncode = latex(line_1, filename, namepart, dirname);
+    } else {
+        _color_print({{"No defined action", "red"}});
     }
 
     if (returncode == 0) {
-        _color_print({{"Completed without errors", "green"}});
+        _color_print({{"\nCompleted without errors", "green"}});
     } else {
         _color_print({{"\nPREVIOUS COMMAND EXITED WITH ", "red"}, {to_string(returncode), "red"}});
     }
