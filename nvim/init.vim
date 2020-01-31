@@ -91,13 +91,10 @@
         Plug 'tpope/vim-commentary'
         Plug 'tpope/vim-surround'
         Plug 'neoclide/coc.nvim', {'branch': 'release'}
-        Plug 'neovim/nvim-lsp'
-        Plug 'Shougo/context_filetype.vim'
-        " Plug 'mhinz/vim-signify'
+        " Plug 'neovim/nvim-lsp'
+        " Plug 'Shougo/context_filetype.vim'
+        Plug 'mhinz/vim-signify'
         Plug 'tpope/vim-fugitive'
-        Plug 'vim-python/python-syntax', {'for': 'python'}
-        Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}
-        Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
         Plug 'vim-airline/vim-airline'
         Plug 'ryanoasis/vim-devicons'
         Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
@@ -106,26 +103,23 @@
         Plug 'liuchengxu/vista.vim'
         Plug 'zefei/vim-wintabs'
         Plug 'zefei/vim-wintabs-powerline'
-        Plug 'othree/html5.vim', {'for': 'html'}
         Plug 'michaeljsmith/vim-indent-object'
         Plug 'K1DV5/vim-code-dark'
         Plug 'ferrine/md-img-paste.vim'
-        Plug 'pangloss/vim-javascript'
-        Plug 'mxw/vim-jsx'
-        Plug 'StanAngeloff/php.vim'
-        Plug 'mattn/emmet-vim'
-        Plug 'mustache/vim-mustache-handlebars'
+        " Plug 'mattn/emmet-vim'
         Plug 'lambdalisue/gina.vim'
         Plug 'aserebryakov/vim-todo-lists'
         Plug 'justinmk/vim-sneak'
-        Plug 'cocopon/vaffle.vim'
+        Plug 'sheerun/vim-polyglot'
+        " Plug 'vim-vdebug/vdebug'
+        Plug 'Yggdroot/LeaderF'
         call plug#end()
 
         " }}}
     "S_coc: {{{
         let g:coc_snippet_next = '<tab>'
-        call coc#add_extension('coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-powershell', 'coc-texlab')
-
+        let g:coc_global_extensions = ['coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-powershell', 'coc-texlab', 'coc-explorer']
+        set statusline^=%{coc#status()}
         " }}}
     "S_airline: {{{
         "show tab line at top
@@ -146,23 +140,6 @@
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
-
-        " }}}
-    "S_nerdtree: {{{
-        " remove "press ... for help"
-        let g:NERDTreeMinimalUI = 1
-        " use command line for menu
-        " let NERDTreeMinimalMenu = 1
-        " Improve NERDTree arrow
-        let g:NERDTreeDirArrowCollapsible=""
-        " Improve NERDTree arrow
-        let g:NERDTreeDirArrowExpandable=""
-        " quit nerdtree when opening file
-        " let g:NERDTreeQuitOnOpen = 1
-        " Show hidden files on NERDTree
-        let g:NERDTreeShowHidden = 1
-        let g:NERDTreeShowGitStatus = 1
-        let g:NERDTreeUpdateOnWrite = 1
 
         " }}}
     "S_wintabs: {{{
@@ -230,6 +207,14 @@
         colorscheme codedark
 
         " }}}
+    "S_sneak: {{{
+        " Make it like easymotion
+        let g:sneak#label = 1
+        "}}}
+    "S_leaderf: {{{
+        " use floating window
+        let g:Lf_WindowPosition = 'popup'
+        "}}}
     "}}}
 
 " C_FUNCTIONS: {{{
@@ -293,12 +278,14 @@
         let l:hidden = ['tex', 'texw', 'html', 'htm', 'md', 'pmd']
         let l:cwd = getcwd()
         cd %:h
+        let script = 'D:/Documents/Code/.dotfiles/misc/do.py'
         if index(l:hidden, s:ext_part) != -1
-            execute 'setlocal makeprg=do'
+            execute 'setlocal makeprg=python\' script
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
-            call Term('do '.expand('%:t'))
+            call Term('python '.script.' '.expand('%:t'))
+            " call Term('do '.expand('%:t'))
             norm i
         endif
         execute 'cd' l:cwd
@@ -307,8 +294,8 @@
     " }}}
     function! SwitchTaB(where) "{{{
         " switch buffers without collateral damage
-        if &filetype == 'nerdtree'
-            NERDTreeClose
+        if !(&modifiable || &buftype == 'terminal')
+            call win_gotoid(1000)
         endif
         " location before jump
         let temp_alt = bufnr('%')
@@ -370,7 +357,7 @@
             let l:to_be_closed = bufnr()
             call win_gotoid(1000)
             execute 'bdelete' l:to_be_closed
-        else
+        elseif &modifiable
             try
                 " split current window above, height: 12
                 abo Gstatus
@@ -378,6 +365,8 @@
                 edit
                 abo Gstatus
             endtry
+        else
+            echo 'Must be on a file'
         endif
     endfunction
 
@@ -430,34 +419,35 @@
     endfunction
 
     " }}}
-    function! NERDhandle(toggle) abort "{{{
-        " NERDTree jumping and closing
-        if a:toggle
-            NERDTreeToggle
-        else
-            let l:nerd_bufwins = filter(copy(nvim_list_wins()), 'bufname(winbufnr(v:val)) =~ "^NERD_tree_"')
-            if l:nerd_bufwins != []
-                if &filetype == 'nerdtree'
-                    execute "norm \<c-w>l"
-                else
-                    call win_gotoid(l:nerd_bufwins[0])
+    function! HandleTree(command, file_type) abort "{{{
+        " tree jumping and/or opening
+        let l:tree_wins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&filetype") == "'.a:file_type.'"')
+        if l:tree_wins != []
+            if &filetype == a:file_type
+                wincmd l
+                if &filetype == a:file_type " still here
+                    wincmd h
                 endif
             else
-                NERDTree
+                call win_gotoid(l:tree_wins[0])
             endif
+        else
+            execute a:command
         endif
     endfunction
 
     " }}}
     function! Latexify(display) abort "{{{
         " convert to latex, requires pip install docal
-python import vim
-python from docal import eqn
 python << EOF
+import vim
+from docal import eqn
+from docal.handlers.latex import syntax
+synt = syntax()
 cline = vim.eval("getline('.')")
 disp = False if int(vim.eval('a:display')) == 0 else True
 txt, eq_asc = cline.rsplit('  ', 1) if '  ' in cline else ['', cline]
-eq = eqn(eq_asc, disp=disp).split('\n')
+eq = eqn(eq_asc, disp=disp, syntax=synt).split('\n')
 # "because they will be appended at the same line
 eq.reverse()
 vim.command(f"call setline('.', '{txt} {eq[-1]}')")
@@ -593,7 +583,7 @@ EOF
 " C_SESSIONS: {{{
 
     " store globals as well for wintabs active positions
-    set ssop=buffers,curdir,globals
+    set ssop=buffers,curdir
     "restore and resume commands with optional session names
     command! -nargs=? Resume call ResumeSession("<args>")
     command! -nargs=? Pause call SaveSession("<args>")
@@ -608,8 +598,8 @@ EOF
         noremap <a-k> <cmd>move-2<cr>
         noremap <a-j> <cmd>move+1<cr>
         "scroll by space and [shift] space
-        noremap <space> <c-f>
-        noremap <s-space> <c-b>
+        noremap <space> <c-d>
+        noremap <s-space> <c-u>
         "select all ctrl a
         noremap <c-a> ggVG
         " copy till the end of line
@@ -634,17 +624,11 @@ EOF
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
         tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
-        " toggle nerdtree
-        noremap <s-a-n> <cmd>call NERDhandle(1)<cr>
-        noremap <a-n> <cmd>call NERDhandle(0)<cr>
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
         " go back with [shift] backspace
         nnoremap <bs> <esc><c-o>
         nnoremap <s-bs> <esc><c-i>
-        " toggle tagbar
-        " noremap <c-t> <cmd>TagbarToggle<cr>
-        noremap <c-t> <cmd>Vista!!<cr>
         " disable the arrow keys
         noremap <up> <nop>
         noremap <down> <nop>
@@ -706,8 +690,9 @@ EOF
         let mapleader = ','
         " default for the leader
         noremap <leader><leader> <leader>
-        " open terminal pane
+        " open/close terminal pane
         noremap <leader>t <cmd>call Term(0.3)<cr>
+        tnoremap <leader>t <cmd>call Term(0.3)<cr>
         " open big terminal window
         noremap <leader>T <cmd>call Term(1)<cr>
         " show git status
@@ -727,8 +712,6 @@ EOF
         noremap <leader>u <cmd>UndotreeToggle<cr>
         " enter window commands
         noremap <leader>w <c-w>
-        " fuzzyfind files and other things
-        noremap <leader>f <cmd>Vaffle<cr>
         " undo wintabs command
         noremap <leader>wu <Plug>(wintabs_undo)
         " jump directly to {n}th wintab
@@ -755,6 +738,11 @@ EOF
         noremap <leader><tab> <cmd>call SwitchWin()<cr>
         " use system clipboard
         noremap <leader>c "+
+        " toggle file and tag (definition) trees
+        noremap <leader>f <cmd>call HandleTree('CocCommand explorer', 'coc-explorer')<cr>
+        noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
+        noremap <leader>F <cmd>CocCommand explorer --toggle<cr>
+        noremap <leader>D <cmd>Vista!!<cr>
         "}}}
     "}}}
 
@@ -774,13 +762,13 @@ EOF
         " save the current window number before jumping to jump back
         autocmd WinLeave * let g:init_alt_win = win_getid()
         " highlight 78th column for python files
-        autocmd FileType python setlocal colorcolumn=79 omnifunc=python3complete#Complete formatprg=autopep8\ -
+        autocmd FileType python setlocal colorcolumn=79 omnifunc=python3complete#Complete
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " enter for commit
-        autocmd FileType gitcommit inoremap <cr> <esc><cmd>write \| bdelete<cr>
+        autocmd FileType gitcommit inoremap <buffer> <cr> <esc><cmd>write \| bdelete<cr>
         " close tagbar when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
             \| wincmd L
@@ -804,13 +792,8 @@ EOF
     hi! link Folded Boolean
     hi! link FoldColumn Boolean
     hi! Tabline guifg=#BBBBBB
+    hi! DiffChange guibg=#18384B
+    hi! DiffDelete guifg=Grey
     "}}}
- function! s:customize_vaffle_mappings() abort
-    nmap <buffer> <silent> x :<C-u>call vaffle#fill_cmdline() <Bar> call feedkeys("silent !start\<cr>", 't')<CR>
-  endfunction
 
-  augroup vimrc_vaffle
-    autocmd!
-    autocmd FileType vaffle call s:customize_vaffle_mappings()
-  augroup END
 " vim:foldmethod=marker:foldlevel=0:foldcolumn=3:foldtext=MyFold('\:')
