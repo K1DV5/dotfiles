@@ -10,7 +10,43 @@ from subprocess import run
 from glob import glob
 from re import sub, search
 from time import sleep
+import ctypes
 
+# ENABLE_VIRTUAL_TERMINAL_PROCESSING
+k = ctypes.windll.kernel32
+k.SetConsoleMode(k.GetStdHandle(-11), 7)
+
+console_colors = {
+    "cyan": 96,
+    "green": 92,
+    "red": 91,
+    "yellow": 93,
+    'default': ''
+    }
+
+def _color_text(pairs: dict):
+    '''color text for print'''
+    printed = ''
+    for text, color in pairs.items():
+        printed += f'\x1b[{console_colors[color]}m{text}'
+    printed += f'\x1b[{console_colors["default"]}m'
+    return printed
+
+def _exec_cmd(cmd, shell=None):
+    '''
+    color print the command and execute it
+    return the exitcode
+    '''
+    executable, args = cmd[0], ' '.join(cmd[1:])
+    print(_color_text({'$ ': 'cyan', executable + ' ': 'yellow', args: 'default'}))
+    if executable == 'cd':
+        chdir(args)
+        return 0
+    return run(cmd, shell=shell).returncode
+
+# convert to absolute path
+if not path.isabs(argv[1]):
+    argv[1] = path.abspath(path.join('.', argv[1]))
 # extract filename from path\to\file\filename.ext in the format filename.ext
 FILE_NAME = path.basename(argv[1])
 # only filename from filename.ext
@@ -23,15 +59,6 @@ with open(FILE_NAME, 'r', encoding='utf-8') as file:
     LINE_1 = file.readline()
 
 
-def pandoc(line, from_fmt):
-    '''return the desired format for pandoc if any'''
-    if ' -pd(' in line:
-        b_ind = line.find('pd(') + len('pd(')
-        e_ind = line.find(')', b_ind)
-        pd_fmt = '.' + line[b_ind: e_ind]
-        run(['pandoc', FILE_NAME, '-f', from_fmt, '-o', NAME_PART + pd_fmt])
-
-
 def autohotkey():
     '''just run it'''
     startfile(FILE_NAME)
@@ -39,50 +66,6 @@ def autohotkey():
 
 def html():
     startfile(FILE_NAME)
-
-
-def cython():
-    '''if a cython section exists in the file, cythonize that section. If
-    it doesn't, cythonize the whole file.
-    '''
-
-    # search for embedded cython code commented HTML blocks
-    with open(FILE_NAME, 'r') as file:
-        embed = search(r'(?s).*# <cython>\n.*\n# </cython>.*', file.read())
-    if embed:
-        with open(FILE_NAME, 'r+') as file:
-            original = file.read()
-            # extract cython code
-            cycode = sub(
-                r'((?s).*# <cython>)(\n.*)(\n# </cython>.*)', r'\2', original)
-            # comment the cython code
-            cycomment = sub(r'(?s)\n', r'\n# ', cycode)
-            # comment the cython code and insert "from .. import *" statement
-            changed = sub(r'(?s)(.*)# <cython>\n.*\n# </cython>(.*)',
-                          fr'\1# === {NAME_PART}_cy contents: ==={cycomment}'
-                          fr'\n# ================='
-                          fr'\nfrom {NAME_PART}_cy import * \2', original)
-            # remove the cython option
-            changed = sub(r'(?<=^# )(-cython|-cy)', '', changed)
-            # save the above changes
-            file.flush()
-            file.write(changed)
-
-        with open(NAME_PART + '_cy.pyx', 'w') as file:
-            # save the cython code on a separate .pyx file
-            file.write(cycode)
-            # compile the cython code
-        cmd = ['cythonize', '-i', NAME_PART + '_cy.pyx']
-
-    else:
-        # copy the file to a .pyx file
-        copy(FILE_NAME, NAME_PART + '_cy.pyx')
-        # compile the .pyx file to .pyd
-        cmd = ['cythonize', '-i', NAME_PART + '_cy.pyx']
-    run(cmd)
-    # remove auxiliary files including .pyx
-    for aux in glob('*.o') + glob('*.c') + glob('*.def') + glob('*.pyx'):
-        remove(aux)
 
 
 def python():
@@ -98,16 +81,13 @@ def python():
         if there is no region delimiter, the whole file will be converted
     '''
 
-    if '-args(' in LINE_1:
+    if '-(' in LINE_1:
         # extract arguments to be passed to the script from first line
-        b_ind = LINE_1.find('-args(') + len('-args(')
+        b_ind = LINE_1.find('-(') + len('-(')
         e_ind = LINE_1.find(')', b_ind)
         args = LINE_1[b_ind: e_ind].split(' ')
     else:
         args = []
-
-    if ' -cy' in LINE_1 or ' -cython' in LINE_1:
-        cython()
 
     if ' -ip' in LINE_1 or ' -ipy' in LINE_1 or ' -ipython' in LINE_1:
         cmd = ['ipython', '-i', FILE_NAME] + args
@@ -121,8 +101,7 @@ def python():
         cmd = ['ipython', '-c', '%run -d ' + FILE_NAME] + args
     else:
         cmd = ['python', FILE_NAME] + args
-    print('$', ' '.join(cmd))
-    run(cmd)
+    return _exec_cmd(cmd)
 
 
 def latex():
@@ -153,17 +132,17 @@ def latex():
     if ' -se' in options:
         command.insert(-1, '--shell-escape')
 
-    successful = not run([command[0], '-interaction=nonstopmode', *command[1:]]).returncode
+    successful = not _exec_cmd([command[0], '-interaction=nonstopmode', *command[1:]])
 
     if successful:
         if '-py' in options:
-            run(['pythontex', temp_folder+'\\'+NAME_PART])
+            _exec_cmd(['pythontex', temp_folder+'\\'+NAME_PART])
 
         if '-mk' in options:
-            run(['latexmk', '-pvc', '-pdf', NAME_PART])
+            _exec_cmd(['latexmk', '-pvc', '-pdf', NAME_PART])
 
         elif '-lmk' in options:
-            run(['latexmk', '-pvc', '-lualatex', NAME_PART])
+            _exec_cmd(['latexmk', '-pvc', '-lualatex', NAME_PART])
 
         elif '-fin' in options or '-final' in options or '-rel' in options:
             version = 'release'
@@ -173,13 +152,13 @@ def latex():
                     copy(bib, path.basename(bib))
                 except FileNotFoundError:
                     print('HOHO')
-            run(['bibtex', NAME_PART])
+            _exec_cmd(['bibtex', NAME_PART])
             chdir(FOLDER)
-            run(command)
-            run(command)
+            _exec_cmd(command)
+            _exec_cmd(command)
         elif '-beta' in options:
             version = 'beta'
-            run(command)
+            _exec_cmd(command)
         else:
             version = 'alpha'
 
@@ -193,79 +172,71 @@ def latex():
         new_name = NAME_PART + '-' + datetime.today().strftime('%Y%m%d%a') \
             + '-' + version
         rename(NAME_PART + '.pdf', new_name + '.pdf')
-        pandoc(LINE_1, 'latex')
         startfile(new_name + '.pdf')
 
 
 def markdown():
-    run(['pandoc', FILE_NAME, '-o', NAME_PART + '.htm'])
+    _exec_cmd(['pandoc', FILE_NAME, '-o', NAME_PART + '.htm'])
     startfile(NAME_PART + '.htm')
     if '-del' in LINE_1:
         sleep(1.5)
         remove(NAME_PART + '.htm')
 
 
-def pweave():
-    '''-pdf or -cont to typeset the output after weaving
-    -pd({type}) to convert the tex file to {type}
-    '''
-
-    successful = not run(['pweave', NAME_PART + '.texw']).returncode
-
-    if successful:
-        post_fixes = {'_{}': '',
-                      '\\mathrm{m \\, N}': '\\mathrm{N \\, m}',
-                      '^{1.0}': ''}
-        with open(NAME_PART + '.tex', 'r') as file:
-            not_fixed = file.read()
-        fixed = not_fixed
-        for wrng, rght in post_fixes.items():
-            fixed = fixed.replace(wrng, rght)
-        with open(NAME_PART + '.tex', 'w') as file:
-            file.write(fixed)
-
-        pandoc(LINE_1, 'latex')
-        if ' -pdf' in LINE_1 or ' -cont' in LINE_1:
-            run(['python', argv[0], FOLDER + '\\' + NAME_PART + '.tex'])
-
-
 def cpp():
     '''just run it (compile and run)'''
 
-    successful = run(['cl', FILE_NAME]).returncode
+    successful = _exec_cmd(['cl', FILE_NAME])
     if successful:
-        run('.\\' + NAME_PART + '.exe', shell=True)
+        _exec_cmd('.\\' + NAME_PART + '.exe', shell=True)
 
 
 def javascript():
     '''just run it'''
 
     if ' -i' in LINE_1:
-        run(['node', '-i', FILE_NAME])
+        _exec_cmd(['node', '-i', FILE_NAME])
     else:
-        run(['node', FILE_NAME])
+        _exec_cmd(['node', FILE_NAME])
 
+def generic():
+    returncode = 0
+    b_ind = LINE_1.find('-{') + len('-{')
+    e_ind = LINE_1.find('}', b_ind)
+    commands = LINE_1[b_ind: e_ind].replace('%f', FILE_NAME).replace('%n', NAME_PART).split('|')
+    for command in commands:
+        if not command.strip():
+            continue
+        # handle quoted arguments
+        parts = []
+        by_quote = command.split('"')
+        quoted = False
+        for part in by_quote:
+            if quoted:
+                if parts and parts[-1].endswith('='):
+                    parts[-1] += '"' + part + '"'
+                else:
+                    parts.append(part)
+                quoted = False
+            else:
+                if part.strip():
+                    parts += part.split()
+                quoted = True
+        returncode = _exec_cmd(parts, shell=True)
+        if returncode:
+            return returncode
+    return 0
 
 def main():
     '''main function'''
 
+    returncode = 0
     if '-{' in LINE_1:
-        b_ind = LINE_1.find('-{') + len('-{')
-        e_ind = LINE_1.find('}', b_ind)
-        commands = LINE_1[b_ind: e_ind].replace('%f', FILE_NAME).replace('%n', NAME_PART).split('|')
-        returncode = 0
-        for command in commands:
-            print(f'$ {command}')
-            returncode = run(command.strip(), shell=True).returncode
-            if returncode:
-                print('\nPREVIOUS COMMAND EXITED WITH ' + str(returncode))
-                break
+        returncode = generic()
     elif FILE_NAME.endswith('.py'):
-        python()
+        returncode = python()
     elif FILE_NAME.endswith('.tex'):
         latex()
-    elif FILE_NAME.endswith('.texw'):
-        pweave()
     elif FILE_NAME.endswith('.cpp'):
         cpp()
     elif FILE_NAME.endswith('.ahk'):
@@ -276,6 +247,9 @@ def main():
         markdown()
     elif FILE_NAME.endswith('.js'):
         javascript()
+
+    if returncode:
+        raise SystemExit(_color_text({'\nPREVIOUS COMMAND EXITED WITH ' + str(returncode): 'red'}))
 
 
 if __name__ == '__main__':
