@@ -176,7 +176,8 @@ def latex():
 
 
 def markdown():
-    _exec_cmd(['pandoc', FILE_NAME, '-o', NAME_PART + '.htm'])
+    css = 'D:/Documents/Code/.res/pandoc.css'
+    _exec_cmd(['pandoc', FILE_NAME, '-o', NAME_PART + '.htm', '--standalone', '-c', css])
     startfile(NAME_PART + '.htm')
     if '-del' in LINE_1:
         sleep(1.5)
