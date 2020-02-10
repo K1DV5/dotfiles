@@ -24,10 +24,22 @@ function! s:TermHeight(size) abort
 	return l:term_height
 endfunction
 
+" get terminal buffers or windows
+function! s:Terminals(...) abort
+    if a:0  " windows
+        let list = nvim_list_wins()
+        let Item = function('winbufnr')
+    else  " buffers
+        let list = nvim_list_bufs()
+        let Item = {val -> val}
+    endif
+    return filter(list, {_, val -> getbufvar(Item(val), '&buftype') == 'terminal'})
+endfunction
+
 " find and go to terminal pane, return success
 function! s:GoToTerm() abort
 	" terminal windows
-	let l:tbufwins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&buftype") == "terminal"')
+	let l:tbufwins = s:Terminals(1)
     " if there is a terminal window
     if l:tbufwins != []
         " go to that window
@@ -42,7 +54,7 @@ function! s:ToggleTerm(size) abort
 	" work only if buffer is a normal file
 	if !buflisted(@%)
         echo "Not a file buffer, aborting..."
-		return
+		return 1
 	endif
 	let l:term_height = s:TermHeight(a:size)
 	" if in terminal pane
@@ -53,44 +65,50 @@ function! s:ToggleTerm(size) abort
 			let g:term_current_buf = bufnr('%')
 			hide
 		endif
-	else
-        if !s:GoToTerm()
-            " terminal buffers
-            let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
-            " if last opened terminal is hidden but exists
-            if exists('g:term_current_buf') && buflisted(g:term_current_buf)
-                execute 'belowright' l:term_height.'split +buffer\' g:term_current_buf
-            elseif len(l:tbuflist) " choose one of the others
-                execute 'belowright' l:term_height.'split +buffer\' l:tbuflist[0]
-            else " create a new one
-                execute 'belowright' l:term_height.'split term://'.s:default_shell
-                tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
-                tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
-            endif
-            " bring other terminal buffers into this window
-            let w:wintabs_buflist = l:tbuflist
-            call wintabs#init()
-        endif
-        norm G
-	endif
+        return 1
+    elseif s:GoToTerm()
+        return 1
+    endif
+    " terminal buffers
+    let l:tbuflist = s:Terminals()
+    " if last opened terminal is hidden but exists
+    if exists('g:term_current_buf') && buflisted(g:term_current_buf)
+        execute 'belowright' l:term_height.'split +buffer\' g:term_current_buf
+    elseif len(l:tbuflist) " choose one of the others
+        execute 'belowright' l:term_height.'split +buffer\' l:tbuflist[0]
+    else " create a new one
+        return 0
+    endif
+    " bring other terminal buffers into this window
+    let w:wintabs_buflist = l:tbuflist
+    call wintabs#init()
+    return 1
 endfunction
 
-function! s:NewTerm(cmd) abort
-    " a:cmd may be an empty string
-    let cmd = len(a:cmd) ? a:cmd : s:default_shell
+function! Term(cmd, ...)
+    " a:cmd - string | number | float - the cmd name or the desired win height
+    " if a:cmd is a number
+    if index([v:t_number, v:t_float], type(a:cmd)) != -1
+        if s:ToggleTerm(a:cmd)
+            return
+        endif
+        let cmd = s:default_shell
+    else
+        let cmd = len(a:cmd) ? a:cmd : s:default_shell
+    endif
     " new terminal
 	let l:term_height = s:TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
-	let l:tbuflist = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
+	let l:tbuflist = s:Terminals()
     " same command terminal buffers
-	let l:buflist = filter(copy(l:tbuflist), 
-        \'substitute(bufname(v:val), "\\", "/", "g") =~ substitute(cmd, "\\", "/", "g")."$"')
+    let dir = a:0 > 0 ? a:1 : '.'
+    let buf_name = 'term://'.dir.'//'.cmd
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
-        execute 'terminal' cmd 
+        execute 'edit' buf_name
     else
         " create a new terminal in split
-        execute 'belowright' l:term_height.'split term://'.cmd 	
+        execute 'belowright' l:term_height.'split '.buf_name
         " bring other terminal buffers into this window
         let w:wintabs_buflist = l:tbuflist
         call wintabs#init()
@@ -98,19 +116,13 @@ function! s:NewTerm(cmd) abort
     tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
     tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
 	" if the cmd has argumets, delete existing with the same cmd
-	if len(split(cmd, ' \+')) > 1 && len(l:buflist) > 0
-		execute 'bdelete!' join(l:buflist)
-	endif
-endfunction
-
-function! Term(cmd)
-    " a:cmd - string | number | float - the cmd name or the desired win height
-    " if a:cmd is a number
-    if index([v:t_number, v:t_float], type(a:cmd)) != -1
-        call s:ToggleTerm(a:cmd)
-    else
-        call s:NewTerm(a:cmd)
-    endif
+    for buf in l:tbuflist
+        let name = substitute(bufname(buf), '//\d\+:', '//', '')
+        echo name buf_name
+        if name == buf_name
+            execute 'bdelete!' buf
+        endif
+    endfor
 endfunction
 
 " delete all terminal buffers or the current one
@@ -125,7 +137,7 @@ function! DelTerms()
             bwipeout!
         endif
     else
-        let l:terms = filter(copy(nvim_list_bufs()), 'getbufvar(v:val, "&buftype") == "terminal"')
+        let l:terms = s:Terminals()
         if len(l:terms) > 0
             execute 'bwipeout!' join(l:terms)
         endif
