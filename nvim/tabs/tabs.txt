@@ -12,7 +12,6 @@ winnr based
     NO!
 
 buffer based
-    hiding the tab numbers is not possible on focus lost
     same file open in two windows will show both windows as active and same statusline as the new split
     YES
 

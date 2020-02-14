@@ -24,20 +24,21 @@ function! StatusLine(bufnr)
 endfunction
 
 function! TabsGetBufsText(bufnr)
-    let bufs = getwinvar(bufwinnr(a:bufnr), 'tabs_buflist')
+    let win = bufwinid(a:bufnr)
+    let bufs = getwinvar(win, 'tabs_buflist')
     if !len(bufs)
         let bufs = [a:bufnr]
     endif
     let text = ''
     let i_buf = 1
+    let is_current_win = win_getid() == win
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
         if buf == a:bufnr
             let text .= '%#TabLineSel# %{&filetype!=""?WebDevIconsGetFileTypeSymbol() . " ":""}' . name . '%m %*'
         else
-            let num = i_buf . ':'
-            " let num = is_current_win ? i_buf . ':' : ''
+            let num = is_current_win ? i_buf . ':' : ''
             let text .= ' ' . num . name . ' '
         endif
         let i_buf += 1
