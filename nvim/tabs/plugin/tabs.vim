@@ -1,4 +1,4 @@
-hi! Tabs_Status guifg=white guibg=#0A7ACA
+hi Tabs_Status guifg=white guibg=#0A7ACA
 hi! link Tabs_Status_NC StatusLine
 " hi Tabs_Num guifg=yellow gui=bold
 hi! link Tabs_Num StatusLine
@@ -7,18 +7,23 @@ function! StatusLine(bufnr)
     let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && index(g:tabs_custom_stl, ft) != -1  " custom buffer
-        return hi_stat . ' %{&filetype} %* %= %l/%L '
+        let text = hi_stat . ' %{&filetype} %* %<%{fnamemodify(bufname(), ":t")} '  " filetype & fname
+        return text . hi_stat . '%= %l/%L ' " line num
     endif
-    let text = hi_stat . ' %{toupper(mode())} %*'  " mode
+    let bt = getbufvar(a:bufnr, '&buftype')
+    if len(bt) && bt != 'terminal'
+        let text = hi_stat . ' ' . toupper(bt) . ' '  " buftype
+        let text .= '%#TabLineSel# %{fnamemodify(bufname(), ":t")} '  " file name
+        return text . hi_stat . '%= %l/%L %*'
+    endif
+    let text = hi_stat . ' %{toupper(mode())} '  " mode
     let text .= '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
-    let bt = getbufvar(a:bufnr, '&buftype')
-    if len(bt)
-        let text .= toupper(bt)  " only buftype
-    else
-        let text .= '%{&filetype} %{WebDevIconsGetFileFormatSymbol()}'  " file type
-        let text .= ' %l.%c/%L'  " line.col/lines
+    if bt == 'terminal'
+        return text . toupper(bt) . ' '
     endif
+    let text .= '%{&filetype} %{WebDevIconsGetFileFormatSymbol()}'  " file type
+    let text .= ' %l.%c/%L'  " line.col/lines
     let additional = exists('g:tabs_statusline_add') ? g:tabs_statusline_add : ''
     return text . ' ' . additional . ' %*'
 endfunction
