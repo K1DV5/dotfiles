@@ -3,17 +3,16 @@ hi! link Tabs_Status_NC StatusLine
 " hi Tabs_Num guifg=yellow gui=bold
 hi! link Tabs_Num StatusLine
 
-function! StatusLine(winid)
-    let hi_stat = a:winid == win_getid() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
-    let buf = winbufnr(a:winid)
-    let ft = getbufvar(buf, '&filetype')
+function! StatusLine(bufnr)
+    let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
+    let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && index(g:tabs_custom_stl, ft) != -1  " custom buffer
         return hi_stat . ' %{&filetype} %* %= %l/%L '
     endif
     let text = hi_stat . ' %{toupper(mode())} %*'  " mode
-    let text .= '%<' . TabsGetBufsText(a:winid)  " tabs
+    let text .= '%<' . TabsGetBufsText(a:bufnr)  " tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
-    let bt = getbufvar(buf, '&buftype')
+    let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt)
         let text .= toupper(bt)  " only buftype
     else
@@ -24,24 +23,21 @@ function! StatusLine(winid)
     return text . ' ' . additional . ' %*'
 endfunction
 
-function! TabsGetBufsText(winid)
-    let buf = winbufnr(a:winid)
-    let bufs = getwinvar(a:winid, 'tabs_buflist')
+function! TabsGetBufsText(bufnr)
+    let bufs = getwinvar(bufwinnr(a:bufnr), 'tabs_buflist')
     if !len(bufs)
-        let bufs = [buf]
+        let bufs = [a:bufnr]
     endif
     let text = ''
-    let current = bufnr()
-    let is_current_win = current == buf
     let i_buf = 1
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
-        if buf == current
+        if buf == a:bufnr
             let text .= '%#TabLineSel# %{&filetype!=""?WebDevIconsGetFileTypeSymbol() . " ":""}' . name . '%m %*'
         else
-            let num = is_current_win ? i_buf . ':' : ''
-            " let num = is_current_win ? '%#Tabs_Num#' . i_buf . ' %*' : ''
+            let num = i_buf . ':'
+            " let num = is_current_win ? i_buf . ':' : ''
             let text .= ' ' . num . name . ' '
         endif
         let i_buf += 1
@@ -64,7 +60,7 @@ function! TabsReload()
     else
         let w:tabs_buflist = [buf]
     endif
-    redrawstatus
+    " redrawstatus
 endfunction
 
 function! TabsAllBuffers() abort
@@ -135,16 +131,7 @@ function! TabsClose()
     call TabsReload()
 endfunction
 
-function! TabsSetStatusLine() abort
-    " if exists('b:tabs_stl_set') && b:tabs_stl_set
-    "     return
-    " endif
-    " use win ids to really make them unique
-    execute 'setlocal statusline=%!StatusLine(' . win_getid() .')'
-    call TabsReload()
-endfunction
-
 augroup Tabs
     autocmd!
-    autocmd Syntax * call TabsSetStatusLine()
+    autocmd FileType,TermOpen * execute 'setlocal statusline=%!StatusLine(' . bufnr() .')' | call TabsReload()
 augroup END

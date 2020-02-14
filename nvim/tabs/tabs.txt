@@ -1,0 +1,18 @@
+setlocal statusline is local to buffer, not window based!
+
+
+winid based
+    same buffer opened in another window may have a different stl
+    opening and closing the window containing the buffer can change the stl
+    NO!
+
+winnr based
+    opening and closing another window can change the winnr of the current one
+        misaligned stl
+    NO!
+
+buffer based
+    hiding the tab numbers is not possible on focus lost
+    same file open in two windows will show both windows as active and same statusline as the new split
+    YES
+
