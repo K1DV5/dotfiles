@@ -10,7 +10,7 @@ function! StatusLine(bufnr)
         return hi_stat . ' %{&filetype} %* %= %l/%L '
     endif
     let text = hi_stat . ' %{toupper(mode())} %*'  " mode
-    let text .= '%<' . TabsGetBufsText(a:bufnr)  " tabs
+    let text .= '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt)
