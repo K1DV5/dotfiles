@@ -1,6 +1,6 @@
 " term-pane plugin
 " Written by K1DV5
-" depends on zefei/vim-wintabs
+" depends on :repo/nvim/tabs
 "
 " Constant(s):
 let s:default_shell = exists('term_default_shell')? g:term_default_shell : &shell
@@ -80,8 +80,7 @@ function! s:ToggleTerm(size) abort
         return 0
     endif
     " bring other terminal buffers into this window
-    let w:wintabs_buflist = l:tbuflist
-    call wintabs#init()
+    let w:tabs_buflist = l:tbuflist
     return 1
 endfunction
 
@@ -96,7 +95,7 @@ function! Term(cmd, ...)
     else
         let cmd = len(a:cmd) ? a:cmd : s:default_shell
     endif
-    " new terminal
+    " NEW TERMINAL
 	let l:term_height = s:TermHeight(0.3)
 	" terminal buffer numbers like [1, 56, 78]
 	let l:tbuflist = s:Terminals()
@@ -110,38 +109,18 @@ function! Term(cmd, ...)
         " create a new terminal in split
         execute 'belowright' l:term_height.'split '.buf_name
         " bring other terminal buffers into this window
-        let w:wintabs_buflist = l:tbuflist
-        call wintabs#init()
+        let w:tabs_buflist = l:tbuflist
     endif
     tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
     tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
 	" if the cmd has argumets, delete existing with the same cmd
     for buf in l:tbuflist
         let name = substitute(bufname(buf), '//\d\+:', '//', '')
-        echo name buf_name
         if name == buf_name
             execute 'bdelete!' buf
         endif
     endfor
-endfunction
-
-" delete all terminal buffers or the current one
-function! DelTerms()
-    if &buftype == 'terminal'
-        " delete the current one
-        if len(w:wintabs_buflist) > 1
-            let other = filter(copy(w:wintabs_buflist), bufnr().' != v:val')[0]
-            execute 'buffer' other
-            bwipeout! #
-        else " just delete it
-            bwipeout!
-        endif
-    else
-        let l:terms = s:Terminals()
-        if len(l:terms) > 0
-            execute 'bwipeout!' join(l:terms)
-        endif
-    endif
+    call TabsReload()
 endfunction
 
 " use the current process in the terminal as the buffer name
