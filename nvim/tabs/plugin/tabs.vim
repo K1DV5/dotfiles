@@ -5,25 +5,21 @@ hi! link Tabs_Num StatusLine
 
 function! StatusLine(bufnr)
     let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
+    let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && index(g:tabs_custom_stl, ft) != -1  " custom buffer
-        let text = hi_stat . ' %{&filetype} %* %<%{fnamemodify(bufname(), ":t")} '  " filetype & fname
-        return text . hi_stat . '%= %l/%L ' " line num
+        return hi_stat . ' %{&filetype} %*' . tabs_section " filetype and tabs
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
-        let text = hi_stat . ' ' . toupper(bt) . ' '  " buftype
-        let text .= '%#TabLineSel# %{fnamemodify(bufname(), ":t")} '  " file name
-        return text . hi_stat . '%= %l/%L %*'
+        return hi_stat . ' ' . toupper(bt) . ' ' . tabs_section . '%*'  " buftype and tabs
     endif
-    let text = hi_stat . ' %{toupper(mode())} '  " mode
-    let text .= '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
+    let text = hi_stat . ' %{toupper(mode())} ' . tabs_section  " mode and tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
     if bt == 'terminal'
         return text . toupper(bt) . ' '
     endif
     let text .= '%{&filetype} %{WebDevIconsGetFileFormatSymbol()}'  " file type
-    let text .= ' %l.%c/%L'  " line.col/lines
     let additional = exists('g:tabs_statusline_add') ? g:tabs_statusline_add : ''
     return text . ' ' . additional . ' %*'
 endfunction
@@ -124,16 +120,9 @@ function! TabsGo(...)
 endfunction
 
 function! TabsClose()
-    if &buftype == 'terminal'
-        let delcmd = 'bdelete!'
-    elseif !&modifiable
-        bdelete
-        return
-    else
-        let delcmd = 'bdelete'
-    endif
-    call TabsGo()
-    execute delcmd w:tabs_alt_file
+    let bang = &buftype == 'terminal' ? '!' : ''
+    call TabsGo()  " to the alt file
+    execute 'bdelete'.bang w:tabs_alt_file
     call TabsReload()
 endfunction
 
