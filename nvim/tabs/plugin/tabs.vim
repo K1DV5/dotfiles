@@ -1,9 +1,9 @@
-hi Tabs_Status guifg=white guibg=#0A7ACA
-hi! link Tabs_Status_NC StatusLine
-hi Tabs_Error guifg=black guibg=red
-hi Tabs_Warning guifg=black guibg=yellow
+" config vars:
+" g:tabs_statusline_add - additional things to add to statusline
+" g:tabs_custom_stl - list of filetypes to show in place of mode
 
 function! StatusLine(bufnr)
+    " this is what is set in the autocmds
     let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
     let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let ft = getbufvar(a:bufnr, '&filetype')
@@ -23,6 +23,7 @@ function! StatusLine(bufnr)
 endfunction
 
 function! TabsGetBufsText(bufnr)
+    " get the section of the tabs
     let win = bufwinid(a:bufnr)
     let bufs = getwinvar(win, 'tabs_buflist')
     if !len(bufs)
@@ -64,7 +65,6 @@ function! TabsReload()
 endfunction
 
 function! TabsAllBuffers() abort
-
     let w:tabs_buflist = []
     for buf in range(1, bufnr('$'))
         let empty = bufname(buf) == '' && !getbufvar(buf, '&modified')
@@ -76,6 +76,7 @@ function! TabsAllBuffers() abort
 endfunction
 
 function! TabsNext()
+    " cycle through tabs
     if len(w:tabs_buflist) < 2  " too few tabs
         return
     endif
@@ -90,6 +91,7 @@ function! TabsNext()
 endfunction
 
 function! TabsGo(...)
+    " jump through the tabs
     let last = bufnr()
     if !a:0  " jump to alt
         if exists('w:tabs_buflist')
@@ -118,6 +120,7 @@ function! TabsGo(...)
 endfunction
 
 function! TabsClose()
+    " close current tab
     let bang = &buftype == 'terminal' ? '!' : ''
     call TabsGo()  " to the alt file
     execute 'bdelete'.bang w:tabs_alt_file
@@ -126,6 +129,12 @@ endfunction
 
 " add the filetype and fileformat to the <c-g>
 noremap <c-g> <cmd>file <bar> echon '  ' &filetype '  ' WebDevIconsGetFileFormatSymbol()<cr>
+
+" highlightings used
+hi Tabs_Status guifg=white guibg=#0A7ACA
+hi link Tabs_Status_NC StatusLine
+hi Tabs_Error guifg=black guibg=red
+hi Tabs_Warning guifg=black guibg=yellow
 
 augroup Tabs
     autocmd!
