@@ -1,7 +1,7 @@
 hi Tabs_Status guifg=white guibg=#0A7ACA
 hi! link Tabs_Status_NC StatusLine
-" hi Tabs_Num guifg=yellow gui=bold
-hi! link Tabs_Num StatusLine
+hi Tabs_Error guifg=black guibg=red
+hi Tabs_Warning guifg=black guibg=yellow
 
 function! StatusLine(bufnr)
     let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
@@ -19,9 +19,7 @@ function! StatusLine(bufnr)
     if bt == 'terminal'
         return text . toupper(bt) . ' '
     endif
-    let text .= '%{&filetype} %{WebDevIconsGetFileFormatSymbol()}'  " file type
-    let additional = exists('g:tabs_statusline_add') ? g:tabs_statusline_add : ''
-    return text . ' ' . additional . ' %*'
+    return text . get(g:, 'tabs_statusline_add', '')  " with additional from user
 endfunction
 
 function! TabsGetBufsText(bufnr)
@@ -109,7 +107,7 @@ function! TabsGo(...)
         if a:1 < len(w:tabs_buflist)
             call nvim_set_current_buf(w:tabs_buflist[a:1])
         else
-            echo 'No buffer at ' . a:1
+            echo 'No buffer at ' . (a:1 + 1)
         endif
     endif
     if last != bufnr()
@@ -125,6 +123,9 @@ function! TabsClose()
     execute 'bdelete'.bang w:tabs_alt_file
     call TabsReload()
 endfunction
+
+" add the filetype and fileformat to the <c-g>
+noremap <c-g> <cmd>file <bar> echon '  ' &filetype '  ' WebDevIconsGetFileFormatSymbol()<cr>
 
 augroup Tabs
     autocmd!
