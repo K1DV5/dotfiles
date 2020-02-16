@@ -18,7 +18,7 @@
         "auto change search to case sensitive when there are upper cases
         set smartcase
         "turn on line numbers where the cursor is (revert: set nonumber)
-        set number
+        set number relativenumber
         "highlight current line
         set cursorline
         " enable true color on terminal
@@ -59,6 +59,8 @@
         set mouse=n
         " disable the tabline
         set showtabline=0
+        " to show line numbers on <c-g>, disable on statusline
+        set noruler
 
         "}}}
     "S_performance: {{{
@@ -239,7 +241,7 @@
             let l:session_file = a:file
         endif
         try
-            silent execute 'source' fnameescape(l:session_file.'.vim')
+            silent execute 'source' fnameescape(l:session_file.'.sess')
         catch
             echo 'No Session File'
         endtry
@@ -253,7 +255,7 @@
         else
             let l:session_file = a:file
         endif
-        execute 'mksession!' fnameescape(l:session_file.'.vim')
+        execute 'mksession!' fnameescape(l:session_file.'.sess')
     endfunction
 
     " }}}
@@ -337,18 +339,12 @@
     " }}}
     function! GitStat() "{{{
         " show git status
-        if &filetype == 'gitcommit' || &filetype == 'fugitive'
+        if index(['gitcommit', 'fugitive', 'gina-log', 'gina-status'], &filetype) != -1
             let l:to_be_closed = bufnr()
             call win_gotoid(1000)
             execute 'bdelete' l:to_be_closed
         elseif &modifiable
-            try
-                " split current window above, height: 12
-                abo Gstatus
-            catch
-                edit
-                abo Gstatus
-            endtry
+            Gina status -s --opener=sp
         else
             echo 'Must be on a file'
         endif
@@ -554,6 +550,17 @@ EOF
     endfunction
 
     " }}}
+    function! StatusDiagnostic() abort "{{{
+        " coc status for statusline
+        let info = get(b:, 'coc_diagnostic_info', {})
+        if empty(info) | return '' | endif
+        let lnums = get(info, 'lnums', [])
+        let lnums = filter(lnums, {_, val -> val})
+        if empty(lnums) | return '' | endif
+        return ' ' . join(lnums, ' ') . ' '
+    endfunction
+
+    " }}}
     function! MyFold(...) abort "{{{
         " better folding
         let other = a:0 ? '\|'.a:1 : ''
@@ -583,7 +590,6 @@ EOF
         Plug 'tpope/vim-surround'
         Plug 'neoclide/coc.nvim', {'branch': 'release'}
         Plug 'mhinz/vim-signify'
-        Plug 'tpope/vim-fugitive'
         Plug 'ryanoasis/vim-devicons'
         Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
         Plug stdpath('config').'/terminal-pane'
@@ -614,9 +620,10 @@ EOF
         " }}}
     "S_tabs: {{{
         " tabs that are not normal buffers
-        let g:tabs_custom_stl = ['coc-explorer', 'undo', 'fugitive', 'gitcommit', 'vista']
+        let g:tabs_custom_stl = ['coc-explorer', 'undo', 'vista', 'gina-status', 'gina-commit']
         " appended at the end
-        let g:tabs_statusline_add = '%{len(split(coc#status(), "  ")) > 1 ? split(coc#status(), "  ")[0] : ""}'
+        " let g:tabs_statusline_add = '%{len(split(coc#status(), "  ")) > 1 ? split(coc#status(), "  ")[0] : ""}'
+        let g:tabs_statusline_add = '%#Tabs_Error#%{StatusDiagnostic()}'
 
         " }}}
     "S_python_syntax: {{{
@@ -711,12 +718,13 @@ EOF
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " enter for commit
-        autocmd FileType gitcommit inoremap <buffer> <cr> <esc><cmd>write \| bdelete<cr>
+        autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
+        autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
         " set lsp mappings for supported filetypes
         autocmd FileType * call LSP()
         " use o to open file or definition
         autocmd FileType vista nmap <buffer> o <enter> | nmap <buffer> <2-LeftMouse> <enter>
-        " close definition window when help opens
+        " close tags window when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
             \| wincmd L
             \| execute 'vertical resize' &columns/2
