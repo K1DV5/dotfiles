@@ -116,7 +116,7 @@
         noremap <Down> g<Down>
         "using [shift] tab for switching buffers
         noremap <tab> <cmd>call TabsGo()<cr>
-        noremap <s-tab> <cmd>call TabsGo()<cr>
+        noremap <s-tab> <cmd>call TabsNext()<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -717,7 +717,7 @@ EOF
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
-        " enter for commit
+        " gc: edit commit message, gp: push, <cr>: commit
         autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
         autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
         " set lsp mappings for supported filetypes
