@@ -100,8 +100,8 @@ function! Term(cmd, ...)
 	" terminal buffer numbers like [1, 56, 78]
 	let l:tbuflist = s:Terminals()
     " same command terminal buffers
-    let dir = a:0 > 0 ? a:1 : '.'
-    let buf_name = 'term://'.dir.'//'.cmd
+    let dir = a:0 > 0 ? a:1 : fnamemodify('.', ':p')
+    let buf_name = 'term://'.(dir).'//'.cmd
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
         execute 'edit' buf_name
@@ -115,7 +115,7 @@ function! Term(cmd, ...)
     tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
 	" if the cmd has argumets, delete existing with the same cmd
     for buf in l:tbuflist
-        let name = substitute(bufname(buf), '//\d\+:', '//', '')
+        let name = substitute(bufname(buf), '//\d\+:', '\\//', '')
         if name == buf_name
             execute 'bdelete!' buf
         endif
