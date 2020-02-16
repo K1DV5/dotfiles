@@ -51,10 +51,9 @@ endfunction
 function! TabsReload()
     let buf = bufnr()
     if exists('w:tabs_buflist')
+        call filter(w:tabs_buflist, {_, buf -> buflisted(buf)})  " maybe removed
         if index(w:tabs_buflist, buf) == -1  " maybe added
             call add(w:tabs_buflist, buf)
-        else  " maybe removed
-            call filter(w:tabs_buflist, {_, buf -> buflisted(buf)})
         endif
     elseif bufname(buf) == '' && !getbufvar(buf, '&modified')  " empty
         let w:tabs_buflist = []
