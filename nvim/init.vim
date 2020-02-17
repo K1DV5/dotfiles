@@ -32,7 +32,7 @@
         " keep windows the same size when adding/removing
         set noequalalways
         " hide the ~'s at the end of files
-        set fillchars=eob:\ ,diff:\ ,fold:\  "make it disappear
+        set fillchars=eob:\ ,diff:\ ,fold:\ ,stl:\  "make it disappear
         " keep some lines visible at top/bottom when scrolling
         " set scrolloff=3
         " read only the first and last lines
@@ -620,7 +620,7 @@ EOF
         " }}}
     "S_tabs: {{{
         " tabs that are not normal buffers
-        let g:tabs_custom_stl = ['coc-explorer', 'undo', 'vista', 'gina-status', 'gina-commit']
+        let g:tabs_custom_stl = {'gina-status': '%f', 'coc-explorer': '', 'undo': '', 'vista': '', 'gina-commit': ''}
         " appended at the end
         " let g:tabs_statusline_add = '%{len(split(coc#status(), "  ")) > 1 ? split(coc#status(), "  ")[0] : ""}'
         let g:tabs_statusline_add = '%#Tabs_Error#%{StatusDiagnostic()}'

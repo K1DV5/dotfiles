@@ -7,8 +7,9 @@ function! StatusLine(bufnr)
     let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
     let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let ft = getbufvar(a:bufnr, '&filetype')
-    if exists('g:tabs_custom_stl') && index(g:tabs_custom_stl, ft) != -1  " custom buffer
-        return hi_stat . ' %{&filetype} %*' . tabs_section " filetype and tabs
+    if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
+        let custom = substitute(g:tabs_custom_stl[ft], ':tabs\>', tabs_section, '')
+        return hi_stat . ' %{&filetype} %* ' . custom " filetype and custom
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
