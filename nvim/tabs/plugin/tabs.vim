@@ -9,7 +9,7 @@ function! StatusLine(bufnr)
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
         let custom = substitute(g:tabs_custom_stl[ft], ':tabs\>', tabs_section, '')
-        return hi_stat . ' %{&filetype} %* ' . custom " filetype and custom
+        return hi_stat . ' %{&filetype} %#StatusLineNC# ' . custom " filetype and custom
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
@@ -136,7 +136,16 @@ hi link Tabs_Status_NC StatusLine
 hi Tabs_Error guifg=black guibg=red
 hi Tabs_Warning guifg=black guibg=yellow
 
+function! s:OnNew() abort
+    execute 'setlocal statusline=%!StatusLine(' . bufnr() .')'
+    call TabsReload()
+    let alt = bufnr('#')
+    if index(w:tabs_buflist, alt) != -1  " for when closing just after opening
+        let w:tabs_alt_file = alt
+    endif
+endfunction
+
 augroup Tabs
     autocmd!
-    autocmd FileType,TermOpen * execute 'setlocal statusline=%!StatusLine(' . bufnr() .')' | call TabsReload()
+    autocmd FileType,TermOpen * call s:OnNew()
 augroup END
