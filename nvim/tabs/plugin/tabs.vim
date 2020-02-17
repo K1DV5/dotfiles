@@ -122,7 +122,18 @@ endfunction
 function! TabsClose()
     " close current tab
     let bang = &buftype == 'terminal' ? '!' : ''
-    call TabsGo()  " to the alt file
+    let to_go = index(w:tabs_buflist, w:tabs_alt_file)
+    if to_go == -1  " alt file closed
+        let to_go = index(w:tabs_buflist, bufnr()) - 1
+        if to_go < 0 && len(w:tabs_buflist) > 1  " no left buffer, look right
+            let to_go += 2
+            if to_go < 0  " last in a window
+                execute 'bdelete' . bang
+                return
+            endif
+        endif
+    endif
+    call TabsGo(to_go)  " to the alt file
     execute 'bdelete'.bang w:tabs_alt_file
     call TabsReload()
 endfunction
