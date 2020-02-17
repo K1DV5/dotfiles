@@ -128,7 +128,7 @@ function! TabsClose()
 endfunction
 
 " add the filetype and fileformat to the <c-g>
-noremap <c-g> <cmd>file <bar> echon '  ' &filetype '  ' WebDevIconsGetFileFormatSymbol()<cr>
+noremap <c-g> <cmd>file <bar> echon '  ft:'.&filetype '  eol:'.&fileformat<cr>
 
 " highlightings used
 hi Tabs_Status guifg=white guibg=#0A7ACA
