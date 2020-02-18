@@ -585,26 +585,26 @@ EOF
 " C_PLUGINS: {{{
 
     "S_management: {{{
-        call plug#begin()
-        Plug 'tpope/vim-commentary'
-        Plug 'tpope/vim-surround'
-        Plug 'neoclide/coc.nvim', {'branch': 'release'}
-        Plug 'mhinz/vim-signify'
-        Plug 'ryanoasis/vim-devicons'
-        Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}
-        Plug stdpath('config').'/terminal-pane'
-        Plug stdpath('config').'/tabs'
-        Plug 'mtth/scratch.vim'
-        Plug 'liuchengxu/vista.vim'
-        Plug 'michaeljsmith/vim-indent-object'
-        Plug 'K1DV5/vim-code-dark'
-        Plug 'ferrine/md-img-paste.vim'
-        Plug 'mattn/emmet-vim', {'for': 'html'}
-        Plug 'lambdalisue/gina.vim'
-        Plug 'aserebryakov/vim-todo-lists'
-        Plug 'justinmk/vim-sneak'
-        Plug 'sheerun/vim-polyglot'
-        call plug#end()
+        packadd minpac
+        call minpac#init()
+
+        call minpac#add('k-takata/minpac', {'type': 'opt'})
+        call minpac#add('tpope/vim-commentary')
+        call minpac#add('tpope/vim-surround')
+        call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
+        call minpac#add('mhinz/vim-signify')
+        call minpac#add('ryanoasis/vim-devicons')
+        call minpac#add('mbbill/undotree')
+        call minpac#add('mtth/scratch.vim')
+        call minpac#add('liuchengxu/vista.vim')
+        call minpac#add('michaeljsmith/vim-indent-object')
+        call minpac#add('K1DV5/vim-code-dark')
+        call minpac#add('ferrine/md-img-paste.vim')
+        call minpac#add('mattn/emmet-vim', {'for': 'html'})
+        call minpac#add('lambdalisue/gina.vim')
+        call minpac#add('aserebryakov/vim-todo-lists')
+        call minpac#add('justinmk/vim-sneak')
+        call minpac#add('sheerun/vim-polyglot')
 
         " }}}
     "S_coc: {{{
