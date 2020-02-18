@@ -36,7 +36,6 @@
     "explorer.toggle": false,
     "explorer.width": 30,
     "explorer.openAction.strategy": "previousBuffer",
-    "python.linting.mypyEnabled": true,
     "explorer.sources": [
         {
             "name": "buffer",
