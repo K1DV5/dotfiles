@@ -148,6 +148,11 @@ hi Tabs_Error guifg=black guibg=red
 hi Tabs_Warning guifg=black guibg=yellow
 
 function! s:OnNew() abort
+    if get(b:, 'tabs_status_set', 0)
+        " already set
+        return
+    endif
+    let b:tabs_status_set = 0
     execute 'setlocal statusline=%!StatusLine(' . bufnr() .')'
     call TabsReload()
     let alt = bufnr('#')
@@ -158,5 +163,5 @@ endfunction
 
 augroup Tabs
     autocmd!
-    autocmd FileType,TermOpen * call s:OnNew()
+    autocmd BufRead,BufNewFile,FileType,TermOpen * call s:OnNew()
 augroup END

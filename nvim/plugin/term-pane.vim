@@ -151,3 +151,9 @@ function! RenameTerm(timer)
     execute 'file '.new_name
     " execute 'bwipeout!' bufnr(@#)
 endfunction
+
+augroup term
+    autocmd!
+    " remove line numbers from the terminal windows and offsets
+    autocmd TermOpen * setlocal nonumber norelativenumber nowrap
+augroup END
