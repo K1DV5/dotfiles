@@ -1,8 +1,8 @@
 " init script for neovim
 
-" C_BUILTINS: {{{
+" BUILTINS: {{{
 
-    "S_miscellaneous: {{{
+    "Miscellaneous: {{{
         "make search case insensitive
         set ignorecase
         " continue wrapped lines with the same indent
@@ -41,17 +41,15 @@
         set noshowmode
         " split to the right
         set splitright
-        "disable the preview window when in completion
-        set completeopt-=preview
-        "always have a space for gutter signs (on the left of the line numbers)
-        set signcolumn=yes
+        " only show menu when completing
+        set completeopt=menu,noinsert,noselect,menuone
         " show diff with vertical split
         set diffopt+=vertical
         " some filetype specific features
         filetype plugin indent on
         " default sql variant
         let g:sql_type_default = 'mysql'
-        " fold text
+        " fold text for this file
         set foldtext=MyFold()
         " allow expressions in modelines
         set modelineexpr
@@ -63,7 +61,7 @@
         set noruler
 
         "}}}
-    "S_performance: {{{
+    "Performance: {{{
         " hide buffers when not shown in window
         set hidden
         " Don’t update screen during macro and script execution
@@ -84,11 +82,11 @@
         let g:loaded_2html_plugin = 1
         let g:loaded_tarPlugin = 1
         "}}}
+
     "}}}
+" MAPPINGS: {{{
 
-" C_MAPPINGS: {{{
-
-    "S_normal_mode: {{{
+    "Normal_mode: {{{
         " do what needs to be done
         noremap <c-p> <cmd>call Please_Do()<cr>
         " move lines up down
@@ -133,7 +131,7 @@
         noremap <right> <nop>
 
         "}}}
-    "S_command_mode: {{{
+    "Command_mode: {{{
         " paste on command line
         cnoremap <c-v> <c-r>*
         cnoremap <c-h> <cmd>norm h<cr>
@@ -144,7 +142,7 @@
         cnoremap kj <esc>
 
         "}}}
-    "S_insert_mode: {{{
+    "Insert_mode: {{{
         " escape quick
         imap kj <esc>
         " move one line up and down
@@ -163,15 +161,13 @@
         " delete word
         inoremap <c-bs> <cmd>norm bdw<cr>
         inoremap <c-del> <cmd>norm dw<cr>
-        " go through suggestions or jump to snippet placeholders
-        imap <expr> <tab> Itab(1)
-        imap <expr> <s-tab> Itab(0)
-        smap <expr> <tab> Itab(0)
-        " refresh completion
-        inoremap <silent><expr> <c-space> coc#refresh()
+        " " go through suggestions or jump to snippet placeholders
+        " imap <expr> <tab> Itab(1)
+        " imap <expr> <s-tab> Itab(0)
+        " smap <expr> <tab> Itab(0)
 
         "}}}
-    "S_visual_mode: {{{
+    "Visual_mode: {{{
         " escape quick
         vnoremap kj <esc>
         vnoremap KJ <esc>
@@ -183,7 +179,7 @@
         vnoremap /w <cmd>call Subs('within')<cr>
 
         "}}}
-    "S_with_leader_key: {{{
+    "With_leader_key: {{{
         let mapleader = ','
         " open/close terminal pane
         noremap <leader>t <cmd>call Term(0.3)<cr>
@@ -224,14 +220,14 @@
         " use system clipboard
         noremap <leader>c "+
         " toggle file and tag (definition) trees
-        noremap <leader>f <cmd>call HandleTree('execute "CocCommand explorer" getcwd()', 'coc-explorer')<cr>
+        noremap <leader>f <cmd>Files<cr>
         noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
-        noremap <leader>F <cmd>CocCommand explorer --toggle<cr>
+        noremap <leader>F <cmd>Files ..<cr>
         noremap <leader>D <cmd>Vista!!<cr>
         "}}}
-    "}}}
 
-" C_FUNCTIONS: {{{
+    "}}}
+" FUNCTIONS: {{{
 
     function! ResumeSession(file) "{{{
         " to resume a session
@@ -262,10 +258,11 @@
     function! EntArgs(event) "{{{
         " what to do at startup, and exit
         if a:event == 'enter'
+            " setup lsp
+            call LSP()
             if argc() == 0
                 call ResumeSession('')
                 call TabsAllBuffers()
-                CocEnable
             else
                 execute 'cd' expand('%:p:h')
                 if bufname('%') == ''
@@ -384,18 +381,22 @@
         " when pressing tab in insert mode...
         if pumvisible()
             if a:direction == 1 "without shift
-                " call coc#_select_confirm()
                 return "\<c-n>"
             else
                 return "\<c-p>"
             endif
         else
-            return "\<tab>"
+            let col = col('.') - 1
+            let is_not_at_end = !col || getline('.')[col - 1]  =~# '\s'
+            if is_not_at_end
+                return "\<tab>"
+            else
+                " completion
+                call feedkeys("\<c-n>")
+                call feedkeys("\<C-x>\<C-o>", "n")
+                return ''
+            endif
         endif
-    endfunction
-    function! s:check_back_space() abort
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~# '\s'
     endfunction
 
     " }}}
@@ -434,6 +435,14 @@ vim.command(f"call setline('.', '{txt} {eq[-1]}')")
 for e in eq[:-1]:
     vim.command(f"call append('.', '{e}')")
 EOF
+    endfunction
+
+    " }}}
+    function! Highlight() abort "{{{
+        " override some highlights
+        hi! link Folded Boolean
+        hi! DiffChange guibg=#18384B
+        hi! DiffDelete guifg=Grey
     endfunction
 
     " }}}
@@ -528,39 +537,6 @@ EOF
     endfunction
 
     " }}}
-    function! LSP() abort "{{{
-        " LSP mappings
-        let l:filetypes = ['python', 'css', 'html', 'json', 'js', 'javascript.jsx', 'tex']
-        if index(l:filetypes, &filetype) != -1
-            nmap <buffer> gd <Plug>(coc-definition)
-            nmap <buffer> <f2> <Plug>(coc-rename)
-            nmap <buffer> gm <Plug>(coc-references)
-            nmap <buffer> <expr> gh CocAction('doHover')
-            setlocal formatexpr=CocAction('formatSelected')
-            " augroup Hover
-            "     autocmd!
-            "     function! Hove(timer) abort
-            "         echo strftime('%c')
-            "         call CocActionAsync('doHover')
-            "     endfunction
-            "     autocmd CursorHold <buffer> call timer_start(2000, 'Hove')
-            "     " autocmd CursorMoved <buffer> nested pclose
-            " augroup END
-        endif
-    endfunction
-
-    " }}}
-    function! StatusDiagnostic() abort "{{{
-        " coc status for statusline
-        let info = get(b:, 'coc_diagnostic_info', {})
-        if empty(info) | return '' | endif
-        let lnums = get(info, 'lnums', [])
-        let lnums = filter(lnums, {_, val -> val})
-        if empty(lnums) | return '' | endif
-        return ' ' . join(lnums, ' ') . ' '
-    endfunction
-
-    " }}}
     function! MyFold(...) abort "{{{
         " better folding
         let other = a:0 ? '\|'.a:1 : ''
@@ -571,62 +547,96 @@ EOF
     endfunction
 
     " }}}
-    "}}}
+    function! LSPmaps() abort "{{{
+        if index(['python', 'tex'], &filetype) == -1
+            return
+        endif
+        " set completions
+        setlocal omnifunc=v:lua.vim.lsp.omnifunc
+        " define mappings
+        nnoremap <buffer> <silent> <c-]> <cmd>lua vim.lsp.buf.declaration()<CR>
+        nnoremap <buffer> <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
+        nnoremap <buffer> <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
+        nnoremap <buffer> <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
+        nnoremap <buffer> <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+        nnoremap <buffer> <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
+        nnoremap <buffer> <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
+    endfunction
 
-" C_SESSIONS: {{{
+    " }}}
+
+    "}}}
+" SESSIONS: {{{
 
     " store globals as well for wintabs active positions
     set ssop=buffers,curdir
     "restore and resume commands with optional session names
     command! -nargs=? Resume call ResumeSession("<args>")
     command! -nargs=? Pause call SaveSession("<args>")
+
     "}}}
+" PLUGINS: {{{
 
-" C_PLUGINS: {{{
-
-    "S_management: {{{
-        packadd minpac
-        call minpac#init()
-
-        call minpac#add('k-takata/minpac', {'type': 'opt'})
-        call minpac#add('tpope/vim-commentary')
-        call minpac#add('tpope/vim-surround')
-        call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
-        call minpac#add('mhinz/vim-signify')
-        call minpac#add('ryanoasis/vim-devicons')
-        call minpac#add('mbbill/undotree')
-        call minpac#add('mtth/scratch.vim')
-        call minpac#add('liuchengxu/vista.vim')
-        call minpac#add('michaeljsmith/vim-indent-object')
-        call minpac#add('K1DV5/vim-code-dark')
-        call minpac#add('ferrine/md-img-paste.vim')
-        call minpac#add('mattn/emmet-vim', {'for': 'html'})
-        call minpac#add('lambdalisue/gina.vim')
-        call minpac#add('aserebryakov/vim-todo-lists')
-        call minpac#add('justinmk/vim-sneak')
-        call minpac#add('sheerun/vim-polyglot')
+    "Management: {{{
+        " managing func, lazy loads minpac first
+        function! Pack() abort
+            packadd minpac
+            call minpac#init()
+            call minpac#add('k-takata/minpac', {'type': 'opt'})
+            call minpac#add('tpope/vim-commentary')
+            call minpac#add('tpope/vim-surround')
+            call minpac#add('lifepillar/vim-mucomplete')
+            call minpac#add('neovim/nvim-lsp')
+            call minpac#add('junegunn/fzf')
+            call minpac#add('junegunn/fzf.vim')
+            call minpac#add('jiangmiao/auto-pairs')
+            call minpac#add('mhinz/vim-signify')
+            call minpac#add('ryanoasis/vim-devicons')
+            call minpac#add('mbbill/undotree')
+            call minpac#add('mtth/scratch.vim')
+            call minpac#add('liuchengxu/vista.vim')
+            call minpac#add('michaeljsmith/vim-indent-object')
+            call minpac#add('K1DV5/vim-code-dark')
+            call minpac#add('ferrine/md-img-paste.vim')
+            call minpac#add('mattn/emmet-vim', {'for': 'html'})
+            call minpac#add('lambdalisue/gina.vim')
+            call minpac#add('aserebryakov/vim-todo-lists')
+            call minpac#add('justinmk/vim-sneak')
+            call minpac#add('sheerun/vim-polyglot')
+        endfunction
 
         " }}}
-    "S_coc: {{{
-        let g:coc_snippet_next = '<tab>'
-        let g:coc_global_extensions = ['coc-json', 'coc-tsserver', 'coc-html', 'coc-pairs', 'coc-css', 'coc-python', 'coc-texlab', 'coc-explorer']
+    "Mucomplete: {{{
+        let g:mucomplete#enable_auto_at_startup = 1
+
         " }}}
-    "S_devicons: {{{
+    "Fzf: {{{
+        " split in the current window
+        let g:fzf_layout = {'window': 'bel 10sp +enew'}
+
+        " }}}
+    "Lsp: {{{
+        function! LSP()
+            " for texlab
+            lua require 'nvim_lsp'.texlab.setup{}
+            " for python
+            lua require 'nvim_lsp'.pyls.setup{}
+        endfunction
+
+        " }}}
+    "Devicons: {{{
         "folder icons
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
 
         " }}}
-    "S_tabs: {{{
+    "Tabs: {{{
         " tabs that are not normal buffers
-        let g:tabs_custom_stl = {'gina-status': '%f', 'coc-explorer': '', 'undo': '', 'vista': '', 'gina-commit': ''}
-        " appended at the end
-        " let g:tabs_statusline_add = '%{len(split(coc#status(), "  ")) > 1 ? split(coc#status(), "  ")[0] : ""}'
-        let g:tabs_statusline_add = '%#Tabs_Error#%{StatusDiagnostic()}'
+        let g:tabs_custom_stl = {'gina-status': '%f', 'undo': '', 'vista': '', 'gina-commit': ''}
 
         " }}}
-    "S_python_syntax: {{{
+    "Python_syntax: {{{
         " enable all highlighting
         let g:python_highlight_all = 1
         let g:python_highlight_operators = 0
@@ -634,7 +644,7 @@ EOF
         let g:python_highlight_indent_errors = 0
 
         " }}}
-    "S_scratch: {{{
+    "Scratch: {{{
         " split vertically
         let g:scratch_horizontal = 0
         " open on the right side
@@ -648,12 +658,12 @@ EOF
         let g:scratch_autohide = 0
 
         " }}}
-    "S_term: {{{
+    "Term: {{{
         " set default shell to powershell
         let g:term_default_shell = 'powershell'
 
         " }}}
-    "S_signify: {{{
+    "Signify: {{{
         " work only with git
         let g:signify_vcs_list = ['git']
         " show only colors
@@ -662,9 +672,9 @@ EOF
         " let g:signify_sign_show_count = 0
 
         " }}}
-    "S_undotree: {{{
+    "Undotree: {{{
         " the layout
-        let g:undotree_WindowLayout = 3
+        let g:undotree_WindowLayout = 2
         " short timestamps
         let g:undotree_ShortIndicators = 1
         " width
@@ -673,56 +683,47 @@ EOF
         let g:undotree_SetFocusWhenToggle = 1
 
         " }}}
-    "S_colorscheme: {{{
-        " Use colors that suit a dark background
-        set background=dark
-        " Change colorscheme
-        colorscheme codedark
-
-        " }}}
-    "S_sneak: {{{
+    "Sneak: {{{
         " Make it like easymotion
         let g:sneak#label = 1
         "}}}
-    "S_leaderf: {{{
-        " use floating window
-        let g:Lf_WindowPosition = 'popup'
-        "}}}
-    " S_vista: {{{
+    " Vista: {{{
         " show definition in floating win
         let g:vista_echo_cursor_strategy = 'floating_win'
         " to use my own statusline
         let g:vista_disable_statusline = 1
         " }}}
+    "Colorscheme: {{{
+        if get(g:, 'colors_name', 'default') == 'default'
+            " Use colors that suit a dark background
+            set background=dark
+            " Change colorscheme
+            colorscheme codedark
+        endif
+
+        " }}}
+
     "}}}
-
-" C_AUTOCOMMANDS: {{{
-
+" AUTOCOMMANDS: {{{
     " define in an autogroup for re-sourcing
-    augroup theautocmds
+    augroup init
         autocmd!
-        "resume session, open the tags panel
-        autocmd VimEnter * nested call EntArgs('enter')
+        "resume session, override some colors
+        autocmd VimEnter * nested call EntArgs('enter') | call Highlight()
         "save session
         autocmd VimLeavePre * call EntArgs('leave')
-        " close preview window
-        autocmd InsertLeave * silent! pclose!
-        "save the buffer number for switching back easily
-        autocmd BufNewFile,BufRead * let w:alt_file = bufnr('#')
         " save the current window number before jumping to jump back
         autocmd WinLeave * let g:init_alt_win = win_getid()
-        " highlight 78th column for python files
-        autocmd FileType python setlocal colorcolumn=79
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
+        " lsp completions
+        autocmd FileType * call LSPmaps()
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " gc: edit commit message, gp: push, <cr>: commit
         autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
         autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
-        " set lsp mappings for supported filetypes
-        autocmd FileType * call LSP()
-        " use o to open file or definition
+        " use o to open definition
         autocmd FileType vista nmap <buffer> o <enter> | nmap <buffer> <2-LeftMouse> <enter>
         " close tags window when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
@@ -730,18 +731,8 @@ EOF
             \| execute 'vertical resize' &columns/2
             \| silent! execute 'Vista!'
             \| endif
-        " remove line numbers from the terminal windows and offsets
-        autocmd TermOpen * setlocal nonumber norelativenumber nowrap
     augroup END
 
     "}}}
 
-" C_OVERRIDES: {{{
-    " change the highlighting
-    hi! link Folded Boolean
-    hi! link FoldColumn Boolean
-    hi! DiffChange guibg=#18384B
-    hi! DiffDelete guifg=Grey
-    "}}}
-
-" vim:foldmethod=marker:foldlevel=0:foldcolumn=3:foldtext=MyFold('\:')
+" vim:foldmethod=marker:foldlevel=0:foldtext=MyFold('\:')
