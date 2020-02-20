@@ -11,6 +11,13 @@
     " disable the gui popup menu
     GuiPopupmenu 0
 
+	if argc() == 0
+		" start maximized
+		" call GuiWindowMaximized(1)
+		" start fullscreen
+		call GuiWindowFullScreen(1)
+	endif
+
 " Functions:
 	" toggle full screen
 	function! ToggleFS()
