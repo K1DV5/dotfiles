@@ -13,7 +13,7 @@ function! StatusLine(bufnr)
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
-        return hi_stat . ' ' . toupper(bt) . ' ' . tabs_section . '%*'  " buftype and tabs
+        return hi_stat . ' ' . toupper(bt) . ' ' . tabs_section . hi_stat  " buftype and tabs
     endif
     let text = hi_stat . ' %{toupper(mode())} ' . tabs_section  " mode and tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
