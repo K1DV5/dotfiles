@@ -1,8 +1,9 @@
 " init script for neovim
 
-" BUILTINS: {{{
-
-    "Miscellaneous: {{{
+" BUILTINS {{{
+    "Miscellaneous {{{
+        set title
+        set titlestring=foo
         "make search case insensitive
         set ignorecase
         " continue wrapped lines with the same indent
@@ -63,7 +64,7 @@
         set noruler
 
         "}}}
-    "Performance: {{{
+    "Performance {{{
         " hide buffers when not shown in window
         set hidden
         " Don’t update screen during macro and script execution
@@ -75,8 +76,8 @@
         " disable node.js
         let g:loaded_node_provider = 1
         " set python path
-        let g:python3_host_prog = 'D:\DevPrograms\Python\python'
-        let g:python_host_prog = 'D:\DevPrograms\Python\python'
+        let g:python3_host_prog = 'D\DevPrograms\Python\python'
+        let g:python_host_prog = 'D\DevPrograms\Python\python'
         " disable builtin plugins
         let g:loaded_gzip = 1
         let g:loaded_netrw = 1
@@ -86,9 +87,8 @@
         "}}}
 
     "}}}
-" MAPPINGS: {{{
-
-    "Normal_mode: {{{
+" MAPPINGS {{{
+    "Normal_mode {{{
         " do what needs to be done
         noremap <c-p> <cmd>call Please_Do()<cr>
         " move lines up down
@@ -117,6 +117,8 @@
         "using [shift] tab for switching buffers
         noremap <tab> <cmd>call TabsGo(v:count)<cr>
         noremap <s-tab> <cmd>call TabsNext()<cr>
+        " fuzzy find files
+        noremap \ <cmd>call fzf#run({"window": {"width": 0.6, "height": 0.6}, "dir": repeat("../", v:count), "sink": "e"})<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -124,8 +126,8 @@
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
         " go back with [shift] backspace
-        nnoremap <bs> <esc><c-o>
-        nnoremap <s-bs> <esc><c-i>
+        " map ctrl-v<bs> <c-o>
+        " map ctrl-v<s-bs> <c-i>
         " disable the arrow keys
         noremap <up> <nop>
         noremap <down> <nop>
@@ -133,7 +135,7 @@
         noremap <right> <nop>
 
         "}}}
-    "Command_mode: {{{
+    "Command_mode {{{
         " paste on command line
         cnoremap <c-v> <c-r>*
         cnoremap <c-h> <cmd>norm h<cr>
@@ -142,9 +144,11 @@
         cnoremap <c-l> <cmd>norm l<cr>
         " go normal
         cnoremap kj <esc>
+        " delete a character
+        cnoremap <bs> <c-bs>
 
         "}}}
-    "Insert_mode: {{{
+    "Insert_mode {{{
         " escape quick
         imap kj <esc>
         " move one line up and down
@@ -169,7 +173,7 @@
         " smap <expr> <tab> Itab(0)
 
         "}}}
-    "Visual_mode: {{{
+    "Visual_mode {{{
         " escape quick
         vnoremap kj <esc>
         vnoremap KJ <esc>
@@ -181,7 +185,7 @@
         vnoremap /w <cmd>call Subs('within')<cr>
 
         "}}}
-    "With_leader_key: {{{
+    "With_leader_key {{{
         let mapleader = ','
         " open/close terminal pane
         noremap <leader>t <cmd>call Term(0.3)<cr>
@@ -217,14 +221,12 @@
         " use system clipboard
         noremap <leader>c "+
         " toggle file and tag (definition) trees
-        noremap <leader>f <cmd>call fzf#run({"window": {"width": 0.6, "height": 0.6}, "dir": repeat("../", v:count), "sink": "e"})<cr>
         noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
         noremap <leader>D <cmd>Vista!!<cr>
         "}}}
 
     "}}}
-" FUNCTIONS: {{{
-
+" FUNCTIONS {{{
     function! ResumeSession(file) "{{{
         " to resume a session
         if a:file == ""
@@ -285,13 +287,12 @@
         let l:hidden = ['tex', 'texw', 'html', 'htm']
         let l:cwd = getcwd()
         cd %:h
-        let script = 'D:/Documents/Code/.dotfiles/misc/do.py'
         if index(l:hidden, s:ext_part) != -1
-            execute 'setlocal makeprg=python\' script
+            execute 'setlocal makeprg=do.bat'
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
-            call Term('python '.script.' '.expand('%:t'))
+            call Term('do.bat '.expand('%:t'))
             " call Term('do '.expand('%:t'))
             norm i
         endif
@@ -533,10 +534,9 @@ EOF
     endfunction
 
     " }}}
-    function! MyFold(...) abort "{{{
+    function! MyFold() abort "{{{
         " better folding
-        let other = a:0 ? '\|'.a:1 : ''
-        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'.other
+        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
         let fold_line = repeat('   ', v:foldlevel - 1) . ' ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
         return fold_line
         " }}}, keep the markers balanced
@@ -562,8 +562,7 @@ EOF
     " }}}
 
     "}}}
-" SESSIONS: {{{
-
+" SESSIONS {{{
     " store globals as well for wintabs active positions
     set ssop=buffers,curdir
     "restore and resume commands with optional session names
@@ -571,9 +570,8 @@ EOF
     command! -nargs=? Pause call SaveSession("<args>")
 
     "}}}
-" PLUGINS: {{{
-
-    "Management: {{{
+" PLUGINS {{{
+    "Management {{{
         " managing func, lazy loads minpac first
         function! Pack() abort
             packadd minpac
@@ -584,7 +582,6 @@ EOF
             call minpac#add('lifepillar/vim-mucomplete')
             call minpac#add('neovim/nvim-lsp')
             call minpac#add('junegunn/fzf')
-            call minpac#add('junegunn/fzf.vim')
             call minpac#add('jiangmiao/auto-pairs')
             call minpac#add('mhinz/vim-signify')
             call minpac#add('ryanoasis/vim-devicons')
@@ -602,11 +599,11 @@ EOF
         endfunction
 
         " }}}
-    "Mucomplete: {{{
+    "mucomplete {{{
         let g:mucomplete#enable_auto_at_startup = 1
 
         " }}}
-    "Lsp: {{{
+    "lsp {{{
         function! LSP()
             " for texlab
             lua require 'nvim_lsp'.texlab.setup{}
@@ -615,19 +612,19 @@ EOF
         endfunction
 
         " }}}
-    "Devicons: {{{
+    "devicons {{{
         "folder icons
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
 
         " }}}
-    "Tabs: {{{
+    "tabs {{{
         " tabs that are not normal buffers
         let g:tabs_custom_stl = {'gina-status': '%f', 'undo': '', 'vista': '', 'gina-commit': ''}
 
         " }}}
-    "Python_syntax: {{{
+    "python_syntax {{{
         " enable all highlighting
         let g:python_highlight_all = 1
         let g:python_highlight_operators = 0
@@ -635,7 +632,7 @@ EOF
         let g:python_highlight_indent_errors = 0
 
         " }}}
-    "Scratch: {{{
+    "scratch {{{
         " split vertically
         let g:scratch_horizontal = 0
         " open on the right side
@@ -649,12 +646,12 @@ EOF
         let g:scratch_autohide = 0
 
         " }}}
-    "Term: {{{
+    "term {{{
         " set default shell to powershell
         let g:term_default_shell = 'powershell'
 
         " }}}
-    "Signify: {{{
+    "signify {{{
         " work only with git
         let g:signify_vcs_list = ['git']
         " show only colors
@@ -663,7 +660,7 @@ EOF
         " let g:signify_sign_show_count = 0
 
         " }}}
-    "Undotree: {{{
+    "undotree {{{
         " the layout
         let g:undotree_WindowLayout = 2
         " short timestamps
@@ -674,17 +671,17 @@ EOF
         let g:undotree_SetFocusWhenToggle = 1
 
         " }}}
-    "Sneak: {{{
+    "sneak {{{
         " Make it like easymotion
         let g:sneak#label = 1
         "}}}
-    " Vista: {{{
+    " vista {{{
         " show definition in floating win
         let g:vista_echo_cursor_strategy = 'floating_win'
         " to use my own statusline
         let g:vista_disable_statusline = 1
         " }}}
-    "Colorscheme: {{{
+    "colorscheme {{{
         if get(g:, 'colors_name', 'default') == 'default'
             " Use colors that suit a dark background
             set background=dark
@@ -695,7 +692,7 @@ EOF
         " }}}
 
     "}}}
-" AUTOCOMMANDS: {{{
+" AUTOCOMMANDS {{{
     " define in an autogroup for re-sourcing
     augroup init
         autocmd!
@@ -726,4 +723,4 @@ EOF
 
     "}}}
 
-" vim:foldmethod=marker:foldlevel=0:foldtext=MyFold('\:')
+" vim:foldmethod=marker:foldlevel=0:foldtext=MyFold()
