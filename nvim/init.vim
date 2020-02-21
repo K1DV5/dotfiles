@@ -45,6 +45,8 @@
         set completeopt=menu,noinsert,noselect,menuone
         " show diff with vertical split
         set diffopt+=vertical
+        " always have a space for signs
+        set signcolumn=yes
         " some filetype specific features
         filetype plugin indent on
         " default sql variant
