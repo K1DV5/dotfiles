@@ -90,10 +90,10 @@ function! TabsNext()
     call nvim_set_current_buf(w:tabs_buflist[i_next])
 endfunction
 
-function! TabsGo(...)
+function! TabsGo(where)
     " jump through the tabs
     let last = bufnr()
-    if !a:0  " jump to alt
+    if !a:where  " jump to alt
         if exists('w:tabs_buflist')
             if !exists('w:tabs_alt_file') || index(w:tabs_buflist, w:tabs_alt_file) == -1 || w:tabs_alt_file == last
                 call TabsNext()
@@ -103,13 +103,13 @@ function! TabsGo(...)
         else
             echo 'Unchartered waters!'
         endif
-    elseif a:1 < 0  " a:to is a bufnr
-        call nvim_set_current_buf(-a:1)
-    else  " to is an index
-        if a:1 < len(w:tabs_buflist)
-            call nvim_set_current_buf(w:tabs_buflist[a:1])
+    elseif a:where < 0  " a:where is a bufnr
+        call nvim_set_current_buf(-a:where)
+    else  " to is an index + 1 (shown on the bar)
+        if a:where <= len(w:tabs_buflist)
+            call nvim_set_current_buf(w:tabs_buflist[a:where - 1])
         else
-            echo 'No buffer at ' . (a:1 + 1)
+            echo 'No buffer at ' . (a:where)
         endif
     endif
     if last != bufnr()

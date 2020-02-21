@@ -94,7 +94,7 @@
         noremap <a-j> <cmd>move+1<cr>
         "scroll by space and [shift] space
         noremap <space> <c-f>
-        noremap <s-space> <c-b>
+        noremap <c-space> <c-b>
         "select all ctrl a
         noremap <c-a> ggVG
         " copy till the end of line
@@ -113,7 +113,7 @@
         noremap <Up> g<Up>
         noremap <Down> g<Down>
         "using [shift] tab for switching buffers
-        noremap <tab> <cmd>call TabsGo()<cr>
+        noremap <tab> <cmd>call TabsGo(v:count)<cr>
         noremap <s-tab> <cmd>call TabsNext()<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
@@ -201,11 +201,6 @@
         noremap <leader>u <cmd>UndotreeToggle<cr>
         " enter window commands
         noremap <leader>w <c-w>
-        " jump directly to {n}th wintab
-        for num in range(1, 9)
-            execute 'noremap <leader>'.num '<cmd>call TabsGo('.(num - 1).')<cr>'
-        endfor
-        noremap <leader>0 <cmd>call TabsGo(10)<cr>
         " change current line to latex
         noremap <leader>xi <cmd>call Latexify(0)<cr>
         noremap <leader>xd <cmd>call Latexify(1)<cr>
@@ -220,9 +215,8 @@
         " use system clipboard
         noremap <leader>c "+
         " toggle file and tag (definition) trees
-        noremap <leader>f <cmd>Files<cr>
+        noremap <leader>f <cmd>call fzf#run({"window": {"width": 0.6, "height": 0.6}, "dir": repeat("../", v:count), "sink": "e"})<cr>
         noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
-        noremap <leader>F <cmd>Files ..<cr>
         noremap <leader>D <cmd>Vista!!<cr>
         "}}}
 
@@ -608,11 +602,6 @@ EOF
         " }}}
     "Mucomplete: {{{
         let g:mucomplete#enable_auto_at_startup = 1
-
-        " }}}
-    "Fzf: {{{
-        " split in the current window
-        let g:fzf_layout = {'window': 'bel 10sp +enew'}
 
         " }}}
     "Lsp: {{{
