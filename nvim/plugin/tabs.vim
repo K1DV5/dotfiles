@@ -4,18 +4,24 @@
 
 function! StatusLine(bufnr)
     " this is what is set in the autocmds
-    let hi_stat = a:bufnr == bufnr() ? '%#Tabs_Status#' : '%#Tabs_Status_NC#'
+    if a:bufnr == bufnr()
+        let hi_stat = '%#Tabs_Status#'
+        let start = hi_stat . ' %{toupper(mode())} '  " mode
+    else
+        let hi_stat = '%#Tabs_Status_NC#'
+        let start = hi_stat . ' %{winnr()} '
+    endif
     let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
         let custom = substitute(g:tabs_custom_stl[ft], ':tabs\>', tabs_section, '')
-        return hi_stat . ' %{&filetype} %#StatusLineNC# ' . custom " filetype and custom
+        return start . '%{&filetype} %#StatusLineNC# ' . custom " filetype and custom
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
-        return hi_stat . ' ' . toupper(bt) . ' ' . tabs_section . hi_stat  " buftype and tabs
+        return start . ' ' . toupper(bt) . ' ' . tabs_section . hi_stat  " buftype and tabs
     endif
-    let text = hi_stat . ' %{toupper(mode())} ' . tabs_section  " mode and tabs
+    let text = start . tabs_section  " win and tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
     if bt == 'terminal'
         return text . toupper(bt) . ' '
@@ -99,31 +105,47 @@ function! TabsNext()
 endfunction
 
 function! TabsGo(where)
-    " jump through the tabs
-    let last = bufnr()
-    if !a:where  " jump to alt
-        if exists('w:tabs_buflist')
-            if !exists('w:tabs_alt_file') || index(w:tabs_buflist, w:tabs_alt_file) == -1 || w:tabs_alt_file == last
-                call TabsNext()
+    " go to the specified buffer or win
+    if type(a:where) == v:t_float  " win
+        let where = float2nr(a:where)
+        if !where  " jump to alt
+            let alt_win = win_getid(get(g:, 'tabs_alt_win', 0))
+            if alt_win
+                call win_gotoid(alt_win)
             else
-                call nvim_set_current_buf(w:tabs_alt_file)
+                let wins = filter(nvim_list_wins(), {_, val -> val != win_getid()})
+                if len(wins)
+                    call win_gotoid(wins[0])
+                endif
             endif
-        else
-            echo 'Unchartered waters!'
+        else  " a:where is a win (shown on the bar)
+            call win_gotoid(win_getid(where))
         endif
-    elseif a:where < 0  " a:where is a bufnr
-        call nvim_set_current_buf(-a:where)
-    else  " to is an index + 1 (shown on the bar)
-        if a:where <= len(w:tabs_buflist)
-            call nvim_set_current_buf(w:tabs_buflist[a:where - 1])
-        else
-            echo 'No buffer at ' . (a:where)
+    else  " buffer
+        " jump through the tabs
+        let last = bufnr()
+        if !a:where
+            if exists('w:tabs_buflist')
+                if !exists('w:tabs_alt_file') || index(w:tabs_buflist, w:tabs_alt_file) == -1 || w:tabs_alt_file == last
+                    call TabsNext()
+                else
+                    call nvim_set_current_buf(w:tabs_alt_file)
+                endif
+            else
+                echo 'Unchartered waters!'
+            endif
+        else  " to is an index + 1 (shown on the bar)
+            if a:where <= len(w:tabs_buflist)
+                call nvim_set_current_buf(w:tabs_buflist[a:where - 1])
+            else
+                echo 'No buffer at ' . (a:where)
+            endif
         endif
-    endif
-    if last != bufnr()
-        let w:tabs_alt_file = last
-    else
-        let w:tabs_alt_file = bufnr()
+        if last != bufnr()
+            let w:tabs_alt_file = last
+        else
+            let w:tabs_alt_file = bufnr()
+        endif
     endif
 endfunction
 
@@ -202,4 +224,6 @@ endfunction
 augroup Tabs
     autocmd!
     autocmd BufRead,BufNewFile,FileType,TermOpen * call s:OnNew()
+    " save the current window number before jumping to jump back
+    autocmd WinLeave * let g:tabs_alt_win = win_getid()
 augroup END
