@@ -37,7 +37,15 @@ function! TabsGetBufsText(bufnr)
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
         if buf == a:bufnr
-            let text .= '%#TabLineSel# %{&filetype!=""?WebDevIconsGetFileTypeSymbol() . " ":""}' . name . '%m %*'
+            let ft = getbufvar(buf, '&filetype')
+            if empty(ft)
+                let icon = '%#TabLineSel# '
+            else
+                let hl_icon = 'TabsFt_' . ft " highlighting for the icons
+                let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
+                let icon = hl_icon . ' %{WebDevIconsGetFileTypeSymbol()} '
+            endif
+            let text .= icon . '%#TabLineSel#' . name . '%m %*'
         else
             let num = is_current_win ? i_buf . ':' : ''
             let text .= ' ' . num . name . ' '
@@ -142,10 +150,40 @@ endfunction
 noremap <c-g> <cmd>file <bar> echon '  ft:'.&filetype '  eol:'.&fileformat<cr>
 
 " highlightings used
+
 hi Tabs_Status guifg=white guibg=#0A7ACA
 hi link Tabs_Status_NC StatusLine
 hi Tabs_Error guifg=black guibg=red
 hi Tabs_Warning guifg=black guibg=yellow
+
+let ft_hl = [
+    \ ['vim', 'green'],
+    \ ['jade', 'green'],
+    \ ['ini', 'yellow'],
+    \ ['md', 'blue'],
+    \ ['yml', 'yellow'],
+    \ ['config', 'yellow'],
+    \ ['conf', 'yellow'],
+    \ ['json', 'yellow'],
+    \ ['html', 'orange'],
+    \ ['styl', 'cyan'],
+    \ ['css', 'cyan'],
+    \ ['coffee', 'Red'],
+    \ ['js', '#F7DF1E'],
+    \ ['javascript', '#F7DF1E'],
+    \ ['javascriptreact', '#00D8FF'],
+    \ ['php', 'Magenta'],
+    \ ['python', '#4584B6'],
+    \ ['ds_store', 'Gray'],
+    \ ['gitconfig', 'Gray'],
+    \ ['gitignore', 'Gray'],
+    \ ['bashrc', 'Gray'],
+    \ ['bashprofile', 'Gray',]]
+
+for hl in ft_hl
+    let bg = synIDattr(hlID('Normal'), 'bg')
+    execute 'hi TabsFt_' . hl[0] 'guifg=' . hl[1] 'guibg=' . bg
+endfor
 
 function! s:OnNew() abort
     if get(b:, 'tabs_status_set', 0)
