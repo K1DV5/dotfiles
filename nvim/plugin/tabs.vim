@@ -12,7 +12,7 @@ function! StatusLine(bufnr)
     else
         let current = 0
         let hi_stat = '%#Tabs_Status_NC#'
-        let start = hi_stat . ' %{winnr()} '
+        let start = hi_stat . ' %{win_getid() == g:tabs_alt_win ? "#" : winnr()} '
     endif
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
@@ -35,13 +35,12 @@ endfunction
 function! TabsGetBufsText(bufnr)
     " get the section of the tabs
     let win = bufwinid(a:bufnr)
-    let bufs = getwinvar(win, 'tabs_buflist')
-    if !len(bufs)
-        let bufs = [a:bufnr]
-    endif
+    let bufs = getwinvar(win, 'tabs_buflist', [a:bufnr])
     let text = ''
     let i_buf = 1
     let is_current_win = win_getid() == win
+    let i_this = index(bufs, a:bufnr)
+    let alt = getwinvar(win, 'tabs_alt_file', (len(bufs) > 1 ? bufs[i_this == len(bufs) - 1 ? 0 : i_this + 1] : a:bufnr))
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
@@ -56,7 +55,7 @@ function! TabsGetBufsText(bufnr)
             endif
             let text .= icon . '%#TabLineSel#' . name . '%m %*'
         else
-            let num = is_current_win ? i_buf . ':' : ''
+            let num = is_current_win ? (buf == alt ? '#' : i_buf) . ':' : ''
             let text .= ' ' . num . name . ' '
         endif
         let i_buf += 1
