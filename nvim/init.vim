@@ -94,18 +94,13 @@
         " move lines up down
         noremap <a-k> <cmd>move-2<cr>
         noremap <a-j> <cmd>move+1<cr>
-        "scroll by space and [shift] space
+        "scroll by page
         noremap <space> <c-f>
         noremap <c-space> <c-b>
         "select all ctrl a
         noremap <c-a> ggVG
         " copy till the end of line
         noremap Y y$
-        "move around windows with ctrl directions
-        noremap <c-h> <c-w>h
-        noremap <c-j> <c-w>j
-        noremap <c-k> <c-w>k
-        noremap <c-l> <c-w>l
         "also for wrapped lines
         noremap j gj
         noremap k gk
@@ -114,20 +109,21 @@
         noremap $ g$
         noremap <Up> g<Up>
         noremap <Down> g<Down>
-        "using [shift] tab for switching buffers
+        "using tab for switching buffers
         noremap <tab> <cmd>call TabsGo(v:count)<cr>
-        noremap <s-tab> <cmd>call TabsNext()<cr>
-        " fuzzy find files
-        noremap \ <cmd>call fzf#run({"window": {"width": 0.6, "height": 0.6}, "dir": repeat("../", v:count), "sink": "e"})<cr>
+        " switch windows using `
+        noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
+        " fuzzy find files, count means that much up dir
+        noremap - <cmd>call fzf#run({"window": {"width": 0.5, "height": 0.4}, "dir": repeat("../", v:count), "sink": "e"})<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
         tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
-        " go back with [shift] backspace
-        " map ctrl-v<bs> <c-o>
-        " map ctrl-v<s-bs> <c-i>
+        " go forward (back) with backspace
+        noremap <c-h> <c-o>
+        noremap <bs> <c-i>
         " disable the arrow keys
         noremap <up> <nop>
         noremap <down> <nop>
@@ -138,14 +134,10 @@
     "Command_mode {{{
         " paste on command line
         cnoremap <c-v> <c-r>*
-        cnoremap <c-h> <cmd>norm h<cr>
-        cnoremap <c-j> <cmd>norm gj<cr>
-        cnoremap <c-k> <cmd>norm gk<cr>
-        cnoremap <c-l> <cmd>norm l<cr>
         " go normal
         cnoremap kj <esc>
         " delete a character
-        cnoremap <bs> <c-bs>
+        cnoremap <c-h> <c-bs>
 
         "}}}
     "Insert_mode {{{
@@ -288,11 +280,11 @@
         let l:cwd = getcwd()
         cd %:h
         if index(l:hidden, s:ext_part) != -1
-            execute 'setlocal makeprg=do.bat'
+            execute 'setlocal makeprg=do'
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
-            call Term('do.bat '.expand('%:t'))
+            call Term('do '.expand('%:t'))
             " call Term('do '.expand('%:t'))
             norm i
         endif
@@ -600,7 +592,7 @@ EOF
 
         " }}}
     "mucomplete {{{
-        let g:mucomplete#enable_auto_at_startup = 1
+        " let g:mucomplete#enable_auto_at_startup = 1
 
         " }}}
     "lsp {{{
@@ -700,8 +692,6 @@ EOF
         autocmd VimEnter * nested call EntArgs('enter') | call Highlight()
         "save session
         autocmd VimLeavePre * call EntArgs('leave')
-        " save the current window number before jumping to jump back
-        autocmd WinLeave * let g:init_alt_win = win_getid()
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
         " lsp completions
