@@ -4,14 +4,16 @@
 
 function! StatusLine(bufnr)
     " this is what is set in the autocmds
+    let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     if a:bufnr == bufnr()
+        let current = 1
         let hi_stat = '%#Tabs_Status#'
         let start = hi_stat . ' %{toupper(mode())} '  " mode
     else
+        let current = 0
         let hi_stat = '%#Tabs_Status_NC#'
         let start = hi_stat . ' %{winnr()} '
     endif
-    let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
         let custom = substitute(g:tabs_custom_stl[ft], ':tabs\>', tabs_section, '')
@@ -19,7 +21,8 @@ function! StatusLine(bufnr)
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
-        return start . ' ' . toupper(bt) . ' ' . tabs_section . hi_stat  " buftype and tabs
+        let begin = current ? hi_stat : start
+        return begin . ' ' . toupper(bt) . ' ' . tabs_section . hi_stat  " buftype and tabs
     endif
     let text = start . tabs_section  " win and tabs
     let text .= hi_stat . '%= ' " custom highlighting and right align
