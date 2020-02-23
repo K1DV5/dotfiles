@@ -55,7 +55,7 @@ function! TabsGetBufsText(bufnr)
             endif
             let text .= icon . '%#TabLineSel#' . name . '%m %*'
         else
-            let num = is_current_win ? (buf == alt ? '#' : i_buf) . ':' : ''
+            let num = is_current_win ? (buf == alt ? '# ' : i_buf . ':') : ''
             let text .= ' ' . num . name . ' '
         endif
         let i_buf += 1
@@ -180,20 +180,15 @@ endfunction
 function! TabsClose()
     " close current tab
     let bang = &buftype == 'terminal' ? '!' : ''
-    let to_go = exists('w:tabs_alt_file') ? index(w:tabs_buflist, w:tabs_alt_file) : -1
-    if to_go == -1  " alt file closed
-        let to_go = index(w:tabs_buflist, bufnr()) - 1
-        if to_go < 0
-            if len(w:tabs_buflist) < 2  " last buffer, just close
-                execute 'bdelete' . bang
-                return
-            endif
-            let to_go += 2  " to the right
-        endif
+    let alt = s:TabsGetAltBuf(winnr())
+    if alt
+        let to_del = bufnr()
+        call nvim_set_current_buf(alt)
+        execute 'bdelete'.bang to_del
+        call TabsReload()
+    else
+        execute 'bdelete'.bang
     endif
-    call TabsGo(to_go)  " to the alt file
-    execute 'bdelete'.bang w:tabs_alt_file
-    call TabsReload()
 endfunction
 
 " add the filetype and fileformat to the <c-g>
@@ -211,7 +206,7 @@ let ft_hl = [
     \ ['jade', 'green'],
     \ ['ini', 'yellow'],
     \ ['md', 'blue'],
-    \ ['yml', 'yellow'],
+    \ ['yaml', 'yellow'],
     \ ['config', 'yellow'],
     \ ['conf', 'yellow'],
     \ ['json', 'yellow'],
@@ -254,5 +249,6 @@ augroup Tabs
     autocmd BufRead,BufNewFile,FileType,TermOpen * call s:OnNew()
     " save the current window number before jumping to jump back, redrawing
     " the statusline to show which is the alt
-    autocmd WinLeave * let g:tabs_alt_win = win_getid() | if len(nvim_list_wins()) > 2 | redraws! | endif
+    " autocmd WinLeave * let g:tabs_alt_win = win_getid() | if len(nvim_list_wins()) > 2 | redraws! | endif
+    autocmd WinLeave * let g:tabs_alt_win = win_getid()
 augroup END
