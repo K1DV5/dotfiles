@@ -40,7 +40,7 @@ function! TabsGetBufsText(bufnr)
     let i_buf = 1
     let is_current_win = win_getid() == win
     let i_this = index(bufs, a:bufnr)
-    let alt = getwinvar(win, 'tabs_alt_file', (len(bufs) > 1 ? bufs[i_this == len(bufs) - 1 ? 0 : i_this + 1] : a:bufnr))
+    let alt = s:TabsGetAlt(win)  " alternate buffer for the current win
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
@@ -106,6 +106,25 @@ function! TabsNext()
     call nvim_set_current_buf(w:tabs_buflist[i_next])
 endfunction
 
+function! s:TabsGetAlt(win)  " get the alternate buffer for the given window
+    let bufs = getwinvar(a:win, 'tabs_buflist', [])
+    let l_bufs = len(bufs)
+    if l_bufs < 2
+        return
+    endif
+    let alt = getwinvar(a:win, 'tabs_alt_file', 0)
+    let i_alt = index(bufs, alt)
+    let current = winbufnr(a:win)
+    if i_alt == -1 || alt == current
+        let i_current = index(bufs, current)
+        if i_current == l_bufs - 1 " last, return first
+            return bufs[0]
+        endif
+        return bufs[i_current + 1]  " next
+    endif
+    return alt
+endfunction
+
 function! TabsGo(where)
     " go to the specified buffer or win
     if type(a:where) == v:t_float  " win
@@ -126,15 +145,10 @@ function! TabsGo(where)
     else  " buffer
         " jump through the tabs
         let last = bufnr()
-        if !a:where
-            if exists('w:tabs_buflist')
-                if !exists('w:tabs_alt_file') || index(w:tabs_buflist, w:tabs_alt_file) == -1 || w:tabs_alt_file == last
-                    call TabsNext()
-                else
-                    call nvim_set_current_buf(w:tabs_alt_file)
-                endif
-            else
-                echo 'Unchartered waters!'
+        if !a:where  " alt
+            let alt = s:TabsGetAlt(winnr())
+            if alt
+                call nvim_set_current_buf(alt)
             endif
         else  " to is an index + 1 (shown on the bar)
             if a:where <= len(w:tabs_buflist)
