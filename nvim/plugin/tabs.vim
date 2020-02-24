@@ -29,7 +29,7 @@ function! StatusLine(bufnr)
     if bt == 'terminal'
         return text . toupper(bt) . ' '
     endif
-    return text . get(g:, 'tabs_statusline_add', '')  " with additional from user
+    return text . get(g:, 'tabs_statusline_add', '') . ' '  " with additional from user
 endfunction
 
 function! TabsGetBufsText(bufnr)
@@ -235,7 +235,7 @@ function! s:OnNew() abort
         " already set
         return
     endif
-    let b:tabs_status_set = 0
+    let b:tabs_status_set = 1
     execute 'setlocal statusline=%!StatusLine(' . bufnr() .')'
     call TabsReload()
     let alt = bufnr('#')

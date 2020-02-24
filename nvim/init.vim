@@ -122,8 +122,15 @@
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
         " go forward (back) with backspace
-        noremap <c-h> <c-o>
-        noremap <bs> <c-i>
+        noremap <c-h> <c-i>
+        noremap <bs> <c-o>
+        " unbound to line
+        nnoremap <silent> f <cmd>call sneak#wrap('', 1, 0, 1, 1)<cr>
+        nnoremap <silent> F <cmd>call sneak#wrap('', 1, 1, 1, 1)<cr>
+        xnoremap <silent> f <cmd>call sneak#wrap(visualmode(), 1, 0, 1, 1)<cr>
+        xnoremap <silent> F <cmd>call sneak#wrap(visualmode(), 1, 1, 1, 1)<cr>
+        onoremap <silent> f <cmd>call sneak#wrap(v:operator,   1, 0, 1, 1)<cr>
+        onoremap <silent> F <cmd>call sneak#wrap(v:operator,   1, 1, 1, 1)<cr>
         " disable the arrow keys
         noremap <up> <nop>
         noremap <down> <nop>
@@ -184,6 +191,7 @@
         tnoremap <leader>t <cmd>call Term(0.3)<cr>
         " open big terminal window
         noremap <leader>T <cmd>call Term(1)<cr>
+        tnoremap <leader>T <cmd>call Term(1)<cr>
         " show git status
         noremap <leader>g <cmd>call GitStat()<cr>
         " closing current buffer
@@ -601,6 +609,8 @@ EOF
             lua require 'nvim_lsp'.texlab.setup{}
             " for python
             lua require 'nvim_lsp'.pyls.setup{}
+            " for tsserver
+            lua require 'nvim_lsp'.tsserver.setup{}
         endfunction
 
         " }}}
@@ -614,6 +624,8 @@ EOF
     "tabs {{{
         " tabs that are not normal buffers
         let g:tabs_custom_stl = {'gina-status': '%f', 'undo': '', 'vista': '', 'gina-commit': ''}
+        " show branch if a repo
+        let g:tabs_statusline_add = '%{!empty(gina#component#repo#name()) ? " ".gina#component#repo#branch() : ""}'
 
         " }}}
     "python_syntax {{{
@@ -653,14 +665,12 @@ EOF
 
         " }}}
     "undotree {{{
-        " the layout
-        let g:undotree_WindowLayout = 2
         " short timestamps
         let g:undotree_ShortIndicators = 1
-        " width
-        let g:undotree_SplitWidth = 29
         " autofocus
         let g:undotree_SetFocusWhenToggle = 1
+        " disable diff win
+        let g:undotree_DiffAutoOpen = 0
 
         " }}}
     "sneak {{{
@@ -703,6 +713,8 @@ EOF
         autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
         " use o to open definition
         autocmd FileType vista nmap <buffer> o <enter> | nmap <buffer> <2-LeftMouse> <enter>
+        " system open
+        autocmd FileType fzf imap <c-x> <cmd>echo "hi"<cr>
         " close tags window when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
             \| wincmd L
