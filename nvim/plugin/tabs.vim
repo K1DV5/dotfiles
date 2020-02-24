@@ -179,6 +179,10 @@ endfunction
 
 function! TabsClose()
     " close current tab
+    if &modified
+        echo "File modified"
+        return
+    endif
     let bang = &buftype == 'terminal' ? '!' : ''
     let alt = s:TabsGetAltBuf(winnr())
     if alt
