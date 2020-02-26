@@ -167,9 +167,9 @@
         inoremap <c-bs> <cmd>norm bdw<cr>
         inoremap <c-del> <cmd>norm dw<cr>
         " " go through suggestions or jump to snippet placeholders
-        " imap <expr> <tab> Itab(1)
-        " imap <expr> <s-tab> Itab(0)
-        " smap <expr> <tab> Itab(0)
+        imap <expr> <tab> Complete(1)
+        imap <expr> <s-tab> Complete(-1)
+        smap <expr> <tab> Complete(1)
 
         "}}}
     "Visual_mode {{{
@@ -257,7 +257,6 @@
         " what to do at startup, and exit
         if a:event == 'enter'
             " setup lsp
-            call LSP()
             if argc() == 0
                 call ResumeSession('')
                 call TabsAllBuffers()
@@ -356,6 +355,71 @@
     endfunction
 
     " }}}
+    function! LSP() abort "{{{
+        " lsp config
+        lua << EOF
+            local nvim_lsp = require('nvim_lsp')
+            local setmap = vim.api.nvim_buf_set_keymap
+
+            local on_attach = function(_, bufnr)
+                vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+                -- Mappings
+
+                local opts = {noremap=true, silent=true}
+                setmap(bufnr, 'n', '<c-]>',  '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+                setmap(bufnr, 'n',  'gd',    '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+                setmap(bufnr, 'n',  'K',     '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+                setmap(bufnr, 'n',  'gD',    '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+                setmap(bufnr, 'n',  '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+                setmap(bufnr, 'n',  '1gD',   '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+                setmap(bufnr, 'n',  'gr',    '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+            end
+
+            local servers = {'pyls', 'texlab', 'texlab'}
+            for _, lsp in ipairs(servers) do
+                nvim_lsp[lsp].setup{on_attach=on_attach,}
+            end
+EOF
+    endfunction
+
+    " }}}
+    function! Complete(direction) "{{{
+        " direction: 1-forward, 2-backward, 0-show
+        " when pressing tab in insert mode...
+        if pumvisible()
+            if a:direction
+                if a:direction == 1 "without shift, forward
+                    return "\<c-n>"
+                endif
+                " with shift, back
+                return "\<c-p>"
+            endif
+        endif
+        let chars = 2  " chars before triggering
+        let pattern = '\(\w\|\d\)\{' . chars . '}'
+        let col = col('.') - 1
+        let line = getline('.')
+        let last_chars = line[col-chars:col-1]
+        if empty(last_chars) || !a:direction && last_chars !~# pattern
+            " not at a completeable place
+            return "\<tab>"
+        endif
+        " prevent keyword completion from making nvim unresponsive
+        " check th[es]e| chars for previous attempts
+        let before_match = line[col-chars-1:col-2]
+        if !a:direction && len(before_match) && before_match =~# pattern
+            return ''
+        endif
+        call feedkeys("\<c-n>")  " keyword completion
+        if empty(&omnifunc)
+            return ''
+        endif
+        execute 'call '.&omnifunc.'(col)'
+        return ''
+    endfunction
+
+    " }}}
     function! ContextSyntax(host, guest, start, end) "{{{
         " Syntax highlighting based on the context range (modified from
         " brotchie/python-sty)
@@ -371,29 +435,6 @@
         execute 'syntax include @Guest syntax/'.a:guest.'.vim'
         execute 'syntax region GuestCode matchgroup=Snip start="'.a:start.'" end="'.a:end.'" containedin=@Host contains=@Guest'
         hi link Snip SpecialComment
-    endfunction
-
-    " }}}
-    function! Itab(direction) abort "{{{
-        " when pressing tab in insert mode...
-        if pumvisible()
-            if a:direction == 1 "without shift
-                return "\<c-n>"
-            else
-                return "\<c-p>"
-            endif
-        else
-            let col = col('.') - 1
-            let is_not_at_end = !col || getline('.')[col - 1]  =~# '\s'
-            if is_not_at_end
-                return "\<tab>"
-            else
-                " completion
-                call feedkeys("\<c-n>")
-                call feedkeys("\<C-x>\<C-o>", "n")
-                return ''
-            endif
-        endif
     endfunction
 
     " }}}
@@ -543,23 +584,6 @@ EOF
     endfunction
 
     " }}}
-    function! LSPmaps() abort "{{{
-        if index(['python', 'tex'], &filetype) == -1
-            return
-        endif
-        " set completions
-        setlocal omnifunc=v:lua.vim.lsp.omnifunc
-        " define mappings
-        nnoremap <buffer> <silent> <c-]> <cmd>lua vim.lsp.buf.declaration()<CR>
-        nnoremap <buffer> <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
-        nnoremap <buffer> <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
-        nnoremap <buffer> <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
-        nnoremap <buffer> <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
-        nnoremap <buffer> <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-        nnoremap <buffer> <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
-    endfunction
-
-    " }}}
 
     "}}}
 " SESSIONS {{{
@@ -579,38 +603,21 @@ EOF
             call minpac#add('k-takata/minpac', {'type': 'opt'})
             call minpac#add('tpope/vim-commentary')
             call minpac#add('tpope/vim-surround')
-            call minpac#add('lifepillar/vim-mucomplete')
             call minpac#add('neovim/nvim-lsp')
             call minpac#add('junegunn/fzf')
             call minpac#add('jiangmiao/auto-pairs')
             call minpac#add('mhinz/vim-signify')
             call minpac#add('ryanoasis/vim-devicons')
             call minpac#add('mbbill/undotree')
-            call minpac#add('mtth/scratch.vim')
             call minpac#add('liuchengxu/vista.vim')
             call minpac#add('michaeljsmith/vim-indent-object')
             call minpac#add('K1DV5/vim-code-dark')
             call minpac#add('ferrine/md-img-paste.vim')
-            call minpac#add('mattn/emmet-vim', {'for': 'html'})
+            call minpac#add('mattn/emmet-vim')
             call minpac#add('lambdalisue/gina.vim')
-            call minpac#add('aserebryakov/vim-todo-lists')
             call minpac#add('justinmk/vim-sneak')
             call minpac#add('sheerun/vim-polyglot')
-        endfunction
-
-        " }}}
-    "mucomplete {{{
-        " let g:mucomplete#enable_auto_at_startup = 1
-
-        " }}}
-    "lsp {{{
-        function! LSP()
-            " for texlab
-            lua require 'nvim_lsp'.texlab.setup{}
-            " for python
-            lua require 'nvim_lsp'.pyls.setup{}
-            " for tsserver
-            lua require 'nvim_lsp'.tsserver.setup{}
+            call minpac#add('vimwiki/vimwiki')
         endfunction
 
         " }}}
@@ -699,13 +706,13 @@ EOF
     augroup init
         autocmd!
         "resume session, override some colors
-        autocmd VimEnter * nested call EntArgs('enter') | call Highlight()
+        autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSP()
         "save session
         autocmd VimLeavePre * call EntArgs('leave')
+        " completion
+        autocmd TextChangedI * call Complete(0)
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
-        " lsp completions
-        autocmd FileType * call LSPmaps()
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " gc: edit commit message, gp: push, <cr>: commit
