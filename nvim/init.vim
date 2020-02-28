@@ -26,17 +26,13 @@
         set termguicolors
         " set the time to update misc things
         set updatetime=100
-        " disable swapfiles
+        " disable swapfiles, allow editing outside nvim
         set noswapfile
-        " add the ginit path as environment variable
-        let $MYGVIMRC = stdpath('config').'/ginit.vim'
         " keep windows the same size when adding/removing
         set noequalalways
-        " hide the ~'s at the end of files
+        " hide the ~'s at the end of files and other chars
         set fillchars=eob:\ ,diff:\ ,fold:\ ,stl:\  "make it disappear
-        " keep some lines visible at top/bottom when scrolling
-        " set scrolloff=3
-        " read only the first and last lines
+        " read options only from the first and last lines
         set modelines=1
         " print info on cmdline
         set noshowmode
@@ -44,6 +40,8 @@
         set splitright
         " only show menu when completing
         set completeopt=menu,noinsert,noselect,menuone
+        " dont be chatty on completions
+        set shortmess+=c
         " show diff with vertical split
         set diffopt+=vertical
         " always have a space for signs
@@ -56,12 +54,12 @@
         set foldtext=MyFold()
         " allow expressions in modelines
         set modelineexpr
-        " allow mouse interaction
-        set mouse=n
         " disable the tabline
         set showtabline=0
         " to show line numbers on <c-g>, disable on statusline
         set noruler
+        " store buffers and cd accross sessions
+        set ssop=buffers,curdir
 
         "}}}
     "Performance {{{
@@ -114,7 +112,7 @@
         " switch windows using `
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
         " fuzzy find files, count means that much up dir
-        noremap - <cmd>call fzf#run({"window": {"width": 0.5, "height": 0.4}, "dir": repeat("../", v:count), "sink": "e"})<cr>
+        noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -122,8 +120,8 @@
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
         " go forward (back) with backspace
-        noremap <c-h> <c-i>
-        noremap <bs> <c-o>
+        noremap <c-h> <c-o>
+        noremap <bs> <c-i>
         " unbound to line
         nnoremap <silent> f <cmd>call sneak#wrap('', 1, 0, 1, 1)<cr>
         nnoremap <silent> F <cmd>call sneak#wrap('', 1, 1, 1, 1)<cr>
@@ -178,10 +176,6 @@
         vnoremap KJ <esc>
         " search for selected text
         vnoremap // y/<c-r>"<cr>
-        " change all instances of selected text
-        vnoremap /c <cmd>call Subs('all')<cr>
-        " change something in current selection (sep by double space)
-        vnoremap /w <cmd>call Subs('within')<cr>
 
         "}}}
     "With_leader_key {{{
@@ -207,17 +201,6 @@
         noremap <leader>u <cmd>UndotreeToggle<cr>
         " enter window commands
         noremap <leader>w <c-w>
-        " change current line to latex
-        noremap <leader>xi <cmd>call Latexify(0)<cr>
-        noremap <leader>xd <cmd>call Latexify(1)<cr>
-        " automate itemize and enumerate
-        noremap <leader>xl <cmd>call ItemizeEnum()<cr>
-        " paste image to latex properly
-        noremap <leader>ip <cmd>call InsertClipFigTex()<cr>
-        " remove unused pasted images in latex
-        noremap <leader>ir <cmd>call PurgeUnusedImagesTex()<cr>
-        " using leader [shift] tab for switching windows
-        noremap <leader><tab> <cmd>call SwitchWin()<cr>
         " use system clipboard
         noremap <leader>c "+
         " toggle file and tag (definition) trees
@@ -227,42 +210,30 @@
 
     "}}}
 " FUNCTIONS {{{
-    function! ResumeSession(file) "{{{
-        " to resume a session
-        if a:file == ""
-            let l:session_file = '~/AppData/Local/nvim/Session'
-        else
-            let l:session_file = a:file
+    function! Session(file, save) "{{{
+        let session_file = fnameescape(empty(a:file) ? stdpath('config') . '/Session' : a:file) . '.sess'
+        if a:save " save session
+            execute 'mksession!' session_file
+            return
         endif
-        try
-            silent execute 'source' fnameescape(l:session_file.'.sess')
-        catch
+        " restore
+        if filereadable(session_file)
+            silent execute 'source' session_file
+        else
             echo 'No Session File'
-        endtry
-    endfunction
-
-    " }}}
-    function! SaveSession(file) "{{{
-        " to save a session
-        if a:file == ""
-            let l:session_file = '~/AppData/Local/nvim/Session'
-        else
-            let l:session_file = a:file
         endif
-        execute 'mksession!' fnameescape(l:session_file.'.sess')
     endfunction
 
     " }}}
     function! EntArgs(event) "{{{
         " what to do at startup, and exit
         if a:event == 'enter'
-            " setup lsp
             if argc() == 0
-                call ResumeSession('')
+                call Session('', 0)
                 call TabsAllBuffers()
             else
                 execute 'cd' expand('%:p:h')
-                if bufname('%') == ''
+                if empty(bufname())
                     bdelete
                 endif
             endif
@@ -270,9 +241,7 @@
             if argc() == 0
                 " delete terminal buffers
                 bufdo if &buftype == 'terminal' | bwipeout! | endif
-                call SaveSession('')
-            else
-                argd *
+                call Session('', 1)
             endif
         endif
     endfunction
@@ -296,37 +265,6 @@
             norm i
         endif
         execute 'cd' l:cwd
-    endfunction
-
-    " }}}
-    function! SwitchWin() abort "{{{
-        " switch windows, works with autocmd WinLeave to save the win id
-        " let temp_alt_win = win_getid()
-        if !(exists('g:init_alt_win') && win_getid() != g:init_alt_win && win_gotoid(g:init_alt_win))
-            execute "norm! \<c-w>w"
-        endif
-        " let g:init_alt_win = temp_alt_win
-    endfunction
-
-    " }}}
-    function! Subs(where) abort "{{{
-        " substitute in visual selection
-        if a:where == 'all'
-            silent norm y
-            let l:oldt = @"
-            let l:newt = input('>', l:oldt)
-            if l:newt == '' || l:newt == l:oldt
-                return
-            endif
-            execute '%s#'.l:oldt.'#'.l:newt.'#g'
-            norm ''
-        else
-            let l:subs = split(input('>'), '  ')
-            if len(l:subs) < 2
-                return
-            endif
-            execute "'<,'>s/".l:subs[0]."/".l:subs[1]."/g"
-        endif
     endfunction
 
     " }}}
@@ -376,7 +314,7 @@
                 setmap(bufnr, 'n',  'gr',    '<cmd>lua vim.lsp.buf.references()<CR>', opts)
             end
 
-            local servers = {'pyls', 'texlab', 'texlab'}
+            local servers = {'pyls', 'texlab', 'tsserver'}
             for _, lsp in ipairs(servers) do
                 nvim_lsp[lsp].setup{on_attach=on_attach,}
             end
@@ -401,7 +339,7 @@ EOF
         let col = col('.') - 1
         let line = getline('.')
         let last_chars = line[col-chars:col-1]
-        if empty(last_chars) || !a:direction && last_chars !~# pattern
+        if !a:direction && last_chars !~# pattern || !col || last_chars[-1] =~ '\s'
             " not at a completeable place
             return "\<tab>"
         endif
@@ -412,10 +350,9 @@ EOF
             return ''
         endif
         call feedkeys("\<c-n>")  " keyword completion
-        if empty(&omnifunc)
-            return ''
+        if &omnifunc == 'v:lua.vim.lsp.omnifunc'  " lsp
+            execute 'call' &omnifunc . '(0, "")'
         endif
-        execute 'call '.&omnifunc.'(col)'
         return ''
     endfunction
 
@@ -586,14 +523,6 @@ EOF
     " }}}
 
     "}}}
-" SESSIONS {{{
-    " store globals as well for wintabs active positions
-    set ssop=buffers,curdir
-    "restore and resume commands with optional session names
-    command! -nargs=? Resume call ResumeSession("<args>")
-    command! -nargs=? Pause call SaveSession("<args>")
-
-    "}}}
 " PLUGINS {{{
     "Management {{{
         " managing func, lazy loads minpac first
@@ -626,6 +555,13 @@ EOF
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
+
+        " }}}
+    "fzf {{{
+        " system open
+        let g:fzf_action = {'ctrl-x': 'silent! !start'}
+        " open in floating win
+        let g:fzf_layout = {"window": {"width": 0.5, "height": 0.4}}
 
         " }}}
     "tabs {{{
@@ -713,6 +649,12 @@ EOF
         autocmd TextChangedI * call Complete(0)
         " highlight where lines should end and map for inline equations for latex
         autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
+                                                            " automate itemize and enumerate
+                                                          \| noremap <buffer> <leader>xl <cmd>call ItemizeEnum()<cr>
+                                                            " paste image to latex properly
+                                                          \| noremap <buffer> <leader>ip <cmd>call InsertClipFigTex()<cr>
+                                                            " remove unused pasted images in latex
+                                                          \| noremap <buffer> <leader>ir <cmd>call PurgeUnusedImagesTex()<cr>
         " use emmet for html
         autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
         " gc: edit commit message, gp: push, <cr>: commit
@@ -720,12 +662,10 @@ EOF
         autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
         " use o to open definition
         autocmd FileType vista nmap <buffer> o <enter> | nmap <buffer> <2-LeftMouse> <enter>
-        " system open
-        autocmd FileType fzf imap <c-x> <cmd>echo "hi"<cr>
         " close tags window when help opens
         autocmd BufWinEnter *.txt if &buftype == 'help'
             \| wincmd L
-            \| execute 'vertical resize' &columns/2
+            \| vertical resize 82
             \| silent! execute 'Vista!'
             \| endif
     augroup END
