@@ -172,11 +172,28 @@
     function! LSP() abort "{{{
         " lsp config
         lua << EOF
-            local nvim_lsp = require('nvim_lsp')
+            -- disable disgnostics in insert mode:
+
+            local default_callback = vim.lsp.callbacks["textDocument/publishDiagnostics"]
+            local err, method, params, client_id
+
+            vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(...)
+                err, method, params, client_id = ...
+                if vim.api.nvim_get_mode().mode ~= "i" and vim.api.nvim_get_mode().mode ~= "ic" then
+                    publish_diagnostics()
+                end
+            end
+
+            function publish_diagnostics()
+                default_callback(err, method, params, client_id)
+            end
+
+            local nvim_lsp = require("nvim_lsp")
             local setmap = vim.api.nvim_buf_set_keymap
 
             local on_attach = function(_, bufnr)
-                vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+                vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')  -- completion
+                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- diagnostics
 
                 -- Mappings
 
@@ -215,7 +232,7 @@ EOF
         let col = col('.') - 1
         let line = getline('.')
         let last_chars = line[col-chars:col-1]
-        if !a:direction && last_chars !~# pattern || !col || last_chars[-1] =~ '\s'
+        if !a:direction && last_chars !~# pattern || !col || last_chars[chars-1] =~ '\s'
             " not at a completeable place
             return "\<tab>"
         endif
