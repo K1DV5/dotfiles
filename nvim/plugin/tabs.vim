@@ -20,7 +20,7 @@
 
 function! StatusLine(bufnr)
     " this is what is set in the autocmds
-    let tabs_section = '%<%#StatusLineNC#' . TabsGetBufsText(a:bufnr)  " tabs
+    let tabs_section = TabsGetBufsText(a:bufnr)  " tabs
     if a:bufnr == bufnr()
         let current = 1
         let hi_stat = '%#Tabs_Status#'
@@ -52,7 +52,7 @@ function! TabsGetBufsText(bufnr)
     " get the section of the tabs
     let win = bufwinid(a:bufnr)
     let bufs = getwinvar(win, 'tabs_buflist', [a:bufnr])
-    let text = ''
+    let text = '%<%#StatusLineNC#'
     let i_buf = 1
     let is_current_win = win_getid() == win
     let i_this = index(bufs, a:bufnr)
@@ -67,9 +67,9 @@ function! TabsGetBufsText(bufnr)
             else
                 let hl_icon = 'TabsFt_' . ft " highlighting for the icons
                 let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
-                let icon = hl_icon . ' %{IconsExt()} '
+                let icon = hl_icon . ' %{IconGet()} '
             endif
-            let text .= icon . '%#TabLineSel#' . name . '%m %*'
+            let text .= icon . '%#TabLineSel#' . name . '%m %#StatusLineNC#'
         else
             let num = is_current_win ? (buf == alt ? '# ' : i_buf . ':') : ''
             let text .= ' ' . num . name . ' '
