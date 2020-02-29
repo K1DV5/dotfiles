@@ -110,36 +110,36 @@ let s:file_node_extensions = {
     \ 'xcplayground' : ''
     \}
 
-" let s:file_node_exact_matches = {
-"     \ 'exact-match-case-sensitive-1.txt' : '1',
-"     \ 'exact-match-case-sensitive-2'     : '2',
-"     \ 'gruntfile.coffee'                 : '',
-"     \ 'gruntfile.js'                     : '',
-"     \ 'gruntfile.ls'                     : '',
-"     \ 'gulpfile.coffee'                  : '',
-"     \ 'gulpfile.js'                      : '',
-"     \ 'gulpfile.ls'                      : '',
-"     \ 'mix.lock'                         : '',
-"     \ 'dropbox'                          : '',
-"     \ '.ds_store'                        : '',
-"     \ '.gitconfig'                       : '',
-"     \ '.gitignore'                       : '',
-"     \ '.gitlab-ci.yml'                   : '',
-"     \ '.bashrc'                          : '',
-"     \ '.zshrc'                           : '',
-"     \ '.vimrc'                           : '',
-"     \ '.gvimrc'                          : '',
-"     \ '_vimrc'                           : '',
-"     \ '_gvimrc'                          : '',
-"     \ '.bashprofile'                     : '',
-"     \ 'favicon.ico'                      : '',
-"     \ 'license'                          : '',
-"     \ 'node_modules'                     : '',
-"     \ 'react.jsx'                        : '',
-"     \ 'procfile'                         : '',
-"     \ 'dockerfile'                       : '',
-"     \ 'docker-compose.yml'               : '',
-"     \}
+let s:file_node_exact_matches = {
+    \ 'exact-match-case-sensitive-1.txt' : '1',
+    \ 'exact-match-case-sensitive-2'     : '2',
+    \ 'gruntfile.coffee'                 : '',
+    \ 'gruntfile.js'                     : '',
+    \ 'gruntfile.ls'                     : '',
+    \ 'gulpfile.coffee'                  : '',
+    \ 'gulpfile.js'                      : '',
+    \ 'gulpfile.ls'                      : '',
+    \ 'mix.lock'                         : '',
+    \ 'dropbox'                          : '',
+    \ '.ds_store'                        : '',
+    \ '.gitconfig'                       : '',
+    \ '.gitignore'                       : '',
+    \ '.gitlab-ci.yml'                   : '',
+    \ '.bashrc'                          : '',
+    \ '.zshrc'                           : '',
+    \ '.vimrc'                           : '',
+    \ '.gvimrc'                          : '',
+    \ '_vimrc'                           : '',
+    \ '_gvimrc'                          : '',
+    \ '.bashprofile'                     : '',
+    \ 'favicon.ico'                      : '',
+    \ 'license'                          : '',
+    \ 'node_modules'                     : '',
+    \ 'react.jsx'                        : '',
+    \ 'procfile'                         : '',
+    \ 'dockerfile'                       : '',
+    \ 'docker-compose.yml'               : '',
+    \}
 
 " let s:file_node_pattern_matches = {
 "     \ '.*jquery.*\.js$'       : '',
@@ -153,8 +153,12 @@ let s:file_node_extensions = {
 "     \ 'Vagrantfile$'          : ''
 "     \}
 
-function! IconsExt(...)
-    let ext = a:0 ? a:1 : expand('%:e')
-    return get(s:file_node_extensions, ext, '')
+function! IconGet(...)
+    let fname = fnamemodify(a:0 ? a:1 : expand('%'), ':t')
+    let exact = get(s:file_node_exact_matches, fname, 0)
+    if type(exact) == v:t_string
+        return exact
+    endif
+    return get(s:file_node_extensions, fnamemodify(fname, ':e'), '')
 endfunction
 
