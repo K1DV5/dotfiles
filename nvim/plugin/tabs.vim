@@ -67,7 +67,7 @@ function! TabsGetBufsText(bufnr)
             else
                 let hl_icon = 'TabsFt_' . ft " highlighting for the icons
                 let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
-                let icon = hl_icon . ' %{IconsFT(&filetype)} '
+                let icon = hl_icon . ' %{IconsExt()} '
             endif
             let text .= icon . '%#TabLineSel#' . name . '%m %*'
         else

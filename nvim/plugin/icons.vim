@@ -153,7 +153,8 @@ let s:file_node_extensions = {
 "     \ 'Vagrantfile$'          : ''
 "     \}
 
-function! IconsFT(ft)
-    return get(s:file_node_extensions, a:ft, '')
+function! IconsExt(...)
+    let ext = a:0 ? a:1 : expand('%:e')
+    return get(s:file_node_extensions, ext, '')
 endfunction
 
