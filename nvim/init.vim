@@ -39,7 +39,7 @@
         " split to the right
         set splitright
         " only show menu when completing
-        set completeopt=menu,noinsert,noselect,menuone
+        set completeopt=menuone,noinsert,noselect
         " dont be chatty on completions
         set shortmess+=c
         " show diff with vertical split
@@ -82,130 +82,6 @@
         let g:loaded_zipPlugin = 1
         let g:loaded_2html_plugin = 1
         let g:loaded_tarPlugin = 1
-        "}}}
-
-    "}}}
-" MAPPINGS {{{
-    "Normal_mode {{{
-        " do what needs to be done
-        noremap <c-p> <cmd>call Please_Do()<cr>
-        " move lines up down
-        noremap <a-k> <cmd>move-2<cr>
-        noremap <a-j> <cmd>move+1<cr>
-        "scroll by page
-        noremap <space> <c-f>
-        noremap <c-space> <c-b>
-        "select all ctrl a
-        noremap <c-a> ggVG
-        " copy till the end of line
-        noremap Y y$
-        "also for wrapped lines
-        noremap j gj
-        noremap k gk
-        noremap ^ g^
-        noremap 0 g0
-        noremap $ g$
-        noremap <Up> g<Up>
-        noremap <Down> g<Down>
-        "using tab for switching buffers
-        noremap <tab> <cmd>call TabsGo(v:count)<cr>
-        " switch windows using `
-        noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
-        " fuzzy find files, count means that much up dir
-        noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
-        " to return to normal mode in terminal
-        tnoremap kj <C-\><C-n>
-        " do the same thing as normal mode in terminal for do
-        tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
-        " lookup help for something under cursor with enter
-        nnoremap <cr> <cmd>call CRFunc()<cr>
-        " go forward (back) with backspace
-        noremap <c-h> <c-o>
-        noremap <bs> <c-i>
-        " unbound to line
-        nnoremap <silent> f <cmd>call sneak#wrap('', 1, 0, 1, 1)<cr>
-        nnoremap <silent> F <cmd>call sneak#wrap('', 1, 1, 1, 1)<cr>
-        xnoremap <silent> f <cmd>call sneak#wrap(visualmode(), 1, 0, 1, 1)<cr>
-        xnoremap <silent> F <cmd>call sneak#wrap(visualmode(), 1, 1, 1, 1)<cr>
-        onoremap <silent> f <cmd>call sneak#wrap(v:operator,   1, 0, 1, 1)<cr>
-        onoremap <silent> F <cmd>call sneak#wrap(v:operator,   1, 1, 1, 1)<cr>
-        " disable the arrow keys
-        noremap <up> <nop>
-        noremap <down> <nop>
-        noremap <left> <nop>
-        noremap <right> <nop>
-
-        "}}}
-    "Command_mode {{{
-        " paste on command line
-        cnoremap <c-v> <c-r>*
-        " go normal
-        cnoremap kj <esc>
-        " delete a character
-        cnoremap <c-h> <c-bs>
-
-        "}}}
-    "Insert_mode {{{
-        " escape quick
-        imap kj <esc>
-        " move one line up and down
-        inoremap <up> <cmd>norm gk<cr>
-        inoremap <down> <cmd>norm gj<cr>
-        " cut
-        vnoremap <c-x> <cmd>norm d<cr>
-        " copy
-        vnoremap <c-c> <cmd>norm y<cr>
-        " paste
-        inoremap <c-v> <cmd>norm gP<cr>
-        " undo
-        inoremap <c-z> <cmd>undo<cr>
-        " redo
-        inoremap <c-y> <cmd>redo<cr>
-        " delete word
-        inoremap <c-bs> <cmd>norm bdw<cr>
-        inoremap <c-del> <cmd>norm dw<cr>
-        " " go through suggestions or jump to snippet placeholders
-        imap <expr> <tab> Complete(1)
-        imap <expr> <s-tab> Complete(-1)
-        smap <expr> <tab> Complete(1)
-
-        "}}}
-    "Visual_mode {{{
-        " escape quick
-        vnoremap kj <esc>
-        vnoremap KJ <esc>
-        " search for selected text
-        vnoremap // y/<c-r>"<cr>
-
-        "}}}
-    "With_leader_key {{{
-        let mapleader = ','
-        " open/close terminal pane
-        noremap <leader>t <cmd>call Term(0.3)<cr>
-        tnoremap <leader>t <cmd>call Term(0.3)<cr>
-        " open big terminal window
-        noremap <leader>T <cmd>call Term(1)<cr>
-        tnoremap <leader>T <cmd>call Term(1)<cr>
-        " show git status
-        noremap <leader>g <cmd>call GitStat()<cr>
-        " closing current buffer
-        noremap <leader>bb <cmd>call TabsClose()<cr>
-        tnoremap <leader>bb <cmd>call TabsClose()<cr>
-        " save file if changed and source if it is a vim file
-        noremap <expr> <leader>bu &filetype == 'vim' ? '<cmd>update! \| source %<cr>' : '<cmd>update!<cr>'
-        " toggle spell check
-        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
-        " quit
-        noremap <leader><esc> <cmd>xall!<cr>
-        " undotree
-        noremap <leader>u <cmd>UndotreeToggle<cr>
-        " enter window commands
-        noremap <leader>w <c-w>
-        " use system clipboard
-        noremap <leader>c "+
-        " toggle file and tag (definition) trees
-        noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
-        noremap <leader>D <cmd>Vista!!<cr>
         "}}}
 
     "}}}
@@ -357,24 +233,6 @@ EOF
     endfunction
 
     " }}}
-    function! ContextSyntax(host, guest, start, end) "{{{
-        " Syntax highlighting based on the context range (modified from
-        " brotchie/python-sty)
-        execute 'setfiletype' a:host
-        let b:current_syntax = ''
-        unlet b:current_syntax
-        execute 'runtime! syntax/'.a:host.'.vim'
-        let b:current_syntax = ''
-        unlet b:current_syntax
-        execute 'syntax include @Host syntax/'.a:host.'.vim'
-        let b:current_syntax = ''
-        unlet b:current_syntax
-        execute 'syntax include @Guest syntax/'.a:guest.'.vim'
-        execute 'syntax region GuestCode matchgroup=Snip start="'.a:start.'" end="'.a:end.'" containedin=@Host contains=@Guest'
-        hi link Snip SpecialComment
-    endfunction
-
-    " }}}
     function! HandleTree(command, file_type) abort "{{{
         " tree jumping and/or opening
         let l:tree_wins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&filetype") == "'.a:file_type.'"')
@@ -393,122 +251,11 @@ EOF
     endfunction
 
     " }}}
-    function! Latexify(display) abort "{{{
-        " convert to latex, requires pip install docal
-python << EOF
-import vim
-from docal import eqn
-from docal.handlers.latex import syntax
-synt = syntax()
-cline = vim.eval("getline('.')")
-disp = False if int(vim.eval('a:display')) == 0 else True
-txt, eq_asc = cline.rsplit('  ', 1) if '  ' in cline else ['', cline]
-eq = eqn(eq_asc, disp=disp, syntax=synt).split('\n')
-# "because they will be appended at the same line
-eq.reverse()
-vim.command(f"call setline('.', '{txt} {eq[-1]}')")
-for e in eq[:-1]:
-    vim.command(f"call append('.', '{e}')")
-EOF
-    endfunction
-
-    " }}}
     function! Highlight() abort "{{{
         " override some highlights
         hi! link Folded Boolean
         hi! DiffChange guibg=#18384B
         hi! DiffDelete guifg=Grey
-    endfunction
-
-    " }}}
-    function! ItemizeEnum() abort "{{{
-        " automate itemize and enumerate in latex
-        norm "xdipk
-        let items = reverse(split(expand(@x), "\n"))
-        let type = trim(items[-1]) == '.' ? 'enumerate' : 'itemize'
-        if type == 'enumerate'
-            let items = items[:-2]
-        endif
-        call append('.', '\end{'.type.'}')
-        for i in items
-            call append('.', '    \item '.i)
-        endfor
-        call append('.', '\setlength\itemsep{0pt}')
-        call append('.', '\begin{'.type.'}')
-        norm }
-    endfunction
-
-    " }}}
-    function! InsertClipFigTex() abort "{{{
-        " automate the saving to file and writing figure environments for
-        " clipboard images to latex
-        if &filetype == 'tex'
-            let relpath = 'res'
-            let imgpath = expand('%:h').'/'.relpath
-            let ext = '.png'
-            let fig_line = line('.')
-            let line_split = split(getline(fig_line), '|', 1)
-            let caption = trim(line_split[0])
-            let label = len(line_split) > 1 ? trim(line_split[1]) : ''
-            if exists('b:init_last_fig_pasted') && fig_line == b:init_last_fig_pasted[1] && filereadable(imgpath.'/'.b:init_last_fig_pasted[0].'.png')
-                let imgname = b:init_last_fig_pasted[0]
-                let img_write_success = 1
-            else
-                let imgname = strftime("%Y%m%d-%H%M%S")
-                " this function is from md-img-paste.vim
-                let img_write_success = !SaveFileTMP(imgpath, imgname)
-                let b:init_last_fig_pasted = [imgname, fig_line]
-            endif
-            if img_write_success
-                let include_ln = '\includegraphics[width=0.7\textwidth]{'.relpath.'/'.imgname.ext.'}'
-                if len(caption) || len(label)
-                    call setline('.', '\begin{figure} [ht]')
-                    call append('.', '\end{figure}')
-                    if len(label)
-                        call append('.', '\label{'.label.'}')
-                        let imgname = label.ext
-                    endif
-                    if len(caption)
-                        call append('.', '\caption{'.caption.'}')
-                    endif
-                    call append('.', include_ln)
-                else
-                    call setline('.', include_ln)
-                endif
-            else
-                echoerr 'Not an image or FS error'
-            endif
-        elseif &filetype == 'markdown'
-            call mdip#MarkdownClipboardImage()
-        else
-            echoerr 'Not a tex file'
-        endif
-    endfunction
-
-    " }}}
-    function! PurgeUnusedImagesTex() abort "{{{
-        " purge/delete unused images in the tex
-        if &filetype == 'tex'
-            let relpath = 'res'
-            let imgpath = expand('%:h').'/'.relpath
-            let imgs = split(glob(imgpath.'/*.png'), '\n')
-            let deathrow = []
-            for path in imgs
-                let pattern = '\\includegraphics[^\n]*'.path[match(path, '\d\+-\d\+.png'):]
-                if !search(pattern)
-                    let deathrow += [path]
-                endif
-            endfor
-            if len(deathrow)
-                let prompt = "The following will be deleted.\n".join(deathrow, "\n")."\n\n(y/n): "
-                let okay = input(prompt)
-                if okay == 'y'
-                    for path in deathrow
-                        silent execute '!del' path
-                    endfor
-                endif
-            endif
-        endif
     endfunction
 
     " }}}
@@ -521,6 +268,118 @@ EOF
     endfunction
 
     " }}}
+
+    "}}}
+" MAPPINGS {{{
+    "Normal_mode {{{
+        " do what needs to be done
+        noremap <c-p> <cmd>call Please_Do()<cr>
+        " move lines up down
+        noremap <a-k> <cmd>move-2<cr>
+        noremap <a-j> <cmd>move+1<cr>
+        "scroll by page
+        noremap <space> <c-f>
+        noremap <c-space> <c-b>
+        "select all ctrl a
+        noremap <c-a> ggVG
+        " copy till the end of line
+        noremap Y y$
+        "also for wrapped lines
+        noremap j gj
+        noremap k gk
+        noremap ^ g^
+        noremap 0 g0
+        noremap $ g$
+        noremap <Up> g<Up>
+        noremap <Down> g<Down>
+        "using tab for switching buffers
+        noremap <tab> <cmd>call TabsGo(v:count)<cr>
+        " switch windows using `
+        noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
+        " fuzzy find files, count means that much up dir
+        noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
+        " to return to normal mode in terminal
+        tnoremap kj <C-\><C-n>
+        " do the same thing as normal mode in terminal for do
+        tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
+        " lookup help for something under cursor with enter
+        nnoremap <cr> <cmd>call CRFunc()<cr>
+        " go forward (back) with backspace
+        noremap <c-h> <c-o>
+        noremap <bs> <c-i>
+
+        "}}}
+    "Command_mode {{{
+        " paste on command line
+        cnoremap <c-v> <c-r>*
+        " go normal
+        cnoremap kj <esc>
+        " delete a character
+        cnoremap <c-h> <c-bs>
+
+        "}}}
+    "Insert_mode {{{
+        " escape quick
+        imap kj <esc>
+        " move one line up and down
+        inoremap <up> <cmd>norm gk<cr>
+        inoremap <down> <cmd>norm gj<cr>
+        " cut
+        vnoremap <c-x> <cmd>norm d<cr>
+        " copy
+        vnoremap <c-c> <cmd>norm y<cr>
+        " paste
+        inoremap <c-v> <cmd>norm gP<cr>
+        " undo
+        inoremap <c-z> <cmd>undo<cr>
+        " redo
+        inoremap <c-y> <cmd>redo<cr>
+        " delete word
+        inoremap <c-bs> <cmd>norm bdw<cr>
+        inoremap <c-del> <cmd>norm dw<cr>
+        " " go through suggestions or jump to snippet placeholders
+        imap <expr> <tab> Complete(1)
+        imap <expr> <s-tab> Complete(-1)
+        smap <expr> <tab> Complete(1)
+
+        "}}}
+    "Visual_mode {{{
+        " escape quick
+        vnoremap kj <esc>
+        vnoremap KJ <esc>
+        " search for selected text
+        vnoremap // y/<c-r>"<cr>
+
+        "}}}
+    "With_leader_key {{{
+        let mapleader = ','
+        " open/close terminal pane
+        noremap <leader>t <cmd>call Term(0.3)<cr>
+        tnoremap <leader>t <cmd>call Term(0.3)<cr>
+        " open big terminal window
+        noremap <leader>T <cmd>call Term(1)<cr>
+        tnoremap <leader>T <cmd>call Term(1)<cr>
+        " show git status
+        noremap <leader>g <cmd>call GitStat()<cr>
+        " closing current buffer
+        noremap <leader>bb <cmd>call TabsClose()<cr>
+        tnoremap <leader>bb <cmd>call TabsClose()<cr>
+        " save file if changed and source if it is a vim file
+        noremap <expr> <leader>bu &filetype == 'vim' ? '<cmd>update! \| source %<cr>' : '<cmd>update!<cr>'
+        " toggle spell check
+        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
+        " quit
+        noremap <leader><esc> <cmd>xall!<cr>
+        " undotree
+        noremap <leader>u <cmd>UndotreeToggle<cr>
+        " enter window commands
+        noremap <leader>w <c-w>
+        " use system clipboard
+        noremap <leader>c "+
+        " toggle file and tag (definition) trees
+        noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
+        noremap <leader>D <cmd>Vista!!<cr>
+        "}}}
 
     "}}}
 " PLUGINS {{{
@@ -559,7 +418,7 @@ EOF
         " }}}
     "fzf {{{
         " system open
-        let g:fzf_action = {'ctrl-x': 'silent! !start'}
+        let g:fzf_action = {'ctrl-x': 'silent !start'}
         " open in floating win
         let g:fzf_layout = {"window": {"width": 0.5, "height": 0.4}}
 
@@ -637,39 +496,27 @@ EOF
         " }}}
 
     "}}}
-" AUTOCOMMANDS {{{
-    " define in an autogroup for re-sourcing
-    augroup init
-        autocmd!
-        "resume session, override some colors
-        autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSP()
-        "save session
-        autocmd VimLeavePre * call EntArgs('leave')
-        " completion
-        autocmd TextChangedI * call Complete(0)
-        " highlight where lines should end and map for inline equations for latex
-        autocmd FileType tex setlocal colorcolumn=80 spell | inoremap <buffer> <c-space> <esc><cmd>call Latexify(0)<cr>A
-                                                            " automate itemize and enumerate
-                                                          \| noremap <buffer> <leader>xl <cmd>call ItemizeEnum()<cr>
-                                                            " paste image to latex properly
-                                                          \| noremap <buffer> <leader>ip <cmd>call InsertClipFigTex()<cr>
-                                                            " remove unused pasted images in latex
-                                                          \| noremap <buffer> <leader>ir <cmd>call PurgeUnusedImagesTex()<cr>
-        " use emmet for html
-        autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
-        " gc: edit commit message, gp: push, <cr>: commit
-        autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
-        autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
-        " use o to open definition
-        autocmd FileType vista nmap <buffer> o <enter> | nmap <buffer> <2-LeftMouse> <enter>
-        " close tags window when help opens
-        autocmd BufWinEnter *.txt if &buftype == 'help'
-            \| wincmd L
-            \| vertical resize 82
-            \| silent! execute 'Vista!'
-            \| endif
-    augroup END
-
-    "}}}
+augroup init "{{{
+    autocmd!
+    "resume session, override some colors
+    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSP()
+    "save session
+    autocmd VimLeavePre * call EntArgs('leave')
+    " completion
+    autocmd TextChangedI * call Complete(0)
+    " highlight where lines should end and map for inline equations for latex
+    " use emmet for html
+    autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
+    " gc: edit commit message, gp: push, <cr>: commit
+    autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
+    autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
+    " close tags window when help opens
+    autocmd BufWinEnter *.txt if &buftype == 'help'
+        \| wincmd L
+        \| vertical resize 82
+        \| silent! execute 'Vista!'
+        \| endif
+augroup END
+"}}}
 
 " vim:foldmethod=marker:foldlevel=0:foldtext=MyFold()
