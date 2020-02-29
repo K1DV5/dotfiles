@@ -1,6 +1,6 @@
-" term-pane plugin
+" term pane plugin
 " Written by K1DV5
-" depends on :repo/nvim/tabs
+" depends on ./tabs.vim
 "
 " Constant(s):
 let s:default_shell = exists('term_default_shell')? g:term_default_shell : &shell
