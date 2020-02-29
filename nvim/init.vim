@@ -1,7 +1,7 @@
 " init script for neovim
 
-" BUILTINS {{{
-    "Miscellaneous {{{
+" builtins {{{
+    "miscellaneous {{{
         set title
         set titlestring=foo
         "make search case insensitive
@@ -62,7 +62,7 @@
         set ssop=buffers,curdir
 
         "}}}
-    "Performance {{{
+    "performance {{{
         " hide buffers when not shown in window
         set hidden
         " Don’t update screen during macro and script execution
@@ -85,7 +85,7 @@
         "}}}
 
     "}}}
-" FUNCTIONS {{{
+" functions {{{
     function! Session(file, save) "{{{
         let session_file = fnameescape(empty(a:file) ? stdpath('config') . '/Session' : a:file) . '.sess'
         if a:save " save session
@@ -270,7 +270,7 @@ EOF
     " }}}
 
     "}}}
-" MAPPINGS {{{
+" mappings {{{
     "Normal_mode {{{
         " do what needs to be done
         noremap <c-p> <cmd>call Please_Do()<cr>
@@ -382,7 +382,7 @@ EOF
         "}}}
 
     "}}}
-" PLUGINS {{{
+" plugins {{{
     "Management {{{
         " managing func, lazy loads minpac first
         function! Pack() abort
@@ -395,7 +395,6 @@ EOF
             call minpac#add('junegunn/fzf')
             call minpac#add('jiangmiao/auto-pairs')
             call minpac#add('mhinz/vim-signify')
-            call minpac#add('ryanoasis/vim-devicons')
             call minpac#add('mbbill/undotree')
             call minpac#add('liuchengxu/vista.vim')
             call minpac#add('michaeljsmith/vim-indent-object')
