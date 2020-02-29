@@ -1,3 +1,19 @@
+"
+" setlocal statusline is local to buffer, not window based!
+" winid based
+"     same buffer opened in another window may have a different stl
+"     opening and closing the window containing the buffer can change the stl
+"     NO!
+
+" winnr based
+"     opening and closing another window can change the winnr of the current one
+"         misaligned stl
+"     NO!
+
+" buffer based
+"     same file open in two windows will show both windows as active and same statusline as the new split
+"     YES
+
 " config vars:
 " g:tabs_statusline_add - additional things to add to statusline
 " g:tabs_custom_stl - list of filetypes to show in place of mode
@@ -51,7 +67,7 @@ function! TabsGetBufsText(bufnr)
             else
                 let hl_icon = 'TabsFt_' . ft " highlighting for the icons
                 let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
-                let icon = hl_icon . ' %{WebDevIconsGetFileTypeSymbol()} '
+                let icon = hl_icon . ' %{IconsFT(&filetype)} '
             endif
             let text .= icon . '%#TabLineSel#' . name . '%m %*'
         else
