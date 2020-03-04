@@ -179,7 +179,8 @@
 
             vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(...)
                 err, method, params, client_id = ...
-                if vim.api.nvim_get_mode().mode ~= "i" and vim.api.nvim_get_mode().mode ~= "ic" then
+                local mode = vim.api.nvim_get_mode().mode
+                if mode ~= "i" and mode ~= "ic" then
                     publish_diagnostics()
                 end
             end
@@ -193,7 +194,8 @@
 
             local on_attach = function(_, bufnr)
                 vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')  -- completion
-                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- diagnostics
+                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
+                vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
 
                 -- Mappings
 
@@ -273,6 +275,9 @@ EOF
         hi! link Folded Boolean
         hi! DiffChange guibg=#18384B
         hi! DiffDelete guifg=Grey
+        hi! default link Title Boolean
+        hi! default link VimwikiMarkers Boolean
+        hi! default link VimwikiLink markdownUrl
     endfunction
 
     " }}}
@@ -473,6 +478,13 @@ EOF
         let g:term_default_shell = 'powershell'
 
         " }}}
+    "vimwiki {{{
+        " disable tab in insert
+        let g:vimwiki_table_mappings = 0
+        " custom path
+        let g:vimwiki_list = [{'path': 'D:\Documents\Notes\', 'syntax': 'markdown', 'ext': '.md'}]
+
+        " }}}
     "signify {{{
         " work only with git
         let g:signify_vcs_list = ['git']
@@ -523,13 +535,15 @@ augroup init "{{{
     " highlight where lines should end and map for inline equations for latex
     " use emmet for html
     autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
+    " reset tab for vimwiki
+    autocmd FileType vimwiki nnoremap <buffer> <tab> <cmd>call TabsGo(v:count)<cr>
     " gc: edit commit message, gp: push, <cr>: commit
     autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
     autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
     " close tags window when help opens
     autocmd BufWinEnter *.txt if &buftype == 'help'
         \| wincmd L
-        \| vertical resize 82
+        \| vertical resize 83
         \| silent! execute 'Vista!'
         \| endif
 augroup END

@@ -101,7 +101,7 @@ function! Term(cmd, ...)
 	let l:tbuflist = s:Terminals()
     " same command terminal buffers
     let dir = a:0 > 0 ? a:1 : fnamemodify('.', ':p')
-    let buf_name = 'term://'.trim(dir, '\\/').'//'.cmd
+    let buf_name = 'term://'.substitute(dir, '[\/]\+$', '', '').'//'.cmd
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
         execute 'edit' buf_name
@@ -114,23 +114,29 @@ function! Term(cmd, ...)
     tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
     tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
 	" if the cmd has argumets, delete existing with the same cmd
-    for buf in l:tbuflist
-        let name = substitute(bufname(buf), '//\d\+:', '//', '')
-        if name == buf_name
-            execute 'bdelete!' buf
-        endif
-    endfor
+    if cmd =~ '\s'
+        for buf in l:tbuflist
+            let name = substitute(bufname(buf), '//\d\+:', '//', '')
+            if name == buf_name
+                execute 'bdelete!' buf
+            endif
+        endfor
+    endif
     call TabsReload()
 endfunction
 
 " use the current process in the terminal as the buffer name
 function! RenameTerm(timer)
+    try
+        let pid = jobpid(&channel)
+    catch  " the job ended
+        return
+    endtry
     let current_name = bufname()
     let cmd_part = substitute(current_name, 'term:\/\/.*\/\/\d\+:', '', '')
     if cmd_part =~ ' ' || &buftype != 'terminal' " dont rename one with a space or a normal file
         return
     endif
-    let pid = jobpid(&channel)
     let child = pid
     while child
         let ch = nvim_get_proc_children(child)
