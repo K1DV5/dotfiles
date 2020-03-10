@@ -60,6 +60,8 @@
         set noruler
         " store buffers and cd accross sessions
         set ssop=buffers,curdir
+        " use ripgrep
+        set grepprg=rg\ --vimgrep
 
         "}}}
     "performance {{{
@@ -129,18 +131,14 @@
         let s:ext_part = expand('%:e')
         silent update!
         let l:hidden = ['tex', 'texw', 'html', 'htm']
-        let l:cwd = getcwd()
-        cd %:h
         if index(l:hidden, s:ext_part) != -1
             execute 'setlocal makeprg=do'
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
-            call Term('do '.expand('%:t'))
-            " call Term('do '.expand('%:t'))
+            call Term('do '.expand('%:p'))
             norm i
         endif
-        execute 'cd' l:cwd
     endfunction
 
     " }}}
@@ -194,8 +192,8 @@
 
             local on_attach = function(_, bufnr)
                 vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')  -- completion
-                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
-                vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
+                -- vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
+                -- vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
 
                 -- Mappings
 
@@ -211,7 +209,7 @@
 
             local servers = {'pyls', 'texlab', 'tsserver'}
             for _, lsp in ipairs(servers) do
-                nvim_lsp[lsp].setup{on_attach=on_attach,}
+                nvim_lsp[lsp].setup{on_attach=on_attach}
             end
 EOF
     endfunction
@@ -319,7 +317,8 @@ EOF
         " switch windows using `
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
         " fuzzy find files, count means that much up dir
-        noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
+        " noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
+        noremap - <cmd>call fzf#run(fzf#wrap({'source': 'rg --files '.repeat('../', v:count)}))<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -413,7 +412,8 @@ EOF
             call minpac#add('k-takata/minpac', {'type': 'opt'})
             call minpac#add('tpope/vim-commentary')
             call minpac#add('tpope/vim-surround')
-            call minpac#add('neovim/nvim-lsp')
+            " call minpac#add('neovim/nvim-lsp')
+            call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
             call minpac#add('junegunn/fzf')
             call minpac#add('jiangmiao/auto-pairs')
             call minpac#add('mhinz/vim-signify')
@@ -428,6 +428,10 @@ EOF
             call minpac#add('sheerun/vim-polyglot')
             call minpac#add('vimwiki/vimwiki')
         endfunction
+
+        " }}}
+    "coc {{{
+        let g:coc_global_extensions = ['coc-tsserver', 'coc-python', 'coc-json', 'coc-html', 'coc-css', 'coc-texlab', 'coc-svelte', 'coc-markdownlint']
 
         " }}}
     "devicons {{{
@@ -527,7 +531,7 @@ EOF
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSP()
+    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() "| call LSP()
     "save session
     autocmd VimLeavePre * call EntArgs('leave')
     " completion
