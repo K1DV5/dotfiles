@@ -200,10 +200,13 @@ def javascript():
     if package:
         with open(package[0]) as file:
             scripts = list(load(file)['scripts'])
-        prompt = f'({scripts[0]}) ' + ' '.join([f'{i}:{cmd}' for i, cmd in enumerate(scripts[1:], start=1)]) + ' > '
+        prompt = f'({scripts[0]}) ' + ' '.join([f'{i}:{cmd}' for i, cmd in enumerate(scripts[1:], start=1)]) + ' (n)ode > '
         selected = input(prompt)
-        script = scripts[int(selected) if selected else 0]
-        cmd = ['npm', 'run', script]
+        if selected == 'n':
+            cmd = ['node', FILE_NAME]
+        else:
+            script = scripts[int(selected) if selected else 0]
+            cmd = ['npm', 'run', script]
     elif ' -i' in LINE_1:
         cmd = ['node', '-i', FILE_NAME]
     else:
