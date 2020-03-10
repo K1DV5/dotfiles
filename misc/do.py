@@ -4,12 +4,13 @@ K1DV5
 '''
 
 from sys import argv
-from os import chdir, remove, rename, path, startfile, environ, makedirs
+from os import chdir, remove, rename, path, startfile, environ, makedirs, getcwd
 from shutil import move, copy
 from subprocess import run
 from glob import glob
 from re import sub, search
 from time import sleep
+from json import load
 import ctypes
 
 # ENABLE_VIRTUAL_TERMINAL_PROCESSING
@@ -47,6 +48,7 @@ def _exec_cmd(cmd, shell=None):
 # convert to absolute path
 if not path.isabs(argv[1]):
     argv[1] = path.abspath(path.join('.', argv[1]))
+CURDIR = path.abspath(getcwd())  # current folder
 # extract filename from path\to\file\filename.ext in the format filename.ext
 FILE_NAME = path.basename(argv[1])
 # only filename from filename.ext
@@ -193,12 +195,20 @@ def cpp():
 
 
 def javascript():
-    '''just run it'''
-
-    if ' -i' in LINE_1:
-        _exec_cmd(['node', '-i', FILE_NAME])
+    '''detect the existence of a package.json and npm run ... else with node'''
+    package = glob(CURDIR + '/package.json')
+    if package:
+        with open(package[0]) as file:
+            scripts = list(load(file)['scripts'])
+        prompt = f'({scripts[0]}) ' + ' '.join([f'{i}:{cmd}' for i, cmd in enumerate(scripts[1:], start=1)]) + ' > '
+        selected = input(prompt)
+        script = scripts[int(selected) if selected else 0]
+        cmd = ['npm', 'run', script]
+    elif ' -i' in LINE_1:
+        cmd = ['node', '-i', FILE_NAME]
     else:
-        _exec_cmd(['node', FILE_NAME])
+        cmd = ['node', FILE_NAME]
+    _exec_cmd(cmd, shell=True)
 
 def generic():
     returncode = 0
