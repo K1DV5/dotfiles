@@ -14,8 +14,8 @@ let s:file_node_extensions = {
     \ 'markdown' : '',
     \ 'rmd'      : '',
     \ 'json'     : '',
-    \ 'js'       : '',
-    \ 'mjs'      : '',
+    \ 'js'       : '',
+    \ 'mjs'      : '',
     \ 'jsx'      : '',
     \ 'rb'       : '',
     \ 'php'      : '',
@@ -154,11 +154,14 @@ let s:file_node_exact_matches = {
 "     \}
 
 function! IconGet(...)
+    if &buftype == 'terminal'
+        return ''
+    endif
     let fname = fnamemodify(a:0 ? a:1 : expand('%'), ':t')
     let exact = get(s:file_node_exact_matches, fname, 0)
     if type(exact) == v:t_string
         return exact
     endif
-    return get(s:file_node_extensions, fnamemodify(fname, ':e'), '')
+    return get(s:file_node_extensions, fnamemodify(fname, ':e'), '')
 endfunction
 

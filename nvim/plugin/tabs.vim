@@ -62,13 +62,9 @@ function! TabsGetBufsText(bufnr)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
         if buf == a:bufnr
             let ft = getbufvar(buf, '&filetype')
-            if empty(ft)
-                let icon = '%#TabLineSel# '
-            else
-                let hl_icon = 'TabsFt_' . ft " highlighting for the icons
-                let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
-                let icon = hl_icon . ' %{IconGet()} '
-            endif
+            let hl_icon = 'TabsFt_' . ft " highlighting for the icons
+            let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
+            let icon = hl_icon . ' %{IconGet()} '
             let text .= icon . '%#TabLineSel#' . name . '%m %#StatusLineNC#'
         else
             let num = is_current_win ? (buf == alt ? '# ' : i_buf . ':') : ''
