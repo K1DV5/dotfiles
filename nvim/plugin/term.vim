@@ -51,8 +51,8 @@ endfunction
 
 function! s:ToggleTerm(size) abort
     " a:size - number | float - the desired size of the pane
-	" work only if buffer is a normal file
-	if !buflisted(@%)
+	" work only if buffer is a normal file or a terminal
+	if !&modifiable && &buftype != 'terminal'
         echo "Not a file buffer, aborting..."
 		return 1
 	endif
