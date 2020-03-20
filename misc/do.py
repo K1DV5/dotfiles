@@ -245,21 +245,22 @@ def main():
     '''main function'''
 
     returncode = 0
+    extension = path.splitext(FILE_NAME)[1]
     if '-{' in LINE_1:
         returncode = generic()
-    elif FILE_NAME.endswith('.py'):
+    elif extension == '.py':
         returncode = python()
-    elif FILE_NAME.endswith('.tex'):
+    elif extension == '.tex':
         latex()
-    elif FILE_NAME.endswith('.cpp'):
+    elif extension == '.cpp':
         cpp()
-    elif FILE_NAME.endswith('.ahk'):
+    elif extension == '.ahk':
         autohotkey()
-    elif FILE_NAME.endswith('.htm') or FILE_NAME.endswith('html'):
+    elif extension == '.htm' or extension == 'html':
         html()
-    elif FILE_NAME.endswith('.md') or FILE_NAME.endswith('.pmd'):
+    elif extension == '.md' or extension == '.pmd':
         markdown()
-    elif FILE_NAME.endswith('.js'):
+    elif extension in ['.js', '.jsx', '.svelte']:
         javascript()
 
     if returncode:
