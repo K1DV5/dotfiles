@@ -100,7 +100,7 @@ function! Term(cmd, ...)
 	" terminal buffer numbers like [1, 56, 78]
 	let l:tbuflist = s:Terminals()
     " same command terminal buffers
-    let dir = a:0 > 0 ? a:1 : fnamemodify('.', ':p')
+    let dir = a:0 ? a:1 : fnamemodify('.', ':p')
     let buf_name = 'term://'.substitute(dir, '[\/]\+$', '', '').'//'.cmd
     if &buftype == 'terminal' || s:GoToTerm()
         " open a new terminal
@@ -110,6 +110,12 @@ function! Term(cmd, ...)
         execute 'belowright' l:term_height.'split '.buf_name
         " bring other terminal buffers into this window
         let w:tabs_buflist = l:tbuflist
+        if a:cmd == 1
+            let l:term_height = s:TermHeight(a:cmd)
+            if winheight(0) < l:term_height " maximize
+                execute 'resize' l:term_height
+            endif
+        endif
     endif
     tnoremap <buffer> <cr> <cmd>call timer_start(500, 'RenameTerm')<cr><cr>
     tnoremap <buffer> <c-c> <cmd>call timer_start(500, 'RenameTerm')<cr><c-c>
