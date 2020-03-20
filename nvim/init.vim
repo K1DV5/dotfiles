@@ -2,18 +2,12 @@
 
 " builtins {{{
     "miscellaneous {{{
-        set title
-        set titlestring=foo
-        "make search case insensitive
-        set ignorecase
         " continue wrapped lines with the same indent
         set breakindent
         " use four spaces for tabs
         set tabstop=4 shiftwidth=4 expandtab
         " keep changes persistent after quitting
         set undofile
-        "show incomplete commands to the right of the command window
-        set showcmd
         "highlight matches from last search
         set nohlsearch
         "auto change search to case sensitive when there are upper cases
@@ -34,7 +28,7 @@
         set fillchars=eob:\ ,diff:\ ,fold:\ ,stl:\  "make it disappear
         " read options only from the first and last lines
         set modelines=1
-        " print info on cmdline
+        " dont show the mode on command line
         set noshowmode
         " split to the right
         set splitright
@@ -62,6 +56,8 @@
         set ssop=buffers,curdir
         " use ripgrep
         set grepprg=rg\ --vimgrep
+        " allow mouse interaction
+        set mouse=a
 
         "}}}
     "performance {{{
@@ -187,13 +183,13 @@
                 default_callback(err, method, params, client_id)
             end
 
-            local nvim_lsp = require("nvim_lsp")
+            local nvim_lsp = require('nvim_lsp')
             local setmap = vim.api.nvim_buf_set_keymap
 
             local on_attach = function(_, bufnr)
                 vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')  -- completion
-                -- vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
-                -- vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
+                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
+                vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
 
                 -- Mappings
 
@@ -212,6 +208,15 @@
                 nvim_lsp[lsp].setup{on_attach=on_attach}
             end
 EOF
+    endfunction
+
+    " }}}
+    function! LSPcoc() abort "{{{
+        let fts = ['python', 'javascript', 'svelte']
+        augroup lsp_coc
+            autocmd!
+            execute 'autocmd FileType' join(fts, ',') 'nmap <leader>sr <Plug>(coc-rename)'
+        augroup END
     endfunction
 
     " }}}
@@ -268,6 +273,28 @@ EOF
     endfunction
 
     " }}}
+    function! OpenFile(arg) abort "{{{
+        " open binary files as double click and text files here
+        if empty(a:arg)
+            return
+        endif
+        if a:arg[0] == 'ctrl-r'
+            let destination = getcwd() . '/' . input('dest: ', a:arg[1])
+            if destination != a:arg[0]
+                execute 'silent! !move' a:arg[1] destination
+            endif
+            return
+        endif
+        for line in readfile(a:arg[1], 'b', 10)
+            if line =~ nr2char(10)  " binary
+                execute 'silent! !start' a:arg[1]
+                return
+            endif
+        endfor
+        execute 'e' a:arg[1]
+    endfunction
+
+    " }}}
     function! Highlight() abort "{{{
         " override some highlights
         hi! link Folded Boolean
@@ -318,7 +345,7 @@ EOF
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
         " fuzzy find files, count means that much up dir
         " noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
-        noremap - <cmd>call fzf#run(fzf#wrap({'source': 'rg --files '.repeat('../', v:count)}))<cr>
+        noremap - <cmd>call fzf#run({'source': 'rg --files '.repeat('../', v:count), 'sink*': funcref('OpenFile'), 'down': '30%', 'options': '--expect=ctrl-r'})<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -413,6 +440,7 @@ EOF
             call minpac#add('tpope/vim-commentary')
             call minpac#add('tpope/vim-surround')
             " call minpac#add('neovim/nvim-lsp')
+            " call minpac#add('haorenW1025/completion-nvim')
             call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
             call minpac#add('junegunn/fzf')
             call minpac#add('jiangmiao/auto-pairs')
@@ -431,7 +459,7 @@ EOF
 
         " }}}
     "coc {{{
-        let g:coc_global_extensions = ['coc-tsserver', 'coc-python', 'coc-json', 'coc-html', 'coc-css', 'coc-texlab', 'coc-svelte', 'coc-markdownlint']
+        let g:coc_global_extensions = ['coc-tsserver', 'coc-python', 'coc-json', 'coc-html', 'coc-css', 'coc-texlab', 'coc-svelte']
 
         " }}}
     "devicons {{{
@@ -439,13 +467,6 @@ EOF
         let g:WebDevIconsUnicodeDecorateFolderNodes = 1
         let g:DevIconsEnableFoldersOpenClose = 1
         let g:DevIconsEnableFolderExtensionPatternMatching = 1
-
-        " }}}
-    "fzf {{{
-        " system open
-        let g:fzf_action = {'ctrl-x': 'silent !start'}
-        " open in floating win
-        let g:fzf_layout = {"window": {"width": 0.5, "height": 0.4}}
 
         " }}}
     "tabs {{{
@@ -531,11 +552,11 @@ EOF
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() "| call LSP()
+    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSPcoc() "| call LSP()
     "save session
     autocmd VimLeavePre * call EntArgs('leave')
     " completion
-    autocmd TextChangedI * call Complete(0)
+    " autocmd TextChangedI * call Complete(0)
     " highlight where lines should end and map for inline equations for latex
     " use emmet for html
     autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
