@@ -59,10 +59,10 @@ function! Reload(lines) abort
         let empty_lines = repeat([''], s:split_height - 1 - len(a:lines))
         let lines = empty_lines + a:lines
     else
-        let lines = a:lines
+        let lines = a:lines[len(a:lines) - s:split_height + 1:]
     endif
     let lnum = 1
-    for line in lines[:s:split_height - 2]
+    for line in lines
         call setline(lnum, line)
         let lnum += 1
     endfor
@@ -86,4 +86,4 @@ function! Fuzzy(cmd) abort
     endif
 endfunction
 
-noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
+noremap - <cmd>call Fuzzy('rg --files --sort modified ' . repeat('../', v:count))<cr>
