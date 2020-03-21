@@ -1,20 +1,21 @@
 call sign_define('file', {'linehl': 'PmenuSel', 'text': '>'})
 
+let s:split_height = 10
 
 function! FuzzyFile(chan, data, name)
-    bel 10sp +enew
-    let b:file_list = a:data
+    execute 'bel' s:split_height . 'sp +enew'
+    let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
     setlocal nonumber norelativenumber buftype=nofile
     autocmd TextChangedI <buffer> call Reload(Filter())
     inoremap <buffer> <esc> <esc><cmd>bd!<cr>
     inoremap <buffer> <cr> <cmd>call Open()<cr>
-    let b:sign = sign_place(0, '', 'file', bufnr(), {'lnum': 9})
+    let b:sign = sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height - 1})
     call Reload(a:data)
     call feedkeys('Go')
 endfunction
 
 function! Open()
-    let file = trim(getline(9))
+    let file = trim(getline(s:split_height - 1))
     call feedkeys("\<esc>")
     bd!
     if !empty(file)
@@ -23,7 +24,7 @@ function! Open()
 endfunction
 
 function! Filter() abort
-    if line('.') == 9
+    if line('.') == s:split_height - 1
         call feedkeys("\<cr>", 'n')
         return b:file_list
     endif
@@ -36,21 +37,21 @@ function! Filter() abort
 endfunction
 
 function! Reload(lines) abort
-    if len(a:lines) < 9
-        let empty_lines = repeat([''], 9 - len(a:lines))
+    if len(a:lines) < s:split_height - 1
+        let empty_lines = repeat([''], s:split_height - 1 - len(a:lines))
         let lines = empty_lines + a:lines
     else
         let lines = a:lines
     endif
     let lnum = 1
-    for line in lines[:8]
+    for line in lines[:s:split_height - 2]
         call setline(lnum, line)
         let lnum += 1
     endfor
     if empty(a:lines)
         call sign_unplace('', {'id': b:sign})
     elseif empty(sign_getplaced(bufnr())[0]['signs'])
-        call sign_place(0, '', 'file', bufnr(), {'lnum': 9})
+        call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height - 1})
     endif
 endfunction
 
