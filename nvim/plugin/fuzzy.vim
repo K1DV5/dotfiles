@@ -9,18 +9,36 @@ function! FuzzyFile(chan, data, name)
     autocmd TextChangedI <buffer> call Reload(Filter())
     inoremap <buffer> <esc> <esc><cmd>bd!<cr>
     inoremap <buffer> <cr> <cmd>call Open()<cr>
-    let b:sign = sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height - 1})
+    inoremap <buffer> <up> <cmd>call Neighbour(-1)<cr>
+    inoremap <buffer> <down> <cmd>call Neighbour(1)<cr>
     call Reload(a:data)
     call feedkeys('Go')
 endfunction
 
 function! Open()
-    let file = trim(getline(s:split_height - 1))
+    let signs = sign_getplaced(bufnr())[0]['signs']
+    if empty(signs)
+        return
+    endif
+    let file = trim(getline(signs[0]['lnum']))
     call feedkeys("\<esc>")
     bd!
     if !empty(file)
         execute 'e' file
     endif
+endfunction
+
+function! Neighbour(direc) abort
+    let signs = sign_getplaced(bufnr())[0]['signs']
+    if empty(signs)
+        return
+    endif
+    let lnum = signs[0]['lnum'] + a:direc
+    if lnum == s:split_height || empty(getline(lnum))
+        return
+    endif
+    call sign_unplace('', {'id': signs[0]['id']})
+    call sign_place(0, '', 'file', bufnr(), {'lnum': lnum})
 endfunction
 
 function! Filter() abort
@@ -48,10 +66,13 @@ function! Reload(lines) abort
         call setline(lnum, line)
         let lnum += 1
     endfor
+    let signs = sign_getplaced(bufnr())[0]['signs']
     if empty(a:lines)
-        call sign_unplace('', {'id': b:sign})
-    elseif empty(sign_getplaced(bufnr())[0]['signs'])
+        call sign_unplace('', {'id': signs[0]['id']})
+    elseif empty(signs)
         call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height - 1})
+    else
+        call Neighbour(s:split_height - 1 - signs[0]['lnum'])
     endif
 endfunction
 
