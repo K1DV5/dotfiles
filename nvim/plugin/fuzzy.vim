@@ -3,9 +3,11 @@ call sign_define('file', {'linehl': 'PmenuSel', 'text': '>'})
 let s:split_height = 10
 
 function! FuzzyFile(chan, data, name)
+    " remove Searching... message
+    echo ''
     execute 'bel' s:split_height . 'sp +enew'
     let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
-    setlocal nonumber norelativenumber buftype=nofile
+    setlocal nonumber norelativenumber buftype=nofile statusline=\ FILES
     autocmd TextChangedI <buffer> call Reload(Filter())
     inoremap <buffer> <esc> <esc><cmd>bd!<cr>
     inoremap <buffer> <cr> <cmd>call Open()<cr>
@@ -77,6 +79,7 @@ function! Reload(lines) abort
 endfunction
 
 function! Fuzzy(cmd) abort
+    echo 'Searching...'
     if type(a:cmd) == v:t_string
         call jobstart(a:cmd, {
             \ 'on_stdout': funcref('FuzzyFile'),
@@ -86,4 +89,5 @@ function! Fuzzy(cmd) abort
     endif
 endfunction
 
-noremap - <cmd>call Fuzzy('rg --files --sort modified ' . repeat('../', v:count))<cr>
+" --sort modified (slow)
+noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
