@@ -278,7 +278,7 @@ EOF
         if empty(a:arg)
             return
         endif
-        if a:arg[0] == 'ctrl-r'
+        if a:arg[0] == 'ctrl-x'  " rename
             let destination = getcwd() . '/' . input('dest: ', a:arg[1])
             if destination != a:arg[0]
                 execute 'silent! !move' a:arg[1] destination
@@ -343,9 +343,6 @@ EOF
         noremap <tab> <cmd>call TabsGo(v:count)<cr>
         " switch windows using `
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
-        " fuzzy find files, count means that much up dir
-        " noremap - <cmd>execute 'FZF' repeat('../', v:count)<cr>
-        noremap - <cmd>call fzf#run({'source': 'rg --files '.repeat('../', v:count), 'sink*': funcref('OpenFile'), 'down': '30%', 'options': '--expect=ctrl-r'})<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
@@ -353,8 +350,8 @@ EOF
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call CRFunc()<cr>
         " go forward (back) with backspace
-        noremap <c-h> <c-o>
-        noremap <bs> <c-i>
+        noremap <bs> <c-o>
+        noremap <s-bs> <c-i>
 
         "}}}
     "Command_mode {{{
@@ -442,7 +439,6 @@ EOF
             " call minpac#add('neovim/nvim-lsp')
             " call minpac#add('haorenW1025/completion-nvim')
             call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
-            call minpac#add('junegunn/fzf')
             call minpac#add('jiangmiao/auto-pairs')
             call minpac#add('mhinz/vim-signify')
             call minpac#add('mbbill/undotree')
