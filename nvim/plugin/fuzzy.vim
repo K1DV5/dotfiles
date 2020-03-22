@@ -3,29 +3,37 @@ call sign_define('file', {'linehl': 'PmenuSel', 'text': '>'})
 let s:split_height = 10
 
 function! FuzzyFile(chan, data, name)
-    " remove Searching... message
-    echo ''
     execute 'bel' s:split_height . 'sp +enew'
     let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
-    setlocal nonumber norelativenumber buftype=nofile statusline=\ FILES
-    autocmd TextChangedI <buffer> call Reload(Filter())
-    inoremap <buffer> <esc> <esc><cmd>bd!<cr>
-    inoremap <buffer> <cr> <cmd>call Open()<cr>
-    inoremap <buffer> <up> <cmd>call Neighbour(-1)<cr>
-    inoremap <buffer> <down> <cmd>call Neighbour(1)<cr>
     call Reload(a:data)
-    call feedkeys('Go')
+    setlocal nonumber norelativenumber nocursorline buftype=nofile filetype=txt
+    cnoremap <buffer> <tab> <cmd>call Action(1)<cr>
+    cnoremap <buffer> <up> <cmd>call Neighbour(-1)<cr>
+    cnoremap <buffer> <down> <cmd>call Neighbour(1)<cr>
+    autocmd CmdlineChanged <buffer> call Reload(b:file_list)
+    redraw
+    if input({'prompt': '> ', 'cancelreturn': 1}) == 1  " cancelled
+        bdelete
+    else
+        call Action(0)
+    endif
 endfunction
 
-function! Open()
+function! Action(menu)
     let signs = sign_getplaced(bufnr())[0]['signs']
     if empty(signs)
         return
     endif
     let file = trim(getline(signs[0]['lnum']))
-    call feedkeys("\<esc>")
-    bd!
-    if !empty(file)
+    bdelete
+    if a:menu
+        let choice = confirm('', "rename\nsystem open")
+        if !choice
+            return
+        else
+            echo choice
+        endif
+    else
         execute 'e' file
     endif
 endfunction
@@ -36,32 +44,22 @@ function! Neighbour(direc) abort
         return
     endif
     let lnum = signs[0]['lnum'] + a:direc
-    if lnum == s:split_height || empty(getline(lnum))
+    if lnum > s:split_height || empty(getline(lnum))
         return
     endif
     call sign_unplace('', {'id': signs[0]['id']})
     call sign_place(0, '', 'file', bufnr(), {'lnum': lnum})
-endfunction
-
-function! Filter() abort
-    if line('.') == s:split_height - 1
-        call feedkeys("\<cr>", 'n')
-        return b:file_list
-    endif
-    let line = getline('.')
-    if empty(trim(line))
-        return b:file_list
-    endif
-    let pattern = substitute(line, ' ', '.*', 'g')
-    return filter(copy(b:file_list), {_, f -> f =~ pattern})
+    redraw
 endfunction
 
 function! Reload(lines) abort
-    if len(a:lines) < s:split_height - 1
-        let empty_lines = repeat([''], s:split_height - 1 - len(a:lines))
-        let lines = empty_lines + a:lines
+    let pattern = substitute(getcmdline(), ' ', '.*', 'g')
+    let lines = filter(copy(a:lines), {_, f -> f =~ pattern})
+    if len(lines) < s:split_height
+        let empty_lines = repeat([''], s:split_height - len(lines))
+        let lines = empty_lines + lines
     else
-        let lines = a:lines[len(a:lines) - s:split_height + 1:]
+        let lines = lines[len(lines) - s:split_height - 1:]
     endif
     let lnum = 1
     for line in lines
@@ -69,13 +67,16 @@ function! Reload(lines) abort
         let lnum += 1
     endfor
     let signs = sign_getplaced(bufnr())[0]['signs']
-    if empty(a:lines)
-        call sign_unplace('', {'id': signs[0]['id']})
+    if empty(lines)
+        if !empty(signs)
+            call sign_unplace('', {'id': signs[0]['id']})
+        endif
     elseif empty(signs)
-        call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height - 1})
+        call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height})
     else
-        call Neighbour(s:split_height - 1 - signs[0]['lnum'])
+        call Neighbour(s:split_height - signs[0]['lnum'])
     endif
+    redraw
 endfunction
 
 function! Fuzzy(cmd) abort
