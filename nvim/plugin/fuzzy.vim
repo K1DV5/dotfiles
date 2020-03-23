@@ -1,30 +1,26 @@
-call sign_define('file', {'linehl': 'PmenuSel', 'text': '>'})
+call sign_define('file', {'linehl': 'PmenuSel', 'text': ''})
 
 let s:split_height = 10
-" let s:cache = {}
-" let s:cache_key = ''
 
-function! FuzzyFile(chan, data, name)
-    execute 'bel' s:split_height . 'sp +enew'
+function! s:FuzzyFile(chan, data, name)
+    execute 'bot' s:split_height - 1 . 'sp +enew'
+    setlocal nonumber norelativenumber nocursorline laststatus=0 buftype=nofile
     let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
-    call Reload(a:data)
-    setlocal nonumber norelativenumber nocursorline buftype=nofile filetype=txt
-    cnoremap <buffer> <tab> <cmd>call Action(1)<cr>
-    cnoremap <buffer> <up> <cmd>call Neighbour(-1)<cr>
-    cnoremap <buffer> <down> <cmd>call Neighbour(1)<cr>
-    autocmd CmdlineChanged <buffer> call Reload(b:file_list)
-    redraw
-    if input({'prompt': '> ', 'cancelreturn': 1}) == 1  " cancelled
+    call s:Reload(a:data)
+    cnoremap <buffer> <tab> <cmd>call s:Action(1)<cr>
+    cnoremap <buffer> <up> <cmd>call s:Neighbour(-1)<cr>
+    cnoremap <buffer> <down> <cmd>call s:Neighbour(1)<cr>
+    autocmd CmdlineChanged <buffer> call s:Reload(b:file_list)
+    let cancelled = input({'prompt': '> ', 'cancelreturn': 1}) == 1  " cancelled
+    set laststatus=2
+    if cancelled
         bdelete
     else
-        call Action(0)
+        call s:Action(0)
     endif
-    " if a:name == 'stdout'
-    "     let s:cache[s:cache_key]['result'] = a:data
-    " endif
 endfunction
 
-function! Action(menu)
+function! s:Action(menu)
     let signs = sign_getplaced(bufnr())[0]['signs']
     if empty(signs)
         return
@@ -53,7 +49,7 @@ function! Action(menu)
     endif
 endfunction
 
-function! Neighbour(direc) abort
+function! s:Neighbour(direc) abort
     let signs = sign_getplaced(bufnr())[0]['signs']
     if empty(signs)
         return
@@ -67,7 +63,7 @@ function! Neighbour(direc) abort
     redraw
 endfunction
 
-function! Reload(lines) abort
+function! s:Reload(lines) abort
     let pattern = substitute(getcmdline(), ' ', '.*', 'g')
     let lines = filter(copy(a:lines), {_, f -> f =~ pattern})
     let signs = sign_getplaced(bufnr())[0]['signs']
@@ -78,7 +74,7 @@ function! Reload(lines) abort
     elseif empty(signs)
         call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height})
     else
-        call Neighbour(s:split_height - signs[0]['lnum'])
+        call s:Neighbour(s:split_height - signs[0]['lnum'])
     endif
     if len(lines) < s:split_height
         let empty_lines = repeat([''], s:split_height - len(lines))
@@ -90,26 +86,14 @@ function! Reload(lines) abort
     redraw
 endfunction
 
-function! Fuzzy(cmd, dir) abort
+function! Fuzzy(cmd) abort
     echo 'Searching...'
     if type(a:cmd) == v:t_string
-        let dir = empty(a:dir) ? '.' : a:dir
-        " let s:cache_key = a:cmd . '::' . a:dir
-        " let dirtime = getftime(dir)
-        " if get(s:cache, s:cache_key, {'time': 0})['time'] == dirtime
-        "     call FuzzyFile(0, s:cache[s:cache_key]['result'], 'cache')
-        " else
-        "     let s:cache[s:cache_key] = {'time': dirtime, 'result': []}
-            call jobstart(a:cmd, {
-                \ 'on_stdout': funcref('FuzzyFile'),
-                \ 'stdout_buffered': 1,
-                \ 'cwd': dir})
-            " call FuzzyFile(0, systemlist(a:cmd . ' '. a:dir), 'system')
-        " endif
+        call jobstart(a:cmd, {
+            \ 'on_stdout': funcref('s:FuzzyFile'),
+            \ 'stdout_buffered': 1})
     else
-        call FuzzyFile(0, a:cmd, 'direct')
+        call s:FuzzyFile(0, a:cmd, 'direct')
     endif
 endfunction
 
-" --sort modified (slow)
-noremap - <cmd>call Fuzzy('rg --files', repeat('../', v:count))<cr>
