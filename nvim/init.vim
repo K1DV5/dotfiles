@@ -273,28 +273,6 @@ EOF
     endfunction
 
     " }}}
-    function! OpenFile(arg) abort "{{{
-        " open binary files as double click and text files here
-        if empty(a:arg)
-            return
-        endif
-        if a:arg[0] == 'ctrl-x'  " rename
-            let destination = getcwd() . '/' . input('dest: ', a:arg[1])
-            if destination != a:arg[0]
-                execute 'silent! !move' a:arg[1] destination
-            endif
-            return
-        endif
-        for line in readfile(a:arg[1], 'b', 10)
-            if line =~ nr2char(10)  " binary
-                execute 'silent! !start' a:arg[1]
-                return
-            endif
-        endfor
-        execute 'e' a:arg[1]
-    endfunction
-
-    " }}}
     function! Highlight() abort "{{{
         " override some highlights
         hi! link Folded Boolean
@@ -343,6 +321,8 @@ EOF
         noremap <tab> <cmd>call TabsGo(v:count)<cr>
         " switch windows using `
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
+        " fuzzy find file
+        noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
         " to return to normal mode in terminal
         tnoremap kj <C-\><C-n>
         " do the same thing as normal mode in terminal for do
