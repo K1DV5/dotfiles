@@ -1,4 +1,4 @@
-call sign_define('file', {'linehl': 'PmenuSel', 'text': ''})
+call sign_define('file', {'linehl': 'PmenuSel', 'text': ''})
 
 let s:split_height = 10
 
@@ -27,15 +27,15 @@ function! s:Action(menu)
     endif
     let file = trim(getline(signs[0]['lnum']))
     if a:menu
-        let choice = confirm('', "rename")
+        let choice = confirm('', "rename\ndelete")
         redraw
         if !choice
             return
         elseif choice == 1
-            let destination = fnamemodify(getcwd() . '/' . input('dest: ', file), ':p')
-            if destination != fnamemodify(file, ':p')
-                execute 'silent! !move' file destination
-            endif
+            let destination = getcwd() . '/' . input('dest: ', fnamemodify(file, ':p'))
+            call rename(file, destination)
+        elseif choice == 2
+            call delete(file)
         endif
     else
         bdelete
@@ -64,7 +64,7 @@ function! s:Neighbour(direc) abort
 endfunction
 
 function! s:Reload(lines) abort
-    let pattern = substitute(getcmdline(), ' ', '.*', 'g')
+    let pattern = substitute(getcmdline(), ' ', '.\\{-}', 'g')
     let lines = filter(copy(a:lines), {_, f -> f =~ pattern})
     let signs = sign_getplaced(bufnr())[0]['signs']
     if empty(lines)
@@ -89,11 +89,8 @@ endfunction
 function! Fuzzy(cmd) abort
     echo 'Searching...'
     if type(a:cmd) == v:t_string
-        call jobstart(a:cmd, {
-            \ 'on_stdout': funcref('s:FuzzyFile'),
-            \ 'stdout_buffered': 1})
+        call jobstart(a:cmd, {'on_stdout': funcref('s:FuzzyFile'), 'stdout_buffered': 1})
     else
         call s:FuzzyFile(0, a:cmd, 'direct')
     endif
 endfunction
-
