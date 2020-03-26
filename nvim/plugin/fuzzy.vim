@@ -1,12 +1,10 @@
-call sign_define('file', {'linehl': 'PmenuSel', 'text': ''})
-
 let s:split_height = 10
 
 function! s:FuzzyFile(chan, data, name)
     execute 'bot' s:split_height - 1 . 'sp +enew'
-    setlocal nonumber norelativenumber nocursorline laststatus=0 buftype=nofile
+    setlocal nonumber norelativenumber laststatus=0 buftype=nofile
     let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
-    call s:Reload(a:data)
+    call s:Reload(b:file_list)
     cnoremap <buffer> <tab> <cmd>call s:Action(1)<cr>
     cnoremap <buffer> <up> <cmd>call s:Neighbour(-1)<cr>
     cnoremap <buffer> <down> <cmd>call s:Neighbour(1)<cr>
@@ -21,22 +19,23 @@ function! s:FuzzyFile(chan, data, name)
 endfunction
 
 function! s:Action(menu)
-    let signs = sign_getplaced(bufnr())[0]['signs']
-    if empty(signs)
+    let file = getline('.')
+    if empty(file)
         return
-    endif
-    let file = trim(getline(signs[0]['lnum']))
-    if a:menu
-        let choice = confirm('', "rename\ndelete")
+    elseif a:menu
+        let action = confirm(file, "rename\ndelete")
         redraw
-        if !choice
+        if !action
             return
-        elseif choice == 1
-            let destination = getcwd() . '/' . input('dest: ', fnamemodify(file, ':p'))
+        elseif action == 1
+            let destination = input('dest: ', file)
             call rename(file, destination)
-        elseif choice == 2
+            call map(b:file_list, {_, f -> f == file ? destination : f})
+        elseif action == 2
             call delete(file)
+            call filter(b:file_list, {_, f -> f != file})
         endif
+        call s:Reload(b:file_list)
     else
         bdelete
         for line in readfile(file, 'b', 10)
@@ -50,39 +49,35 @@ function! s:Action(menu)
 endfunction
 
 function! s:Neighbour(direc) abort
-    let signs = sign_getplaced(bufnr())[0]['signs']
-    if empty(signs)
+    let lnum = line('.') + a:direc
+    if empty(getline(lnum))
         return
     endif
-    let lnum = signs[0]['lnum'] + a:direc
-    if lnum > s:split_height || empty(getline(lnum))
-        return
-    endif
-    call sign_unplace('', {'id': signs[0]['id']})
-    call sign_place(0, '', 'file', bufnr(), {'lnum': lnum})
+    call cursor(lnum, 1)
     redraw
 endfunction
 
 function! s:Reload(lines) abort
     let pattern = substitute(getcmdline(), ' ', '.\\{-}', 'g')
     let lines = filter(copy(a:lines), {_, f -> f =~ pattern})
-    let signs = sign_getplaced(bufnr())[0]['signs']
-    if empty(lines)
-        if !empty(signs)
-            call sign_unplace('', {'id': signs[0]['id']})
-        endif
-    elseif empty(signs)
-        call sign_place(0, '', 'file', bufnr(), {'lnum': s:split_height})
-    else
-        call s:Neighbour(s:split_height - signs[0]['lnum'])
+    let l_lines = len(lines)
+    if !l_lines
+        set winhighlight=CursorLine:Normal
+    elseif !&winhighlight
+        set winhighlight=CursorLine:PmenuSel
     endif
-    if len(lines) < s:split_height
-        let empty_lines = repeat([''], s:split_height - len(lines))
+    if l_lines < s:split_height
+        let empty_lines = repeat([''], s:split_height - l_lines)
         let lines = empty_lines + lines
-    else
-        let lines = lines[len(lines) - s:split_height - 1:]
+        let l_lines = s:split_height
     endif
     call map(lines, {i, line -> setline(i + 1, line)})
+    let last = line('$')
+    if last > l_lines
+        call deletebufline(bufnr(), l_lines + 1, last)
+    endif
+    call cursor(l_lines, 1)
+    norm zb
     redraw
 endfunction
 
