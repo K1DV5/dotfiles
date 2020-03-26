@@ -9,7 +9,7 @@ function! s:FuzzyFile(chan, data, name)
     cnoremap <buffer> <up> <cmd>call s:Neighbour(-1)<cr>
     cnoremap <buffer> <down> <cmd>call s:Neighbour(1)<cr>
     autocmd CmdlineChanged <buffer> call s:Reload(b:file_list)
-    let cancelled = input({'prompt': '> ', 'cancelreturn': 1}) == 1  " cancelled
+    let cancelled = input({'prompt': '> ', 'cancelreturn': 1}) == 1
     set laststatus=2
     if cancelled
         bdelete
@@ -38,9 +38,9 @@ function! s:Action(menu)
         call s:Reload(b:file_list)
     else
         bdelete
-        for line in readfile(file, 'b', 10)
+        for line in readfile(file, 'b', 20)
             if line =~ nr2char(10)  " binary
-                execute 'silent! !start' file
+                call jobstart('start '. file)
                 return
             endif
         endfor
