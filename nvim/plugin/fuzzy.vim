@@ -1,54 +1,53 @@
 let s:split_height = 10
 
-function! s:FuzzyFile(chan, data, name)
+function! s:fuzzy_file(chan, data, name)
     execute 'bot' s:split_height - 1 . 'sp +enew'
     setlocal nonumber norelativenumber laststatus=0 buftype=nofile
     let b:file_list = a:name == 'stdout' ? a:data[:-2] : a:data
-    call s:Reload(b:file_list)
-    cnoremap <buffer> <tab> <cmd>call s:Action(1)<cr>
-    cnoremap <buffer> <up> <cmd>call s:Neighbour(-1)<cr>
-    cnoremap <buffer> <down> <cmd>call s:Neighbour(1)<cr>
-    autocmd CmdlineChanged <buffer> call s:Reload(b:file_list)
+    call s:reload(b:file_list)
+    cnoremap <buffer> <tab> <cmd>call s:sink(getline('.'), 0)<cr>
+    cnoremap <buffer> <up> <cmd>call s:neighbour(-1)<cr>
+    cnoremap <buffer> <down> <cmd>call s:neighbour(1)<cr>
+    autocmd CmdlineChanged <buffer> call s:reload(b:file_list)
     let cancelled = input({'prompt': '> ', 'cancelreturn': 1}) == 1
     set laststatus=2
-    if cancelled
-        bdelete
-    else
-        call s:Action(0)
+    let selected = getline('.')
+    if empty(selected)
+        return
+    endif
+    bdelete
+    if !empty(selected)
+        call s:sink(selected, 1)
     endif
 endfunction
 
-function! s:Action(menu)
-    let file = getline('.')
-    if empty(file)
-        return
-    elseif a:menu
-        let action = confirm(file, "rename\ndelete")
-        redraw
-        if !action
-            return
-        elseif action == 1
-            let destination = input('dest: ', file)
-            call rename(file, destination)
-            call map(b:file_list, {_, f -> f == file ? destination : f})
-        elseif action == 2
-            call delete(file)
-            call filter(b:file_list, {_, f -> f != file})
-        endif
-        call s:Reload(b:file_list)
-    else
-        bdelete
-        for line in readfile(file, 'b', 20)
+function! s:action(selected, default)
+    if a:default
+        for line in readfile(a:selected, 'b', 20)
             if line =~ nr2char(10)  " binary
-                call jobstart('start '. file)
+                call jobstart('start '. a:selected)
                 return
             endif
         endfor
-        execute 'e' file
+        execute 'e' a:selected
+        return
     endif
+    let action = confirm(a:selected, "rename\ndelete")
+    redraw
+    if !action
+        return
+    elseif action == 1
+        let destination = input('dest: ', a:selected)
+        call rename(a:selected, destination)
+        call map(b:file_list, {_, f -> f == a:selected ? destination : f})
+    elseif action == 2
+        call delete(a:selected)
+        call filter(b:file_list, {_, f -> f != a:selected})
+    endif
+    call s:reload(b:file_list)
 endfunction
 
-function! s:Neighbour(direc) abort
+function! s:neighbour(direc) abort
     let lnum = line('.') + a:direc
     if empty(getline(lnum))
         return
@@ -57,7 +56,7 @@ function! s:Neighbour(direc) abort
     redraw
 endfunction
 
-function! s:Reload(lines) abort
+function! s:reload(lines) abort
     let pattern = substitute(getcmdline(), ' ', '.\\{-}', 'g')
     let lines = filter(copy(a:lines), {_, f -> f =~ pattern})
     let l_lines = len(lines)
@@ -81,11 +80,12 @@ function! s:Reload(lines) abort
     redraw
 endfunction
 
-function! Fuzzy(cmd) abort
+function! Fuzzy(cmd, ...) abort
     echo 'Searching...'
+    let s:sink = a:0 ? a:1 : funcref('s:action')
     if type(a:cmd) == v:t_string
-        call jobstart(a:cmd, {'on_stdout': funcref('s:FuzzyFile'), 'stdout_buffered': 1})
+        call jobstart(a:cmd, {'on_stdout': funcref('s:fuzzy_file'), 'stdout_buffered': 1})
     else
-        call s:FuzzyFile(0, a:cmd, 'direct')
+        call s:fuzzy_file(0, a:cmd, 'direct')
     endif
 endfunction
