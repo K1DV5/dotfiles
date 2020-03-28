@@ -8,7 +8,7 @@
         set tabstop=4 shiftwidth=4 expandtab
         " keep changes persistent after quitting
         set undofile
-        "highlight matches from last search
+        " dont highlight matches from last search
         set nohlsearch
         "auto change search to case sensitive when there are upper cases
         set smartcase
@@ -83,6 +83,126 @@
         "}}}
 
     "}}}
+" mappings {{{
+    "normal {{{
+        " do what needs to be done
+        noremap <c-p> <cmd>call <sid>do()<cr>
+        " move lines up down
+        noremap <a-k> <cmd>move-2<cr>
+        noremap <a-j> <cmd>move+1<cr>
+        "scroll by page
+        noremap <space> <c-f>
+        noremap <c-space> <c-b>
+        "select all ctrl a
+        noremap <c-a> ggVG
+        " copy till the end of line
+        noremap Y y$
+        "also for wrapped lines
+        noremap j gj
+        noremap k gk
+        noremap ^ g^
+        noremap 0 g0
+        noremap $ g$
+        noremap <Up> g<Up>
+        noremap <Down> g<Down>
+        "using tab for switching buffers
+        noremap <tab> <cmd>call TabsGo(v:count)<cr>
+        " switch windows using `
+        noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
+        " fuzzy find file
+        noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
+        " to return to normal mode in terminal
+        tnoremap kj <C-\><C-n>
+        " do the same thing as normal mode in terminal for do
+        tnoremap <c-p> <C-\><C-n><cmd>call <sid>do()<cr>
+        " lookup help for something under cursor with enter
+        nnoremap <cr> <cmd>call <sid>cr()<cr>
+        " go forward (back) with backspace
+        noremap <bs> <c-o>
+        noremap <s-bs> <c-i>
+
+        "}}}
+    "command {{{
+        " paste on command line
+        cnoremap <c-v> <c-r>*
+        " go normal
+        cnoremap kj <esc>
+        " delete a character
+        cnoremap <c-h> <c-bs>
+
+        "}}}
+    "insert {{{
+        " escape quick
+        imap kj <esc>
+        " move one line up and down
+        inoremap <up> <cmd>norm gk<cr>
+        inoremap <down> <cmd>norm gj<cr>
+        " cut
+        vnoremap <c-x> <cmd>norm d<cr>
+        " copy
+        vnoremap <c-c> <cmd>norm y<cr>
+        " paste
+        inoremap <c-v> <cmd>norm gP<cr>
+        " undo
+        inoremap <c-z> <cmd>undo<cr>
+        " redo
+        inoremap <c-y> <cmd>redo<cr>
+        " delete word
+        inoremap <c-bs> <cmd>norm bdw<cr>
+        inoremap <c-del> <cmd>norm dw<cr>
+        " " go through suggestions or jump to snippet placeholders
+        imap <expr> <tab> <sid>complete(1)
+        imap <expr> <s-tab> <sid>complete(-1)
+        smap <expr> <tab> <sid>complete(1)
+        " pairs
+        inoremap ( ()<left>
+        inoremap { {}<left>
+        inoremap [ []<left>
+        inoremap " ""<left>
+        inoremap ' ''<left>
+        inoremap ` ``<left>
+        inoremap <expr> <bs> <sid>del_pair()
+
+        "}}}
+    "visual {{{
+        " escape quick
+        vnoremap kj <esc>
+        vnoremap KJ <esc>
+        " search for selected text
+        vnoremap // y/<c-r>"<cr>
+
+        "}}}
+    " leader {{{
+        let mapleader = ','
+        " open/close terminal pane
+        noremap <leader>t <cmd>call Term(0.3)<cr>
+        tnoremap <leader>t <cmd>call Term(0.3)<cr>
+        " open big terminal window
+        noremap <leader>T <cmd>call Term(1)<cr>
+        tnoremap <leader>T <cmd>call Term(1)<cr>
+        " show git status
+        noremap <leader>g <cmd>call <sid>git()<cr>
+        " closing current buffer
+        noremap <leader>bb <cmd>call TabsClose()<cr>
+        tnoremap <leader>bb <cmd>call TabsClose()<cr>
+        " save file if changed and source if it is a vim file
+        noremap <expr> <leader>bu '<cmd>update!' . (&filetype == 'vim' ? '\| source %' : '') . '<cr>'
+        " toggle spell check
+        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
+        " quit
+        noremap <leader><esc> <cmd>xall!<cr>
+        " undotree
+        noremap <leader>u <cmd>UndotreeToggle<cr>
+        " enter window commands
+        noremap <leader>w <c-w>
+        " use system clipboard
+        noremap <leader>c "+
+        " toggle file and tag (definition) trees
+        noremap <leader>d <cmd>call <sid>tree('Vista', 'vista')<cr>
+        noremap <leader>D <cmd>Vista!!<cr>
+        "}}}
+
+    "}}}
 " functions {{{
     function! Session(file, save) "{{{
         let session_file = fnameescape(empty(a:file) ? stdpath('config') . '/Session' : a:file) . '.sess'
@@ -99,7 +219,38 @@
     endfunction
 
     " }}}
-    function! EntArgs(event) "{{{
+    function! Pack() abort "{{{
+        " plugin management, lazy loads minpac first
+        packadd minpac
+        call minpac#init()
+        call minpac#add('k-takata/minpac', {'type': 'opt'})
+        call minpac#add('tpope/vim-commentary')
+        call minpac#add('tpope/vim-surround')
+        " call minpac#add('neovim/nvim-lsp')
+        call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
+        call minpac#add('mhinz/vim-signify')
+        call minpac#add('mbbill/undotree')
+        call minpac#add('liuchengxu/vista.vim')
+        call minpac#add('tomasiser/vim-code-dark')
+        call minpac#add('ferrine/md-img-paste.vim')
+        call minpac#add('mattn/emmet-vim')
+        call minpac#add('lambdalisue/gina.vim')
+        call minpac#add('justinmk/vim-sneak')
+        call minpac#add('sheerun/vim-polyglot')
+        call minpac#add('vimwiki/vimwiki')
+    endfunction
+
+    " }}}
+    function! MyFold() abort "{{{
+        " better folding
+        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
+        let fold_line = repeat('   ', v:foldlevel - 1) . ' ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
+        return fold_line
+        " }}}, keep the markers balanced
+    endfunction
+
+    " }}}
+    function! s:ent_args(event) "{{{
         " what to do at startup, and exit
         if a:event == 'enter'
             if argc() == 0
@@ -121,7 +272,7 @@
     endfunction
 
     " }}}
-    function! Please_Do() "{{{
+    function! s:do() "{{{
         " auto figure out what to do
         wincmd k
         let s:ext_part = expand('%:e')
@@ -138,21 +289,21 @@
     endfunction
 
     " }}}
-    function! GitStat() "{{{
+    function! s:git() "{{{
         " show git status
         if index(['gitcommit', 'fugitive', 'gina-log', 'gina-status'], &filetype) != -1
             let l:to_be_closed = bufnr()
             call win_gotoid(1000)
             execute 'bdelete' l:to_be_closed
         elseif &modifiable
-            Gina status -s --opener=sp
+            Gina status -s --opener=10sp --group=git
         else
             echo 'Must be on a file'
         endif
     endfunction
 
     " }}}
-    function! CRFunc() abort "{{{
+    function! s:cr() abort "{{{
         " follow help links with enter
         let l:supported = ['vim', 'help', 'python']
         if index(l:supported, &filetype) != -1
@@ -163,7 +314,7 @@
     endfunction
 
     " }}}
-    function! LSP() abort "{{{
+    function! s:lsp() abort "{{{
         " lsp config
         lua << EOF
             -- disable disgnostics in insert mode:
@@ -211,7 +362,7 @@ EOF
     endfunction
 
     " }}}
-    function! LSPcoc() abort "{{{
+    function! s:coc() abort "{{{
         let fts = ['python', 'javascript', 'svelte']
         augroup lsp_coc
             autocmd!
@@ -220,7 +371,7 @@ EOF
     endfunction
 
     " }}}
-    function! Complete(direction) "{{{
+    function! s:complete(direction) "{{{
         " direction: 1-forward, 2-backward, 0-show
         " when pressing tab in insert mode...
         if pumvisible()
@@ -255,7 +406,7 @@ EOF
     endfunction
 
     " }}}
-    function! HandleTree(command, file_type) abort "{{{
+    function! s:tree(command, file_type) abort "{{{
         " tree jumping and/or opening
         let l:tree_wins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&filetype") == "'.a:file_type.'"')
         if l:tree_wins != []
@@ -273,7 +424,7 @@ EOF
     endfunction
 
     " }}}
-    function! Highlight() abort "{{{
+    function! s:highlight() abort "{{{
         " override some highlights
         hi! link Folded Boolean
         hi! DiffChange guibg=#18384B
@@ -284,165 +435,24 @@ EOF
     endfunction
 
     " }}}
-    function! MyFold() abort "{{{
-        " better folding
-        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
-        let fold_line = repeat('   ', v:foldlevel - 1) . ' ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
-        return fold_line
-        " }}}, keep the markers balanced
+    function! s:del_pair() abort "{{{
+        " delete a pair of parens...
+        let col = col('.')
+        let line = getline('.')
+        let pairs = ['()', '[]', '{}', '""', "''", '``']
+        let left = line[col-2]
+        let right = line[col-1]
+        if index(pairs, line[col-2:col-1]) > -1 && count(line, left) == count(line, right)
+            return "\<bs>\<del>" 
+        endif
+        return "\<bs>"
     endfunction
 
     " }}}
-
-    "}}}
-" mappings {{{
-    "Normal_mode {{{
-        " do what needs to be done
-        noremap <c-p> <cmd>call Please_Do()<cr>
-        " move lines up down
-        noremap <a-k> <cmd>move-2<cr>
-        noremap <a-j> <cmd>move+1<cr>
-        "scroll by page
-        noremap <space> <c-f>
-        noremap <c-space> <c-b>
-        "select all ctrl a
-        noremap <c-a> ggVG
-        " copy till the end of line
-        noremap Y y$
-        "also for wrapped lines
-        noremap j gj
-        noremap k gk
-        noremap ^ g^
-        noremap 0 g0
-        noremap $ g$
-        noremap <Up> g<Up>
-        noremap <Down> g<Down>
-        "using tab for switching buffers
-        noremap <tab> <cmd>call TabsGo(v:count)<cr>
-        " switch windows using `
-        noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
-        " fuzzy find file
-        noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
-        " to return to normal mode in terminal
-        tnoremap kj <C-\><C-n>
-        " do the same thing as normal mode in terminal for do
-        tnoremap <c-p> <C-\><C-n><cmd>call Please_Do()<cr>
-        " lookup help for something under cursor with enter
-        nnoremap <cr> <cmd>call CRFunc()<cr>
-        " go forward (back) with backspace
-        noremap <bs> <c-o>
-        noremap <s-bs> <c-i>
-
-        "}}}
-    "Command_mode {{{
-        " paste on command line
-        cnoremap <c-v> <c-r>*
-        " go normal
-        cnoremap kj <esc>
-        " delete a character
-        cnoremap <c-h> <c-bs>
-
-        "}}}
-    "Insert_mode {{{
-        " escape quick
-        imap kj <esc>
-        " move one line up and down
-        inoremap <up> <cmd>norm gk<cr>
-        inoremap <down> <cmd>norm gj<cr>
-        " cut
-        vnoremap <c-x> <cmd>norm d<cr>
-        " copy
-        vnoremap <c-c> <cmd>norm y<cr>
-        " paste
-        inoremap <c-v> <cmd>norm gP<cr>
-        " undo
-        inoremap <c-z> <cmd>undo<cr>
-        " redo
-        inoremap <c-y> <cmd>redo<cr>
-        " delete word
-        inoremap <c-bs> <cmd>norm bdw<cr>
-        inoremap <c-del> <cmd>norm dw<cr>
-        " " go through suggestions or jump to snippet placeholders
-        imap <expr> <tab> Complete(1)
-        imap <expr> <s-tab> Complete(-1)
-        smap <expr> <tab> Complete(1)
-
-        "}}}
-    "Visual_mode {{{
-        " escape quick
-        vnoremap kj <esc>
-        vnoremap KJ <esc>
-        " search for selected text
-        vnoremap // y/<c-r>"<cr>
-
-        "}}}
-    "With_leader_key {{{
-        let mapleader = ','
-        " open/close terminal pane
-        noremap <leader>t <cmd>call Term(0.3)<cr>
-        tnoremap <leader>t <cmd>call Term(0.3)<cr>
-        " open big terminal window
-        noremap <leader>T <cmd>call Term(1)<cr>
-        tnoremap <leader>T <cmd>call Term(1)<cr>
-        " show git status
-        noremap <leader>g <cmd>call GitStat()<cr>
-        " closing current buffer
-        noremap <leader>bb <cmd>call TabsClose()<cr>
-        tnoremap <leader>bb <cmd>call TabsClose()<cr>
-        " save file if changed and source if it is a vim file
-        noremap <expr> <leader>bu &filetype == 'vim' ? '<cmd>update! \| source %<cr>' : '<cmd>update!<cr>'
-        " toggle spell check
-        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
-        " quit
-        noremap <leader><esc> <cmd>xall!<cr>
-        " undotree
-        noremap <leader>u <cmd>UndotreeToggle<cr>
-        " enter window commands
-        noremap <leader>w <c-w>
-        " use system clipboard
-        noremap <leader>c "+
-        " toggle file and tag (definition) trees
-        noremap <leader>d <cmd>call HandleTree('Vista', 'vista')<cr>
-        noremap <leader>D <cmd>Vista!!<cr>
-        "}}}
-
-    "}}}
-" plugins {{{
-    "Management {{{
-        " managing func, lazy loads minpac first
-        function! Pack() abort
-            packadd minpac
-            call minpac#init()
-            call minpac#add('k-takata/minpac', {'type': 'opt'})
-            call minpac#add('tpope/vim-commentary')
-            call minpac#add('tpope/vim-surround')
-            " call minpac#add('neovim/nvim-lsp')
-            " call minpac#add('haorenW1025/completion-nvim')
-            call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
-            call minpac#add('jiangmiao/auto-pairs')
-            call minpac#add('mhinz/vim-signify')
-            call minpac#add('mbbill/undotree')
-            call minpac#add('liuchengxu/vista.vim')
-            call minpac#add('michaeljsmith/vim-indent-object')
-            call minpac#add('K1DV5/vim-code-dark')
-            call minpac#add('ferrine/md-img-paste.vim')
-            call minpac#add('mattn/emmet-vim')
-            call minpac#add('lambdalisue/gina.vim')
-            call minpac#add('justinmk/vim-sneak')
-            call minpac#add('sheerun/vim-polyglot')
-            call minpac#add('vimwiki/vimwiki')
-        endfunction
-
-        " }}}
+" }}}
+" pack conf {{{
     "coc {{{
         let g:coc_global_extensions = ['coc-tsserver', 'coc-python', 'coc-json', 'coc-html', 'coc-css', 'coc-texlab', 'coc-svelte']
-
-        " }}}
-    "devicons {{{
-        "folder icons
-        let g:WebDevIconsUnicodeDecorateFolderNodes = 1
-        let g:DevIconsEnableFoldersOpenClose = 1
-        let g:DevIconsEnableFolderExtensionPatternMatching = 1
 
         " }}}
     "tabs {{{
@@ -528,18 +538,17 @@ EOF
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call EntArgs('enter') | call Highlight() | call LSPcoc() "| call LSP()
+    autocmd VimEnter * nested call s:ent_args('enter') | call s:highlight() | call s:coc() "| call s:lsp()
     "save session
-    autocmd VimLeavePre * call EntArgs('leave')
+    autocmd VimLeavePre * call s:ent_args('leave')
     " completion
-    " autocmd TextChangedI * call Complete(0)
-    " highlight where lines should end and map for inline equations for latex
+    " autocmd TextChangedI * call s:complete(0)
     " use emmet for html
     autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
     " reset tab for vimwiki
     autocmd FileType vimwiki nnoremap <buffer> <tab> <cmd>call TabsGo(v:count)<cr>
     " gc: edit commit message, gp: push, <cr>: commit
-    autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit<cr> | noremap <buffer> gp <cmd>Gina push<cr>
+    autocmd FileType gina-status noremap <buffer> gc <cmd>Gina commit --group=git<cr> | noremap <buffer> gp <cmd>Gina push<cr>
     autocmd FileType gina-commit inoremap <buffer> <cr> <esc><cmd>wq<cr>
     " close tags window when help opens
     autocmd BufWinEnter *.txt if &buftype == 'help'
@@ -550,4 +559,4 @@ augroup init "{{{
 augroup END
 "}}}
 
-" vim:foldmethod=marker:foldlevel=0:foldtext=MyFold()
+" vim:foldmethod=marker:foldlevel=0
