@@ -28,7 +28,7 @@ function! StatusLine(bufnr)
     else
         let current = 0
         let hi_stat = '%#Tabs_Status_NC#'
-        let start = hi_stat . ' %{win_getid() == ' . s:TabsGetAltWin(winnr()) . ' ? "#" : winnr()} '
+        let start = hi_stat . ' %{win_getid() == ' . s:get_alt_win(winnr()) . ' ? "#" : winnr()} '
     endif
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
@@ -56,7 +56,7 @@ function! TabsGetBufsText(bufnr)
     let i_buf = 1
     let is_current_win = win_getid() == win
     let i_this = index(bufs, a:bufnr)
-    let alt = s:TabsGetAltBuf(win)  " alternate buffer for the current win
+    let alt = s:get_alt_buf(win)  " alternate buffer for the current win
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
@@ -118,7 +118,7 @@ function! TabsNext()
     call nvim_set_current_buf(w:tabs_buflist[i_next])
 endfunction
 
-function! s:TabsGetAltBuf(win)  " get the alternate buffer for the given window
+function! s:get_alt_buf(win)  " get the alternate buffer for the given window
     let bufs = getwinvar(a:win, 'tabs_buflist', [])
     let l_bufs = len(bufs)
     if l_bufs < 2
@@ -137,7 +137,7 @@ function! s:TabsGetAltBuf(win)  " get the alternate buffer for the given window
     return alt
 endfunction
 
-function! s:TabsGetAltWin(win)
+function! s:get_alt_win(win)
     let alt_win = get(g:, 'tabs_alt_win', 0)  " win id, not winnr
     let wins = nvim_list_wins()  " win ids, not numbers
     if index(wins, alt_win) != -1
@@ -164,13 +164,13 @@ function! TabsGo(where)
         if where  " jump to alt
             call win_gotoid(win_getid(where))
         else
-            call win_gotoid(s:TabsGetAltWin(winnr()))
+            call win_gotoid(s:get_alt_win(winnr()))
         endif
     else  " buffer
         " jump through the tabs
         let last = bufnr()
         if !a:where  " alt
-            let alt = s:TabsGetAltBuf(winnr())
+            let alt = s:get_alt_buf(winnr())
             if alt
                 call nvim_set_current_buf(alt)
             endif
@@ -196,7 +196,7 @@ function! TabsClose()
         return
     endif
     let bang = &buftype == 'terminal' ? '!' : ''
-    let alt = s:TabsGetAltBuf(winnr())
+    let alt = s:get_alt_buf(winnr())
     if alt
         let to_del = bufnr()
         call nvim_set_current_buf(alt)
@@ -216,6 +216,7 @@ hi Tabs_Status guifg=white guibg=#0A7ACA
 hi link Tabs_Status_NC StatusLine
 hi Tabs_Error guifg=black guibg=red
 hi Tabs_Warning guifg=black guibg=yellow
+let norm_bg = synIDattr(hlID('Normal'), 'bg')
 
 let ft_hl = [
     \ ['vim', 'green'],
@@ -242,11 +243,10 @@ let ft_hl = [
     \ ['bashprofile', 'Gray',]]
 
 for hl in ft_hl
-    let bg = synIDattr(hlID('Normal'), 'bg')
-    execute 'hi TabsFt_' . hl[0] 'guifg=' . hl[1] 'guibg=' . bg
+    execute 'hi TabsFt_' . hl[0] 'guifg=' . hl[1] 'guibg=' . norm_bg
 endfor
 
-function! s:OnNew() abort
+function! s:on_new() abort
     if get(b:, 'tabs_status_set', 0)
         " already set
         return
@@ -262,9 +262,8 @@ endfunction
 
 augroup Tabs
     autocmd!
-    autocmd BufRead,BufNewFile,FileType,TermOpen * call s:OnNew()
+    autocmd BufRead,BufNewFile,FileType,TermOpen * call s:on_new()
     " save the current window number before jumping to jump back, redrawing
     " the statusline to show which is the alt
-    " autocmd WinLeave * let g:tabs_alt_win = win_getid() | if len(nvim_list_wins()) > 2 | redraws! | endif
-    autocmd WinLeave * let g:tabs_alt_win = win_getid()
+    autocmd WinLeave * let g:tabs_alt_win = win_getid() " | if len(nvim_list_wins()) > 2 | redraws! | endif
 augroup END
