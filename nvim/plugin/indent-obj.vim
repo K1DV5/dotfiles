@@ -1,7 +1,9 @@
-onoremap ii <cmd>call <sid>in_indent(1)<cr>
-vnoremap ii <cmd>call <sid>in_indent(1)<cr>
-onoremap ai <cmd>call <sid>in_indent(0)<cr>
-vnoremap ai <cmd>call <sid>in_indent(0)<cr>
+onoremap ii <cmd>call <sid>in_indent(0)<cr>
+vnoremap ii <cmd>call <sid>in_indent(0)<cr>
+onoremap ai <cmd>call <sid>in_indent(1)<cr>
+vnoremap ai <cmd>call <sid>in_indent(1)<cr>
+
+let s:around = ['tex', 'vim']
 
 function! s:get_indent(line, direc)
     let lnum = a:line + a:direc
@@ -14,7 +16,7 @@ function! s:get_indent(line, direc)
     return indent(lnum)
 endfunction
 
-function! s:get_offsets(line, ind)
+function! s:get_offsets(line, ind, around)
     let up = 1
     while a:line - up && (indent(a:line - up) >= a:ind || empty(trim(getline(a:line - up))))
         let up += 1
@@ -24,7 +26,13 @@ function! s:get_offsets(line, ind)
     while a:line + down <= last && (indent(a:line + down) >= a:ind || empty(trim(getline(a:line + down))))
         let down += 1
     endwhile
-    return [up, down]
+    if a:around && (trim(getline(a:line + down)) == '}' || index(s:around, &filetype) > -1)
+        let down += 1
+        while a:line + down <= last && empty(trim(getline(a:line + down)))
+            let down += 1
+        endwhile
+    endif
+    return [up - !a:around, down]
 endfunction
 
 function! s:in_indent(around)
@@ -36,8 +44,8 @@ function! s:in_indent(around)
             let ind = s:get_indent(line, -1)
         endif
     endif
-    let [up, down] = s:get_offsets(line, ind)
-    call cursor(line - up + a:around, 1)
+    let [up, down] = s:get_offsets(line, ind, a:around)
+    call cursor(line - up, 1)
     if mode() == 'n'
         norm V
         call cursor(line + down - 1, 1)
