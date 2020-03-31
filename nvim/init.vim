@@ -81,8 +81,7 @@
         let g:loaded_2html_plugin = 1
         let g:loaded_tarPlugin = 1
         "}}}
-
-    "}}}
+" }}}
 " mappings {{{
     "normal {{{
         " do what needs to be done
@@ -201,8 +200,7 @@
         noremap <leader>d <cmd>call <sid>tree('Vista', 'vista')<cr>
         noremap <leader>D <cmd>Vista!!<cr>
         "}}}
-
-    "}}}
+" }}}
 " functions {{{
     function! Session(file, save) "{{{
         let session_file = fnameescape(empty(a:file) ? stdpath('config') . '/Session' : a:file) . '.sess'
@@ -219,20 +217,19 @@
     endfunction
 
     " }}}
-    function! Pack() abort "{{{
+    function! Pack() "{{{
         " plugin management, lazy loads minpac first
         packadd minpac
         call minpac#init()
         call minpac#add('k-takata/minpac', {'type': 'opt'})
         call minpac#add('tpope/vim-commentary')
         call minpac#add('tpope/vim-surround')
-        " call minpac#add('neovim/nvim-lsp')
-        call minpac#add('neoclide/coc.nvim', {'branch': 'release'})
+        call minpac#add('neovim/nvim-lsp')
         call minpac#add('mhinz/vim-signify')
         call minpac#add('mbbill/undotree')
         call minpac#add('liuchengxu/vista.vim')
         call minpac#add('tomasiser/vim-code-dark')
-        call minpac#add('ferrine/md-img-paste.vim')
+        call minpac#add('ferrine/md-img-paste.vim', {'type': 'opt'})
         call minpac#add('mattn/emmet-vim')
         call minpac#add('lambdalisue/gina.vim')
         call minpac#add('justinmk/vim-sneak')
@@ -241,7 +238,7 @@
     endfunction
 
     " }}}
-    function! MyFold() abort "{{{
+    function! MyFold() "{{{
         " better folding
         let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
         let fold_line = repeat('   ', v:foldlevel - 1) . ' ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
@@ -253,21 +250,16 @@
     function! s:ent_args(event) "{{{
         " what to do at startup, and exit
         if a:event == 'enter'
-            if argc() == 0
+            if argc()
+                execute 'cd' expand('%:p:h')
+            else
                 call Session('', 0)
                 call TabsAllBuffers()
-            else
-                execute 'cd' expand('%:p:h')
-                if empty(bufname())
-                    bdelete
-                endif
             endif
-        else
-            if argc() == 0
-                " delete terminal buffers
-                bufdo if &buftype == 'terminal' | bwipeout! | endif
-                call Session('', 1)
-            endif
+        elseif !argc()
+            " delete terminal buffers
+            bufdo if &buftype == 'terminal' | bwipeout! | endif
+            call Session('', 1)
         endif
     endfunction
 
@@ -279,7 +271,7 @@
         silent update!
         let l:hidden = ['tex', 'texw', 'html', 'htm']
         if index(l:hidden, s:ext_part) != -1
-            execute 'setlocal makeprg=do'
+            setlocal makeprg=do
             execute 'make "'.expand('%:p').'"'
             echo "Done."
         else
@@ -291,7 +283,7 @@
     " }}}
     function! s:git() "{{{
         " show git status
-        if index(['gitcommit', 'fugitive', 'gina-log', 'gina-status'], &filetype) != -1
+        if index(['gina-log', 'gina-status'], &filetype) != -1
             let l:to_be_closed = bufnr()
             call win_gotoid(1000)
             execute 'bdelete' l:to_be_closed
@@ -303,7 +295,7 @@
     endfunction
 
     " }}}
-    function! s:cr() abort "{{{
+    function! s:cr() "{{{
         " follow help links with enter
         let l:supported = ['vim', 'help', 'python']
         if index(l:supported, &filetype) != -1
@@ -314,77 +306,66 @@
     endfunction
 
     " }}}
-    function! s:lsp() abort "{{{
-        " lsp config
+    function! s:lsp() "{{{
+        " lsp config, not installed: jsonls, cssls, svelte
         lua << EOF
-            -- disable disgnostics in insert mode:
 
-            local default_callback = vim.lsp.callbacks["textDocument/publishDiagnostics"]
-            local err, method, params, client_id
-
-            vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(...)
-                err, method, params, client_id = ...
-                local mode = vim.api.nvim_get_mode().mode
-                if mode ~= "i" and mode ~= "ic" then
-                    publish_diagnostics()
-                end
+        -- disable disgnostics in insert mode:
+        local default_callback = vim.lsp.callbacks["textDocument/publishDiagnostics"]
+        local err, method, params, client_id
+        vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(...)
+            err, method, params, client_id = ...
+            if ({i = 1; ic = 1})[vim.api.nvim_get_mode().mode] == nil then
+                publish_diagnostics()
             end
+        end
+        function publish_diagnostics()
+            default_callback(err, method, params, client_id)
+        end
 
-            function publish_diagnostics()
-                default_callback(err, method, params, client_id)
-            end
+        local nvim_lsp = require('nvim_lsp')
+        local setmap = vim.api.nvim_buf_set_keymap
 
-            local nvim_lsp = require('nvim_lsp')
-            local setmap = vim.api.nvim_buf_set_keymap
+        local on_attach = function(_, bufnr)
+            vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+            vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]
+            vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]
 
-            local on_attach = function(_, bufnr)
-                vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')  -- completion
-                vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]  -- show diagnostics
-                vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]  -- hide diagnostics
+            -- Mappings
+            local opts = {noremap=true, silent=true}
+            setmap(bufnr, 'n', '<c-]>',  '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+            setmap(bufnr, 'n',  'gd',    '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+            setmap(bufnr, 'n',  'K',     '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
+            setmap(bufnr, 'n',  'gD',    '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+            setmap(bufnr, 'n',  '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+            setmap(bufnr, 'n',  '1gD',   '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+            setmap(bufnr, 'n',  'gr',    '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+            setmap(bufnr, 'n',  '<f2>',  '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+        end
 
-                -- Mappings
-
-                local opts = {noremap=true, silent=true}
-                setmap(bufnr, 'n', '<c-]>',  '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-                setmap(bufnr, 'n',  'gd',    '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
-                setmap(bufnr, 'n',  'K',     '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
-                setmap(bufnr, 'n',  'gD',    '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-                setmap(bufnr, 'n',  '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
-                setmap(bufnr, 'n',  '1gD',   '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-                setmap(bufnr, 'n',  'gr',    '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-            end
-
-            local servers = {'pyls', 'texlab', 'tsserver'}
-            for _, lsp in ipairs(servers) do
-                nvim_lsp[lsp].setup{on_attach=on_attach}
-            end
+        local servers = {'pyls', 'texlab'}
+        for _, lsp in ipairs(servers) do
+            nvim_lsp[lsp].setup{on_attach=on_attach}
+        end
+        nvim_lsp.html.setup{filetypes = {'html', 'svelte'}; cmd = {'html-languageserver.cmd', '--stdio'}, on_attach=on_attach}
+        nvim_lsp.tsserver.setup{cmd = {'typescript-language-server.cmd', '--stdio'}, on_attach=on_attach}
 EOF
     endfunction
 
     " }}}
-    function! s:coc() abort "{{{
-        let fts = ['python', 'javascript', 'svelte']
-        augroup lsp_coc
-            autocmd!
-            execute 'autocmd FileType' join(fts, ',') 'nmap <leader>sr <Plug>(coc-rename)'
-        augroup END
-    endfunction
-
-    " }}}
     function! s:complete(direction) "{{{
-        " direction: 1-forward, 2-backward, 0-show
         " when pressing tab in insert mode...
         if pumvisible()
-            if a:direction
-                if a:direction == 1 "without shift, forward
-                    return "\<c-n>"
-                endif
-                " with shift, back
+            if a:direction == 1 " forward
+                return "\<c-n>"
+            elseif a:direction == -1 " back
                 return "\<c-p>"
             endif
-        endif
+        endif  " show items
         let chars = 2  " chars before triggering
-        let pattern = '\(\w\|\d\)\{' . chars . '}'
+        let trigger_chars = {'lua': ':'}
+        let trigger_char = get(trigger_chars, &filetype, '\.')
+        let pattern = '\(\w\|\d\|' . trigger_char . '\)\{' . chars . '}'
         let col = col('.') - 1
         let line = getline('.')
         let last_chars = line[col-chars:col-1]
@@ -392,21 +373,23 @@ EOF
             " not at a completeable place
             return "\<tab>"
         endif
+        let refresh = last_chars[chars-1] =~ trigger_char
         " prevent keyword completion from making nvim unresponsive
         " check th[es]e| chars for previous attempts
         let before_match = line[col-chars-1:col-2]
-        if !a:direction && len(before_match) && before_match =~# pattern
+        if !a:direction && len(before_match) && before_match =~# pattern && !refresh
             return ''
         endif
-        call feedkeys("\<c-n>")  " keyword completion
-        if &omnifunc == 'v:lua.vim.lsp.omnifunc'  " lsp
-            execute 'call' &omnifunc . '(0, "")'
+        if !empty(&omnifunc) && (!a:direction || refresh)
+            call feedkeys("\<c-x>\<c-o>")
+        elseif !refresh
+            call feedkeys("\<c-n>")  " keyword completion
         endif
         return ''
     endfunction
 
     " }}}
-    function! s:tree(command, file_type) abort "{{{
+    function! s:tree(command, file_type) "{{{
         " tree jumping and/or opening
         let l:tree_wins = filter(copy(nvim_list_wins()), 'getbufvar(winbufnr(v:val), "&filetype") == "'.a:file_type.'"')
         if l:tree_wins != []
@@ -424,7 +407,7 @@ EOF
     endfunction
 
     " }}}
-    function! s:highlight() abort "{{{
+    function! s:highlight() "{{{
         " override some highlights
         hi! link Folded Boolean
         hi! DiffChange guibg=#18384B
@@ -435,7 +418,7 @@ EOF
     endfunction
 
     " }}}
-    function! s:del_pair() abort "{{{
+    function! s:del_pair() "{{{
         " delete a pair of parens...
         let col = col('.')
         let line = getline('.')
@@ -451,10 +434,6 @@ EOF
     " }}}
 " }}}
 " pack conf {{{
-    "coc {{{
-        let g:coc_global_extensions = ['coc-tsserver', 'coc-python', 'coc-json', 'coc-html', 'coc-css', 'coc-texlab', 'coc-svelte']
-
-        " }}}
     "tabs {{{
         " tabs that are not normal buffers
         let g:tabs_custom_stl = {'gina-status': '%f', 'undo': '', 'vista': '', 'gina-commit': ''}
@@ -468,20 +447,6 @@ EOF
         let g:python_highlight_operators = 0
         let g:python_highlight_space_errors = 0
         let g:python_highlight_indent_errors = 0
-
-        " }}}
-    "scratch {{{
-        " split vertically
-        let g:scratch_horizontal = 0
-        " open on the right side
-        let g:scratch_top = 0
-        " set {} of the current width
-        let g:scratch_height = 0.3
-        " make persistent between sessions
-        let g:scratch_persistence_file = '~/Documents/Code/.res/nvim/scratch.txt'
-        " don't hide the scratch buffer on InsertLeave or window leave
-        let g:scratch_insert_autohide = 0
-        let g:scratch_autohide = 0
 
         " }}}
     "term {{{
@@ -501,8 +466,6 @@ EOF
         let g:signify_vcs_list = ['git']
         " show only colors
         let g:signify_sign_show_text = 0
-        " hide numbers
-        " let g:signify_sign_show_count = 0
 
         " }}}
     "undotree {{{
@@ -517,6 +480,7 @@ EOF
     "sneak {{{
         " Make it like easymotion
         let g:sneak#label = 1
+
         "}}}
     " vista {{{
         " show definition in floating win
@@ -533,16 +497,15 @@ EOF
         endif
 
         " }}}
-
-    "}}}
+" }}}
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call s:ent_args('enter') | call s:highlight() | call s:coc() "| call s:lsp()
+    autocmd VimEnter * nested call s:ent_args('enter') | call s:highlight() | call s:lsp()
     "save session
     autocmd VimLeavePre * call s:ent_args('leave')
     " completion
-    " autocmd TextChangedI * call s:complete(0)
+    autocmd TextChangedI * call s:complete(0)
     " use emmet for html
     autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
     " reset tab for vimwiki
@@ -557,6 +520,6 @@ augroup init "{{{
         \| silent! execute 'Vista!'
         \| endif
 augroup END
-"}}}
+" }}}
 
 " vim:foldmethod=marker:foldlevel=0
