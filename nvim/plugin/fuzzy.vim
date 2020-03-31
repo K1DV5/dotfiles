@@ -12,9 +12,6 @@ function! s:fuzzy_file(chan, data, name)
     let cancelled = input({'prompt': '> ', 'cancelreturn': 1}) == 1
     set laststatus=2
     let selected = getline('.')
-    if empty(selected)
-        return
-    endif
     bdelete
     if !empty(selected)
         call s:sink(selected, 1)
@@ -37,7 +34,7 @@ function! s:action(selected, default)
     if !action
         return
     elseif action == 1
-        let destination = input('dest: ', a:selected)
+        let destination = input('dest: ', a:selected, 'file')
         call rename(a:selected, destination)
         call map(b:file_list, {_, f -> f == a:selected ? destination : f})
     elseif action == 2
