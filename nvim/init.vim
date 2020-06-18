@@ -34,6 +34,8 @@
         set splitright
         " only show menu when completing
         set completeopt=menuone,noinsert,noselect
+        " only scan current and other windows for keyword completions
+        set complete=.,w,b,t
         " dont be chatty on completions
         set shortmess+=c
         " show diff with vertical split
@@ -110,12 +112,13 @@
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
         " fuzzy find file
         noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
-        " to return to normal mode in terminal
+        " to return to normal mode in terminal and operator pending
         tnoremap kj <C-\><C-n>
+        onoremap kj <esc>
         " do the same thing as normal mode in terminal for do
         tnoremap <c-p> <C-\><C-n><cmd>call <sid>do()<cr>
         " lookup help for something under cursor with enter
-        nnoremap <cr> <cmd>call <sid>cr()<cr>
+        nnoremap <cr> <cmd>call <sid>cr(0)<cr>
         " go forward (back) with backspace
         noremap <bs> <c-o>
         noremap <s-bs> <c-i>
@@ -150,17 +153,19 @@
         inoremap <c-bs> <cmd>norm bdw<cr>
         inoremap <c-del> <cmd>norm dw<cr>
         " " go through suggestions or jump to snippet placeholders
-        imap <expr> <tab> <sid>complete(1)
-        imap <expr> <s-tab> <sid>complete(-1)
-        smap <expr> <tab> <sid>complete(1)
+        inoremap <expr> <tab> v:lua.complete(1)
+        inoremap <expr> <s-tab> v:lua.complete(-1)
+        snoremap <expr> <tab> v:lua.complete(1)
         " pairs
         inoremap ( ()<left>
+        " inoremap ( <cmd>lua vim.lsp.buf.signature_help()<cr>
         inoremap { {}<left>
         inoremap [ []<left>
         inoremap " ""<left>
         inoremap ' ''<left>
         inoremap ` ``<left>
-        inoremap <expr> <bs> <sid>del_pair()
+        inoremap <expr> <bs> <sid>delp()
+        inoremap <expr> <cr> <sid>cr(1)
 
         "}}}
     "visual {{{
@@ -202,22 +207,7 @@
         "}}}
 " }}}
 " functions {{{
-    function! Session(file, save) "{{{
-        let session_file = fnameescape(empty(a:file) ? stdpath('config') . '/Session' : a:file) . '.sess'
-        if a:save " save session
-            execute 'mksession!' session_file
-            return
-        endif
-        " restore
-        if filereadable(session_file)
-            silent execute 'source' session_file
-        else
-            echo 'No Session File'
-        endif
-    endfunction
-
-    " }}}
-    function! Pack() "{{{
+    function! P() "{{{
         " plugin management, lazy loads minpac first
         packadd minpac
         call minpac#init()
@@ -238,6 +228,35 @@
     endfunction
 
     " }}}
+    function! S(...) "{{{
+        if a:0 == 0
+            let file = 'Session'
+            let save = 1
+        elseif a:0 == 1
+            if type(a:1) == v:t_string
+                let file = a:1
+                let save = 1
+            else  " number
+                let file = 'Session'
+                let save = a:1
+            endif
+        else
+            let file = a:1
+            let save = a:2
+        endif
+        let file = fnameescape(empty(file) ? stdpath('config') . '/Session' : file) . '.sess'
+        if save " save session
+            execute 'mksession!' file
+            return
+        endif
+        " restore
+        if filereadable(file)
+            silent execute 'source' file
+            edit
+        endif
+    endfunction
+
+    " }}}
     function! MyFold() "{{{
         " better folding
         let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
@@ -247,19 +266,19 @@
     endfunction
 
     " }}}
-    function! s:ent_args(event) "{{{
+    function! s:gate(direc) "{{{
         " what to do at startup, and exit
-        if a:event == 'enter'
+        if a:direc == 'in'
             if argc()
                 execute 'cd' expand('%:p:h')
             else
-                call Session('', 0)
+                call S('', 0)
                 call TabsAllBuffers()
             endif
         elseif !argc()
             " delete terminal buffers
             bufdo if &buftype == 'terminal' | bwipeout! | endif
-            call Session('', 1)
+            call S('', 1)
         endif
     endfunction
 
@@ -295,97 +314,35 @@
     endfunction
 
     " }}}
-    function! s:cr() "{{{
-        " follow help links with enter
-        let l:supported = ['vim', 'help', 'python']
-        if index(l:supported, &filetype) != -1
-            norm K
-        else
-            execute "norm! \<cr>"
-        endif
-    endfunction
-
-    " }}}
-    function! s:lsp() "{{{
-        " lsp config, not installed: jsonls, cssls, svelte
-        lua << EOF
-
-        -- disable disgnostics in insert mode:
-        local default_callback = vim.lsp.callbacks["textDocument/publishDiagnostics"]
-        local err, method, params, client_id
-        vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(...)
-            err, method, params, client_id = ...
-            if ({i = 1; ic = 1})[vim.api.nvim_get_mode().mode] == nil then
-                publish_diagnostics()
-            end
-        end
-        function publish_diagnostics()
-            default_callback(err, method, params, client_id)
-        end
-
-        local nvim_lsp = require('nvim_lsp')
-        local setmap = vim.api.nvim_buf_set_keymap
-
-        local on_attach = function(_, bufnr)
-            vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-            vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics()]]
-            vim.api.nvim_command [[autocmd InsertEnter <buffer> call v:lua.vim.lsp.util.buf_clear_diagnostics(bufnr())]]
-
-            -- Mappings
-            local opts = {noremap=true, silent=true}
-            setmap(bufnr, 'n', '<c-]>',  '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-            setmap(bufnr, 'n',  'gd',    '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
-            setmap(bufnr, 'n',  'K',     '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
-            setmap(bufnr, 'n',  'gD',    '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-            setmap(bufnr, 'n',  '<c-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
-            setmap(bufnr, 'n',  '1gD',   '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-            setmap(bufnr, 'n',  'gr',    '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-            setmap(bufnr, 'n',  '<f2>',  '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-        end
-
-        local servers = {'pyls', 'texlab'}
-        for _, lsp in ipairs(servers) do
-            nvim_lsp[lsp].setup{on_attach=on_attach}
-        end
-        nvim_lsp.html.setup{filetypes = {'html', 'svelte'}; cmd = {'html-languageserver.cmd', '--stdio'}, on_attach=on_attach}
-        nvim_lsp.tsserver.setup{cmd = {'typescript-language-server.cmd', '--stdio'}, on_attach=on_attach}
-EOF
-    endfunction
-
-    " }}}
-    function! s:complete(direction) "{{{
-        " when pressing tab in insert mode...
-        if pumvisible()
-            if a:direction == 1 " forward
-                return "\<c-n>"
-            elseif a:direction == -1 " back
-                return "\<c-p>"
+    function! s:cr(insert) "{{{
+        if a:insert
+            " put the cursor above and below, possibly with indent
+            let [_, lnum, cnum, _] = getpos('.')
+            let line = getline('.')
+            " html
+            let html_pairs = ['<\w\+.\{-}>', '</\w\+>']
+            let before = trim(line[:cnum-2])
+            let after = trim(line[cnum-1:])
+            if before =~ '^' . html_pairs[0] . '$' && after =~ '^' . html_pairs[1] . '$'
+                return "\<cr>\<esc>O"
             endif
-        endif  " show items
-        let chars = 2  " chars before triggering
-        let trigger_chars = {'lua': ':'}
-        let trigger_char = get(trigger_chars, &filetype, '\.')
-        let pattern = '\(\w\|\d\|' . trigger_char . '\)\{' . chars . '}'
-        let col = col('.') - 1
-        let line = getline('.')
-        let last_chars = line[col-chars:col-1]
-        if !a:direction && last_chars !~# pattern || !col || last_chars[chars-1] =~ '\s'
-            " not at a completeable place
-            return "\<tab>"
+            " other
+            let surround = ['([{', ')]}']
+            let [i_begin, i_end] = [stridx(surround[0], line[cnum-2]), stridx(surround[1], line[cnum-1])]
+            " let not_equal = count(line, surround[0][i_begin]) != count(line, surround[1][i_end])
+            if i_begin == -1 || i_begin != i_end || empty(line[cnum-2]) "|| not_equal
+                return "\<cr>"
+            endif
+            return "\<cr>\<esc>O"
+        else
+            " follow help links with enter
+            let l:supported = ['vim', 'help', 'python']
+            if index(l:supported, &filetype) != -1
+                norm K
+            else
+                execute "norm! \<cr>"
+            endif
         endif
-        let refresh = last_chars[chars-1] =~ trigger_char
-        " prevent keyword completion from making nvim unresponsive
-        " check th[es]e| chars for previous attempts
-        let before_match = line[col-chars-1:col-2]
-        if !a:direction && len(before_match) && before_match =~# pattern && !refresh
-            return ''
-        endif
-        if !empty(&omnifunc) && (!a:direction || refresh)
-            call feedkeys("\<c-x>\<c-o>")
-        elseif !refresh
-            call feedkeys("\<c-n>")  " keyword completion
-        endif
-        return ''
     endfunction
 
     " }}}
@@ -415,10 +372,16 @@ EOF
         hi! default link Title Boolean
         hi! default link VimwikiMarkers Boolean
         hi! default link VimwikiLink markdownUrl
+        hi! LspDiagnosticsInformation guifg=Green
+        hi! LspDiagnosticsHint guifg=Cyan
+        hi! LspDiagnosticsUnderlineError gui=undercurl guisp=Red
+        hi! LspDiagnosticsUnderlineWarning gui=undercurl guisp=Orange
+        hi! LspDiagnosticsUnderlineHint gui=undercurl guisp=Cyan
+        hi! LspDiagnosticsUnderlineInformation gui=undercurl guisp=Green
     endfunction
 
     " }}}
-    function! s:del_pair() "{{{
+    function! s:delp() "{{{
         " delete a pair of parens...
         let col = col('.')
         let line = getline('.')
@@ -480,6 +443,8 @@ EOF
     "sneak {{{
         " Make it like easymotion
         let g:sneak#label = 1
+        " always ; forward
+        let g:sneak#absolute_dir = 1
 
         "}}}
     " vista {{{
@@ -501,13 +466,13 @@ EOF
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call s:ent_args('enter') | call s:highlight() | call s:lsp()
-    "save session
-    autocmd VimLeavePre * call s:ent_args('leave')
+    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require("lsp")
+    " save session
+    autocmd VimLeavePre * call s:gate('out')
     " completion
-    autocmd TextChangedI * call s:complete(0)
+    autocmd TextChangedI * lua complete(0)
     " use emmet for html
-    autocmd FileType html,php inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
+    autocmd FileType html,php,svelte inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
     " reset tab for vimwiki
     autocmd FileType vimwiki nnoremap <buffer> <tab> <cmd>call TabsGo(v:count)<cr>
     " gc: edit commit message, gp: push, <cr>: commit
@@ -519,6 +484,9 @@ augroup init "{{{
         \| vertical resize 83
         \| silent! execute 'Vista!'
         \| endif
+    autocmd DirChanged * call S('Session', 0)
+    " turn on spelling for prose filetypes
+    autocmd FileType markdown,tex setlocal spell
 augroup END
 " }}}
 

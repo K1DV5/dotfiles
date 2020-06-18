@@ -3,7 +3,7 @@ vnoremap ii <cmd>call <sid>in_indent(0)<cr>
 onoremap ai <cmd>call <sid>in_indent(1)<cr>
 vnoremap ai <cmd>call <sid>in_indent(1)<cr>
 
-let s:around = ['tex', 'vim']
+let s:around = ['tex', 'vim', 'lua']
 
 function! s:get_indent(line, direc)
     let lnum = a:line + a:direc
@@ -46,13 +46,14 @@ function! s:in_indent(around)
     endif
     let [up, down] = s:get_offsets(line, ind, a:around)
     call cursor(line - up, 1)
-    if mode() == 'n'
+    let mod = mode()
+    if mod == 'n'
         norm V
         call cursor(line + down - 1, 1)
         return
-    elseif mode() == 'v'
+    elseif mod == 'v'
         call feedkeys('Vo')
-    elseif mode() == 'V'
+    elseif mod == 'V'
         call feedkeys('o')
     endif
     if down > 1

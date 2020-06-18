@@ -13,7 +13,7 @@ function! s:fuzzy_file(chan, data, name)
     set laststatus=2
     let selected = getline('.')
     bdelete
-    if !empty(selected)
+    if !empty(selected) && !cancelled
         call s:sink(selected, 1)
     endif
 endfunction
@@ -34,7 +34,7 @@ function! s:action(selected, default)
     if !action
         return
     elseif action == 1
-        let destination = input('dest: ', a:selected, 'file')
+        let destination = input('destination: ', a:selected, 'file')
         call rename(a:selected, destination)
         call map(b:file_list, {_, f -> f == a:selected ? destination : f})
     elseif action == 2
@@ -82,6 +82,7 @@ function! Fuzzy(cmd, ...) abort
     let s:sink = a:0 ? a:1 : funcref('s:action')
     if type(a:cmd) == v:t_string
         call jobstart(a:cmd, {'on_stdout': funcref('s:fuzzy_file'), 'stdout_buffered': 1})
+        " call s:fuzzy_file(0, systemlist(a:cmd), 'direct')
     else
         call s:fuzzy_file(0, a:cmd, 'direct')
     endif

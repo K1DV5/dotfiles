@@ -14,7 +14,7 @@ let s:file_node_extensions = {
     \ 'markdown' : '',
     \ 'rmd'      : '',
     \ 'json'     : '',
-    \ 'js'       : '',
+    \ 'js'       : '',
     \ 'mjs'      : '',
     \ 'jsx'      : '',
     \ 'rb'       : '',

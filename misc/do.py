@@ -8,10 +8,10 @@ from os import chdir, remove, rename, path, startfile, environ, makedirs, getcwd
 from shutil import move, copy
 from subprocess import run
 from glob import glob
-from re import sub, search
 from time import sleep
 from json import load
 import ctypes
+from msvcrt import getch
 
 # ENABLE_VIRTUAL_TERMINAL_PROCESSING
 k = ctypes.windll.kernel32
@@ -25,6 +25,7 @@ console_colors = {
     'default': ''
     }
 
+
 def _color_text(pairs: dict):
     '''color text for print'''
     printed = ''
@@ -32,6 +33,7 @@ def _color_text(pairs: dict):
         printed += f'\x1b[{console_colors[color]}m{text}'
     printed += f'\x1b[{console_colors["default"]}m'
     return printed
+
 
 def _exec_cmd(cmd, shell=None):
     '''
@@ -44,6 +46,7 @@ def _exec_cmd(cmd, shell=None):
         chdir(args)
         return 0
     return run(cmd, shell=shell).returncode
+
 
 # convert to absolute path
 if not path.isabs(argv[1]):
@@ -200,18 +203,22 @@ def javascript():
     if package:
         with open(package[0]) as file:
             scripts = list(load(file)['scripts'])
-        prompt = f'({scripts[0]}) ' + ' '.join([f'{i}:{cmd}' for i, cmd in enumerate(scripts[1:], start=1)]) + ' (n)ode > '
-        selected = input(prompt)
-        if selected == 'n':
-            cmd = ['node', FILE_NAME]
-        else:
-            script = scripts[int(selected) if selected else 0]
-            cmd = ['npm', 'run', script]
+        prompt, letters = f'[{scripts[0]}]', {}
+        for cmd in scripts[1:] + ['node']:
+            for i, let in enumerate(cmd):
+                if let not in letters:
+                    letters[let] = cmd
+                    prompt += f' {cmd[:i]}({let}){cmd[i+1:]}'
+                    break
+        print(prompt)
+        script = letters.get(getch().decode(), scripts[0])
+        cmd = ['node', FILE_NAME] if script == 'node' else ['npm', 'run', script]
     elif ' -i' in LINE_1:
         cmd = ['node', '-i', FILE_NAME]
     else:
         cmd = ['node', FILE_NAME]
     _exec_cmd(cmd, shell=True)
+
 
 def generic():
     returncode = 0
@@ -240,6 +247,7 @@ def generic():
         if returncode:
             return returncode
     return 0
+
 
 def main():
     '''main function'''
