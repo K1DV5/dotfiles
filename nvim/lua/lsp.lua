@@ -39,47 +39,63 @@ nvim_lsp.html.setup{filetypes = {'html', 'svelte'}; cmd = {'html-languageserver.
 nvim_lsp.tsserver.setup{cmd = {'typescript-language-server.cmd', '--stdio'}, on_attach=on_attach}
 
 
--- for complete()
-local triggers = {lua = ':'} -- trigger pattern
-local chars = 2 -- chars before triggering
 local util = require 'vim.lsp.util'
 local lsp = require 'vim.lsp'
+-- for complete()
+local chars = 2 -- chars before triggering
+local keys = {
+    next = '\14',  -- <c-n>
+    prev = '\16',  -- <c-p>
+    tab = '\t',  -- <tab>
+    omni = '\24\15'  -- <c-x><c-o>
+}
+local triggers = {lua = ':\\|\\.'} -- trigger patterns
+-- default trigger. most languages use a dot for class.property
+setmetatable(triggers, {__index = function() return '\\.' end})
+
+local function keyword_complete(at_trigger)  -- trigger keyword completion
+    if not at_trigger then
+        vim.fn.feedkeys(keys.next)
+    end
+end
+
 function complete(direction)  -- completion function
-    -- try chain: omnifunc -> keyword
+    -- if direction == 0 usable in autocmd TextChangedI
+    -- if direction == -1 or 1 usable in a mapping with <tab> and <s-tab>
+    --    if pumvisible
+    --        direction == -1 backward
+    --        direction == 1 forward
+    --    else force show completion
+    -- try chain: lsp or omnifunc -> keyword
     if vim.fn.pumvisible() == 1 then
-        if direction == 1 then return ""  -- "<c-n>"
-        elseif direction == -1 then return "" end  -- "<c-p>"
+        if direction == 1 then return keys.next
+        elseif direction == -1 then return keys.prev end
     end
     local col = vim.api.nvim_win_get_cursor(0)[2]
     local line_to_cursor = vim.api.nvim_get_current_line():sub(1, col)
-    local current_keyword_start = vim.regex('\\k*$'):match_str(line_to_cursor) + 1
-    local prefix = line_to_cursor:sub(current_keyword_start)
-    -- nearest character is a trigger
+    local current_keyword_start_col = vim.regex('\\k*$'):match_str(line_to_cursor) + 1
+    local prefix = line_to_cursor:sub(current_keyword_start_col)
     local trigger = triggers[vim.api.nvim_buf_get_option(0, 'filetype')]
-    if not trigger then trigger = "\\." end  -- most languages use a dot for class.property
     local at_trigger = vim.regex(trigger):match_str(line_to_cursor:sub(-1))
-    if not at_trigger and (direction == 0 and (prefix:len() ~= chars or prefix == '') or direction ~= 0 and prefix == '') then
-        return "	"  -- no possible suggestions or prevent useless refresh
+    if not at_trigger and (direction == 0 and prefix:len() ~= chars or direction ~= 0 and prefix == '') then
+        return keys.tab  -- no possible suggestions or prevent useless refresh
     end
     local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
     if omnifunc == 'v:lua.vim.lsp.omnifunc' then
-        -- perform standard lsp completion request (taken from nvim core code)
+        -- request standard lsp completion (taken from nvim core lsp code)
         lsp.buf_request(0, 'textDocument/completion', util.make_position_params(), function(err, _, result)
-            if err or not result or vim.api.nvim_get_mode().mode ~= "i" then return end
-            local matches = util.text_document_completion_list_to_complete_items(result, prefix)
-            if vim.tbl_isempty(matches) then
-                vim.api.nvim_input("<c-n>")  -- keyword completion
-            else
-                vim.fn.complete(current_keyword_start, matches)
+            if err or vim.api.nvim_get_mode().mode ~= "i" then return end
+            if not result or vim.tbl_isempty(result) then
+                return keyword_complete(at_trigger)  -- fallback to keyword
             end
+            local matches = util.text_document_completion_list_to_complete_items(result, prefix)
+            vim.fn.complete(current_keyword_start_col, matches)
         end)
     elseif omnifunc:len() > 0 then
-        vim.api.nvim_input("<c-x><c-o>")
-        if not vim.fn.pumvisible() then
-            vim.api.nvim_input("<c-n>")  -- keyword completion
-        end
+        vim.fn.feedkeys(keys.omni)
+        if not vim.fn.pumvisible() then keyword_complete(at_trigger) end
     else
-        vim.api.nvim_input("<c-n>")  -- keyword completion
+        keyword_complete(at_trigger)  -- fallback to keyword
     end
     return ''
 end
