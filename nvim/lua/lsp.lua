@@ -53,10 +53,14 @@ local triggers = {lua = ':\\|\\.'} -- trigger patterns
 -- default trigger. most languages use a dot for class.property
 setmetatable(triggers, {__index = function() return '\\.' end})
 
-local function keyword_complete(at_trigger)  -- trigger keyword completion
-    if not at_trigger then
-        vim.fn.feedkeys(keys.next)
+local function chain_complete()  -- try built in completions in sequence
+    -- chain: omnifunc -> keyword
+    local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
+    if omnifunc:len() > 0 and omnifunc ~= 'v:lua.vim.lsp.omnifunc' then
+        vim.fn.feedkeys(keys.omni)
+        if vim.fn.pumvisible() then return end
     end
+    vim.fn.feedkeys(keys.next)
 end
 
 function complete(direction)  -- completion function
@@ -66,7 +70,7 @@ function complete(direction)  -- completion function
     --        direction == -1 backward
     --        direction == 1 forward
     --    else force show completion
-    -- try chain: lsp or omnifunc -> keyword
+    -- try lsp then chain_complete()
     if vim.fn.pumvisible() == 1 then
         if direction == 1 then return keys.next
         elseif direction == -1 then return keys.prev end
@@ -80,22 +84,17 @@ function complete(direction)  -- completion function
     if not at_trigger and (direction == 0 and prefix:len() ~= chars or direction ~= 0 and prefix == '') then
         return keys.tab  -- no possible suggestions or prevent useless refresh
     end
-    local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
-    if omnifunc == 'v:lua.vim.lsp.omnifunc' then
+    if not vim.tbl_isempty(lsp.buf_get_clients(0)) then
         -- request standard lsp completion (taken from nvim core lsp code)
         lsp.buf_request(0, 'textDocument/completion', util.make_position_params(), function(err, _, result)
             if err or vim.api.nvim_get_mode().mode ~= "i" then return end
             if not result or vim.tbl_isempty(result) then
-                return keyword_complete(at_trigger)  -- fallback to keyword
+                if not at_trigger then return chain_complete() end
+                return
             end
             local matches = util.text_document_completion_list_to_complete_items(result, prefix)
             vim.fn.complete(current_keyword_start_col, matches)
         end)
-    elseif omnifunc:len() > 0 then
-        vim.fn.feedkeys(keys.omni)
-        if not vim.fn.pumvisible() then keyword_complete(at_trigger) end
-    else
-        keyword_complete(at_trigger)  -- fallback to keyword
-    end
+    elseif not at_trigger then chain_complete() end
     return ''
 end
