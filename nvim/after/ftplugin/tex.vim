@@ -1,7 +1,7 @@
 " show max recommended columns
 setlocal colorcolumn=80
 " check spelling
-set spell
+setlocal spell
 
 " change normal equation to latex
 inoremap <buffer> <c-space> <cmd>call Latexify(0)<cr>

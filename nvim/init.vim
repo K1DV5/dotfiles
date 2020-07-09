@@ -60,6 +60,8 @@
         set grepprg=rg\ --vimgrep
         " allow mouse interaction
         set mouse=a
+        " make windows aquashable to just the statusbar
+        set winminheight=0
 
         "}}}
     "performance {{{
@@ -396,7 +398,7 @@
 
     " }}}
 " }}}
-" pack conf {{{
+" pack config {{{
     "tabs {{{
         " tabs that are not normal buffers
         let g:tabs_custom_stl = {'gina-status': '%f', 'undo': '', 'vista': '', 'gina-commit': ''}
