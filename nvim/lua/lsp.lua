@@ -93,13 +93,10 @@ local compl_win = 2
 function completion_help()
     local info = vim.api.nvim_get_vvar('event')
     local item = info.completed_item
-    if not item or not item.info or item.info == '' then
+    if not item or not item.info or #item.info < 2 then
         return floating_win(nil, compl_win, nil, nil)  -- close
     end
     local lines = vim.split(item.info, '\n')
-    local selected = vim.fn.complete_info().selected
-    local row
-    if selected > -1 then row = info.row + selected else row = info.row end
     local col = info.col + info.width
     local width = 0
     for i, line in pairs(lines) do
@@ -107,8 +104,8 @@ function completion_help()
         if #line > 0 then lines[i] = ' ' .. line .. ' ' end
     end
     width = math.min(width, vim.api.nvim_get_option('columns') - col)
-    local height = math.min(#lines, vim.api.nvim_get_option('lines') - row - 1)
-    local opts = {relative = 'editor', row = row, col = col, height = height, width = width, style = 'minimal'}
+    local height = math.min(#lines, vim.api.nvim_get_option('lines') - info.row - 1)
+    local opts = {relative = 'editor', row = info.row, col = col, height = height, width = width, style = 'minimal'}
     -- vim.api.nvim_set_var('iteM', vim.inspect(item))
     vim.loop.new_timer():start(0, 0, vim.schedule_wrap(function()
         compl_win = floating_win(compl_buf, compl_win, lines, opts)
@@ -172,12 +169,17 @@ end
 local map = vim.api.nvim_buf_set_keymap
 
 -- setup func
-local function on_attach(_, bufnr)
+local function on_attach(client, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-    vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(false); signature_help(true)]]
-    vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(true); signature_help(false)]]
+    vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(false)]]
+    vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(true)]]
+    if client.server_capabilities.signatureHelpProvider then
+        vim.api.nvim_command [[autocmd InsertEnter <buffer> lua signature_help(true)]]
+        vim.api.nvim_command [[autocmd InsertLeave <buffer> lua signature_help(false)]]
+        vim.api.nvim_command [[autocmd TextChangedI <buffer> lua signature_help(true)]]
+    end
+    vim.api.nvim_set_var('capA', vim.inspect(client.server_capabilities))
     vim.api.nvim_command [[autocmd CompleteChanged,CompleteDone <buffer> lua completion_help()]]
-    vim.api.nvim_command [[autocmd TextChangedI <buffer> lua signature_help(true)]]
     -- Mappings
     local opts = {noremap=true, silent=true}
     map(bufnr, 'n', '<c-]>',      '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
@@ -192,8 +194,8 @@ local function on_attach(_, bufnr)
 end
 
 -- setup pyls, texlab, html, tsserver
-local nvim_lsp = require('nvim_lsp')
-for _, lsp in ipairs({'pyls', 'texlab'}) do
+local nvim_lsp = require'nvim_lsp'
+for _, lsp in ipairs{'pyls', 'texlab'} do
     nvim_lsp[lsp].setup{on_attach=on_attach}
 end
 nvim_lsp.html.setup{filetypes = {'html', 'svelte'}; cmd = {'html-languageserver.cmd', '--stdio'}, on_attach=on_attach}
