@@ -96,6 +96,7 @@
         "scroll by page
         noremap <space> <c-f>
         noremap <c-space> <c-b>
+        noremap <s-space> <c-b>
         "select all ctrl a
         noremap <c-a> ggVG
         " copy till the end of line
@@ -138,26 +139,6 @@
     "insert {{{
         " escape quick
         imap kj <esc>
-        " move one line up and down
-        inoremap <up> <cmd>norm gk<cr>
-        inoremap <down> <cmd>norm gj<cr>
-        " cut
-        vnoremap <c-x> <cmd>norm d<cr>
-        " copy
-        vnoremap <c-c> <cmd>norm y<cr>
-        " paste
-        inoremap <c-v> <cmd>norm gP<cr>
-        " undo
-        inoremap <c-z> <cmd>undo<cr>
-        " redo
-        inoremap <c-y> <cmd>redo<cr>
-        " delete word
-        inoremap <c-bs> <cmd>norm bdw<cr>
-        inoremap <c-del> <cmd>norm dw<cr>
-        " " go through suggestions or jump to snippet placeholders
-        inoremap <expr> <tab> v:lua.complete(1)
-        inoremap <expr> <s-tab> v:lua.complete(-1)
-        snoremap <expr> <tab> v:lua.complete(1)
         " pairs
         inoremap ( ()<left>
         " inoremap ( <cmd>lua vim.lsp.buf.signature_help()<cr>
@@ -231,6 +212,7 @@
 
     " }}}
     function! S(...) "{{{
+        " session management
         if a:0 == 0
             let file = 'Session'
             let save = 1
@@ -468,11 +450,9 @@
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require("lsp")
+    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require 'lsp'
     " save session
     autocmd VimLeavePre * call s:gate('out')
-    " completion
-    autocmd TextChangedI * lua complete(0)
     " use emmet for html
     autocmd FileType html,php,svelte inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
     " reset tab for vimwiki
