@@ -40,12 +40,12 @@ end
 local diagnostics = {}  -- {bufnr = {line = {...} ...} ...}
 
 -- show underlines and signs for diagnostics
-function publish_diagnostics(normal_mode)
+function publish_diagnostics(show_all)
     local bufnr = vim.api.nvim_get_current_buf()
     local buffer_diags = diagnostics[bufnr]
     if not buffer_diags then return end
     local diags = {}
-    if normal_mode then
+    if show_all then
         for _, diag in pairs(buffer_diags) do
             vim.list_extend(diags, diag)
         end
@@ -117,9 +117,9 @@ vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(_, _, result)
         if not diagnostics[bufnr][line] then diagnostics[bufnr][line] = {} end
         table.insert(diagnostics[bufnr][line], diag)
     end
-    local normal_mode = vim.api.nvim_get_mode().mode == 'n'
-    publish_diagnostics(normal_mode)
-    floating_line_diagnostics(normal_mode)
+    local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
+    publish_diagnostics(not_insert_mode)
+    floating_line_diagnostics(not_insert_mode)
     vim.api.nvim_command("doautocmd User LspDiagnosticsChanged")
 end
 
@@ -234,7 +234,8 @@ function complete(direction)
         -- request standard lsp completion (taken from nvim core lsp code)
         vim.lsp.buf_request(0, 'textDocument/completion', vim.lsp.util.make_position_params(), function(err, _, result)
             -- vim.api.nvim_set_var('ReS', vim.inspect(result))
-            if err or not result or vim.api.nvim_get_mode().mode == 'n' or vim.tbl_isempty(result) then return end
+            local in_insert_mode = vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
+            if err or not result or not in_insert_mode or vim.tbl_isempty(result) then return end
             local matches = vim.lsp.util.text_document_completion_list_to_complete_items(result, prefix)
             vim.list_extend(matches, vim.fn.complete_info().items)
             vim.fn.complete(current_keyword_start_col, matches)
