@@ -79,19 +79,24 @@ function floating_line_diagnostics(show)
     if not diags or not diags[line] or #diags[line] == 0 then
         return floating_win(nil, diag_win, nil, nil)
     end
+    pos_diags = {}
     diags = diags[line]
     local lines, highlights = {}, {}
     for i, diagnostic in ipairs(diags) do
-        local hiname = vim.lsp.util.get_severity_highlight_name(diagnostic.severity)
-        local message_lines = vim.split(diagnostic.message, '\n')
-        message_lines[1] = ((diagnostic.source .. ': ') or '• ') .. message_lines[1]
-        for _, line in ipairs(message_lines) do
-            table.insert(lines, line)
-            table.insert(highlights, hiname)
+        local End = diagnostic.range['end']
+        if End.line > line or diagnostic.range.start.character <= col and End.character > col then
+            local hiname = vim.lsp.util.get_severity_highlight_name(diagnostic.severity)
+            local message_lines = vim.split(diagnostic.message, '\n')
+            message_lines[1] = ((diagnostic.source .. ': ') or '• ') .. message_lines[1]
+            for _, line in ipairs(message_lines) do
+                table.insert(lines, line)
+                table.insert(highlights, hiname)
+            end
         end
     end
-    -- vim.api.nvim_set_var('diaG', vim.inspect(lines))
-    diag_win = floating_win(diag_buf, diag_win, lines, opts)
+    if #lines == 0 then return floating_win(nil, diag_win, nil, nil) end
+    vim.api.nvim_set_var('diaG', vim.inspect(diags))
+    diag_win = floating_win(diag_buf, diag_win, lines, vim.tbl_extend('keep', {anchor = 'SW', row = 0}, opts))
     for i, hi in ipairs(highlights) do
         vim.api.nvim_buf_add_highlight(diag_buf, -1, hi, i-1, 0, -1)
     end
@@ -265,15 +270,15 @@ local function on_attach(client, bufnr)
     end
     -- Mappings
     local map = vim.api.nvim_buf_set_keymap
-    map(bufnr, 'n', '<c-]>',      '<cmd>lua vim.lsp.buf.declaration()<CR>', map_opts)
-    map(bufnr, 'n',  'gd',        '<cmd>lua vim.lsp.buf.definition()<CR>', map_opts)
-    map(bufnr, 'n',  'K',         '<cmd>lua vim.lsp.buf.hover()<CR>', map_opts)
-    map(bufnr, 'n',  'gD',        '<cmd>lua vim.lsp.buf.implementation()<CR>', map_opts)
-    map(bufnr, 'i',  '<c-k>',     '<cmd>lua vim.lsp.buf.signature_help()<CR>', map_opts)
-    map(bufnr, 'n',  '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
-    map(bufnr, 'n',  'gr',        '<cmd>lua vim.lsp.buf.references()<CR>', map_opts)
-    map(bufnr, 'n',  '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>', map_opts)
-    map(bufnr, 'n',  '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>', map_opts)
+    map(bufnr, 'n', '<c-]>',     '<cmd>lua vim.lsp.buf.declaration()<CR>',     map_opts)
+    map(bufnr, 'n', 'gd',        '<cmd>lua vim.lsp.buf.definition()<CR>',      map_opts)
+    map(bufnr, 'n', 'K',         '<cmd>lua vim.lsp.buf.hover()<CR>',           map_opts)
+    map(bufnr, 'n', 'gD',        '<cmd>lua vim.lsp.buf.implementation()<CR>',  map_opts)
+    map(bufnr, 'i', '<c-k>',     '<cmd>lua vim.lsp.buf.signature_help()<CR>',  map_opts)
+    map(bufnr, 'n', '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
+    map(bufnr, 'n', 'gr',        '<cmd>lua vim.lsp.buf.references()<CR>',      map_opts)
+    map(bufnr, 'n', '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>',          map_opts)
+    map(bufnr, 'n', '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>',      map_opts)
 end
 
 -- setup language servers
