@@ -4,7 +4,7 @@
 -- this is to be used to work with floating wins
 -- by custom functions below.
 local floating_win_opts = {relative = 'cursor', row = -1, col = 0, style = 'minimal'}
-local function floating_win(buf, win, lines, opts)
+local function floating_win(win, buf, lines, opts)
     if not buf then
         if vim.api.nvim_win_is_valid(win) then
             vim.api.nvim_win_close(win, true)
@@ -67,12 +67,11 @@ vim.api.nvim_buf_set_option(diag_buf, 'undolevels', -1)
 
 -- show diagnostics for current line in a floating_win
 function floating_line_diagnostics(show)
-    if not show then
-        return floating_win(nil, diag_win, nil, nil)  -- close
-    end
+    if not show then return floating_win(diag_win) end  -- close
     local pos = vim.api.nvim_win_get_cursor(0)
     local line, col = pos[1] - 1, pos[2]
     local diags = vim.lsp.util.get_line_diagnostics()
+    -- vim.api.nvim_set_var('diaG', vim.inspect(diags))
     local lines, highlights = {}, {}
     for i, diagnostic in ipairs(diags) do
         local End = diagnostic.range['end']
@@ -86,12 +85,11 @@ function floating_line_diagnostics(show)
             end
         end
     end
-    if #lines == 0 then return floating_win(nil, diag_win, nil, nil) end
-    -- vim.api.nvim_set_var('diaG', vim.inspect(diags))
+    if #lines == 0 then return floating_win(diag_win) end
     local new_opts
     if #lines > line then new_opts = {anchor = 'NW', row = 1}
     else new_opts = {anchor = 'SW', row = 0} end
-    diag_win = floating_win(diag_buf, diag_win, lines, vim.tbl_extend('keep', new_opts, floating_win_opts))
+    diag_win = floating_win(diag_win, diag_buf, lines, vim.tbl_extend('keep', new_opts, floating_win_opts))
     for i, hi in ipairs(highlights) do
         vim.api.nvim_buf_add_highlight(diag_buf, -1, hi, i-1, 0, -1)
     end
@@ -101,10 +99,7 @@ end
 vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(_, _, result)
     if not result then return end
     local bufnr = vim.uri_to_bufnr(result.uri)
-    if not bufnr then
-        -- vim.lsp.err_message("LSP.publishDiagnostics: Couldn't find buffer for ", result.uri)
-        return
-    end
+    if not bufnr then return end
     vim.lsp.util.buf_diagnostics_save_positions(bufnr, result.diagnostics)
     local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
     publish_diagnostics(not_insert_mode)
@@ -123,23 +118,23 @@ local sig_win = 1
 local last_col = 0
 
 function signature_help(show)
-    if not show then return floating_win(nil, sig_win, nil, nil) end  -- close
+    if not show then return floating_win(sig_win) end  -- close
     local col = vim.api.nvim_win_get_cursor(0)[2]
     local line_to_cursor = vim.api.nvim_get_current_line():sub(1, col)
     local kw_start = string.find(line_to_cursor, '[a-zA-Z0-9_]+$')
     local sig_col = 0  -- signature help column
     if kw_start then
-        if col > last_col then return floating_win(nil, sig_win, nil, nil) end  -- same signature, no change, close
+        if col > last_col then return floating_win(sig_win) end  -- same signature, no change, close
         sig_col = kw_start - #line_to_cursor - 1
     elseif string.find(line_to_cursor, '[ \t]$') then
         local opts = {relative = 'cursor', row = -1, col = sig_col}
-        return floating_win(sig_buf, sig_win, nil, opts)  -- move
+        return floating_win(sig_win, sig_buf, nil, opts)  -- move
     end
     last_col = col
     vim.lsp.buf_request(0, 'textDocument/signatureHelp', vim.lsp.util.make_position_params(), function(err, _, result)
         vim.api.nvim_set_var('reS', vim.inspect(result))
-        if err or not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.signatures[result.activeSignature + 1].parameters then
-            return floating_win(nil, sig_win, nil, nil)  -- close
+        if not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.signatures[result.activeSignature + 1].parameters then
+            return floating_win(sig_win)  -- close
         end
         local param = result.signatures[result.activeSignature + 1].parameters[(result.activeParameter or 0) + 1]
         if not param then return end
@@ -148,7 +143,7 @@ function signature_help(show)
             text = text .. ': ' .. param.documentation
         end
         local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col})
-        sig_win = floating_win(sig_buf, sig_win, {text}, opts)
+        sig_win = floating_win(sig_win, sig_buf, {text}, opts)
     end)
 end
 
@@ -162,7 +157,7 @@ function completion_help()
     local info = vim.api.nvim_get_vvar('event')
     local item = info.completed_item
     if not item or not item.info or #item.info < 2 then
-        return floating_win(nil, compl_win, nil, nil)  -- close
+        return floating_win(compl_win)  -- close
     end
     vim.api.nvim_set_var('infO', vim.inspect(info))
     local lines = vim.split(item.info, '\n')
@@ -174,7 +169,7 @@ function completion_help()
     if width < 5 then return end
     local opts = {relative = 'editor', row = info.row[false], col = col, height = height, width = width, style = 'minimal'}
     vim.loop.new_timer():start(0, 0, vim.schedule_wrap(function()
-        compl_win = floating_win(compl_buf, compl_win, lines, opts)
+        compl_win = floating_win(compl_win, compl_buf, lines, opts)
         vim.api.nvim_win_set_option(compl_win, 'wrap', false)
     end))
 end
@@ -210,7 +205,7 @@ function complete(direction)
     -- trigger. default: most languages use a dot for class.property
     local trigger = triggers[vim.api.nvim_buf_get_option(0, 'filetype')] or '\\.'
     if not vim.regex(trigger):match_str(line_to_cursor:sub(-1)) then  -- not at trigger
-        if direction == 0 and #prefix ~= chars or direction ~= 0 and prefix == '' then
+        if not direction and #prefix ~= chars or direction and prefix == '' then
             return keys.default  -- no possible suggestions or prevent useless refresh
         end
         local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
@@ -241,7 +236,7 @@ local imap_opts = vim.tbl_extend('keep', map_opts, {expr = true})
 vim.api.nvim_set_keymap('i', '<tab>', 'v:lua.complete(1)', imap_opts)
 vim.api.nvim_set_keymap('i', '<s-tab>', 'v:lua.complete(-1)', imap_opts)
 vim.api.nvim_set_keymap('s', '<tab>', 'v:lua.complete(1)', imap_opts)
-vim.api.nvim_command [[autocmd TextChangedI * lua complete(0)]]
+vim.api.nvim_command [[autocmd TextChangedI * lua complete()]]
 
 -- setup func
 local function on_attach(client, bufnr)
