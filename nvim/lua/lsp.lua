@@ -3,7 +3,7 @@
 -------------------------------------------------
 -- this is to be used to work with floating wins
 -- by custom functions below.
-local opts = {relative = 'cursor', row = -1, col = 0, style = 'minimal'}
+local floating_win_opts = {relative = 'cursor', row = -1, col = 0, style = 'minimal'}
 local function floating_win(buf, win, lines, opts)
     if not buf then
         if vim.api.nvim_win_is_valid(win) then
@@ -37,24 +37,21 @@ local function floating_win(buf, win, lines, opts)
 end
 
 ------------------ DIAGNOSTICS ----------------------
-local diagnostics = {}  -- {bufnr = {line = {...} ...} ...}
 
 -- show underlines and signs for diagnostics
 function publish_diagnostics(show_all)
     local bufnr = vim.api.nvim_get_current_buf()
-    local buffer_diags = diagnostics[bufnr]
+    local buffer_diags = vim.lsp.util.diagnostics_by_buf[bufnr]
     if not buffer_diags then return end
     local diags = {}
     if show_all then
-        for _, diag in pairs(buffer_diags) do
-            vim.list_extend(diags, diag)
-        end
+        diags = buffer_diags
     else
         -- insert mode, filter out the current line's
         local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-        for start_line, diag in pairs(diagnostics[bufnr]) do
-            if start_line ~= line then
-                vim.list_extend(diags, diag)
+        for _, diag in ipairs(buffer_diags) do
+            if diag.range.start.line ~= line then
+                table.insert(diags, diag)
             end
         end
     end
@@ -75,16 +72,11 @@ function floating_line_diagnostics(show)
     end
     local pos = vim.api.nvim_win_get_cursor(0)
     local line, col = pos[1] - 1, pos[2]
-    local diags = diagnostics[vim.api.nvim_get_current_buf()]
-    if not diags or not diags[line] or #diags[line] == 0 then
-        return floating_win(nil, diag_win, nil, nil)
-    end
-    pos_diags = {}
-    diags = diags[line]
+    local diags = vim.lsp.util.get_line_diagnostics()
     local lines, highlights = {}, {}
     for i, diagnostic in ipairs(diags) do
         local End = diagnostic.range['end']
-        if End.line > line or diagnostic.range.start.character <= col and End.character > col then
+        if End.line > line or diagnostic.range.start.character <= col and End.character >= col then
             local hiname = vim.lsp.util.get_severity_highlight_name(diagnostic.severity)
             local message_lines = vim.split(diagnostic.message, '\n')
             message_lines[1] = ((diagnostic.source .. ': ') or '• ') .. message_lines[1]
@@ -95,8 +87,11 @@ function floating_line_diagnostics(show)
         end
     end
     if #lines == 0 then return floating_win(nil, diag_win, nil, nil) end
-    vim.api.nvim_set_var('diaG', vim.inspect(diags))
-    diag_win = floating_win(diag_buf, diag_win, lines, vim.tbl_extend('keep', {anchor = 'SW', row = 0}, opts))
+    -- vim.api.nvim_set_var('diaG', vim.inspect(diags))
+    local new_opts
+    if #lines > line then new_opts = {anchor = 'NW', row = 1}
+    else new_opts = {anchor = 'SW', row = 0} end
+    diag_win = floating_win(diag_buf, diag_win, lines, vim.tbl_extend('keep', new_opts, floating_win_opts))
     for i, hi in ipairs(highlights) do
         vim.api.nvim_buf_add_highlight(diag_buf, -1, hi, i-1, 0, -1)
     end
@@ -111,12 +106,6 @@ vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(_, _, result)
         return
     end
     vim.lsp.util.buf_diagnostics_save_positions(bufnr, result.diagnostics)
-    diagnostics[bufnr] = {}
-    for _, diag in ipairs(result.diagnostics) do
-        local line = diag.range.start.line
-        if not diagnostics[bufnr][line] then diagnostics[bufnr][line] = {} end
-        table.insert(diagnostics[bufnr][line], diag)
-    end
     local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
     publish_diagnostics(not_insert_mode)
     floating_line_diagnostics(not_insert_mode)
@@ -158,7 +147,7 @@ function signature_help(show)
         if param.documentation ~= nil and param.documentation ~= vim.NIL then
             text = text .. ': ' .. param.documentation
         end
-        local opts = vim.tbl_extend('force', opts, {width = #text + 2, col = sig_col})
+        local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col})
         sig_win = floating_win(sig_buf, sig_win, {text}, opts)
     end)
 end
@@ -175,15 +164,15 @@ function completion_help()
     if not item or not item.info or #item.info < 2 then
         return floating_win(nil, compl_win, nil, nil)  -- close
     end
+    vim.api.nvim_set_var('infO', vim.inspect(info))
     local lines = vim.split(item.info, '\n')
-    local col = info.col + info.width
-    local height = math.min(#lines, vim.api.nvim_get_option('lines') - info.row - 1)
+    local col = info.col[false] + info.width[false]
+    local height = math.min(#lines, vim.api.nvim_get_option('lines') - info.row[false] - 1)
     local width = 0
     for i, line in pairs(lines) do width = math.max(width, #line + 2) end -- 2 is for the side spaces
     width = math.min(width, vim.api.nvim_get_option('columns') - col)
     if width < 5 then return end
-    local opts = {relative = 'editor', row = info.row, col = col, height = height, width = width, style = 'minimal'}
-    -- vim.api.nvim_set_var('iteM', vim.inspect(item))
+    local opts = {relative = 'editor', row = info.row[false], col = col, height = height, width = width, style = 'minimal'}
     vim.loop.new_timer():start(0, 0, vim.schedule_wrap(function()
         compl_win = floating_win(compl_buf, compl_win, lines, opts)
         vim.api.nvim_win_set_option(compl_win, 'wrap', false)
