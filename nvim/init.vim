@@ -90,15 +90,10 @@
     "normal {{{
         " do what needs to be done
         noremap <c-p> <cmd>call <sid>do()<cr>
-        " move lines up down
-        noremap <a-k> <cmd>move-2<cr>
-        noremap <a-j> <cmd>move+1<cr>
         "scroll by page
         noremap <space> <c-f>
         noremap <c-space> <c-b>
         noremap <s-space> <c-b>
-        "select all ctrl a
-        noremap <c-a> ggVG
         " copy till the end of line
         noremap Y y$
         "also for wrapped lines
@@ -128,8 +123,6 @@
 
         "}}}
     "command {{{
-        " paste on command line
-        cnoremap <c-v> <c-r>*
         " go normal
         cnoremap kj <esc>
         " delete a character
@@ -154,9 +147,6 @@
     "visual {{{
         " escape quick
         vnoremap kj <esc>
-        vnoremap KJ <esc>
-        " search for selected text
-        vnoremap // y/<c-r>"<cr>
 
         "}}}
     " leader {{{
