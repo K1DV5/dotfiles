@@ -162,15 +162,19 @@ function completion_help()
     vim.api.nvim_set_var('infO', vim.inspect(info))
     local lines = vim.split(item.info, '\n')
     local col = info.col[false] + info.width[false]
-    local height = math.min(#lines, vim.api.nvim_get_option('lines') - info.row[false] - 1)
     local width = 0
     for i, line in pairs(lines) do width = math.max(width, #line + 2) end -- 2 is for the side spaces
     width = math.min(width, vim.api.nvim_get_option('columns') - col)
     if width < 5 then return end
+    local height = 0
+    for _, line in ipairs(lines) do
+        local displaywidth = vim.fn.strdisplaywidth(line) + 1
+        height = height + math.ceil(displaywidth / width)
+    end
+    height = math.min(height, vim.api.nvim_get_option('lines') - info.row[false] - 1)
     local opts = {relative = 'editor', row = info.row[false], col = col, height = height, width = width, style = 'minimal'}
     vim.loop.new_timer():start(0, 0, vim.schedule_wrap(function()
         compl_win = floating_win(compl_win, compl_buf, lines, opts)
-        vim.api.nvim_win_set_option(compl_win, 'wrap', false)
     end))
 end
 
@@ -192,7 +196,6 @@ local keys = {
 --        direction == -1 backward
 --        direction == 1 forward
 --    else force show completion
--- try lsp then chain_complete()
 function complete(direction)
     if vim.fn.pumvisible() == 1 then
         if direction == 1 then return keys.next
