@@ -211,14 +211,7 @@ endfunction
 noremap <c-g> <cmd>file <bar> echon '  ft:'.&filetype '  eol:'.&fileformat<cr>
 
 " highlightings used
-
-hi Tabs_Status guifg=white guibg=#0A7ACA
-hi link Tabs_Status_NC StatusLine
-hi Tabs_Error guifg=black guibg=red
-hi Tabs_Warning guifg=black guibg=yellow
-let norm_bg = synIDattr(hlID('Normal'), 'bg')
-
-let ft_hl = [
+let s:ft_hl = [
     \ ['vim', 'green'],
     \ ['jade', 'green'],
     \ ['ini', 'yellow'],
@@ -242,9 +235,17 @@ let ft_hl = [
     \ ['bashrc', 'Gray'],
     \ ['bashprofile', 'Gray',]]
 
-for hl in ft_hl
-    execute 'hi TabsFt_' . hl[0] 'guifg=' . hl[1] 'guibg=' . norm_bg
-endfor
+function s:define_hl()
+    hi Tabs_Status guifg=white guibg=#0A7ACA
+    hi link Tabs_Status_NC StatusLine
+    hi Tabs_Error guifg=black guibg=red
+    hi Tabs_Warning guifg=black guibg=yellow
+    let norm_bg = synIDattr(hlID('Normal'), 'bg')
+
+    for hl in s:ft_hl
+        execute 'hi TabsFt_' . hl[0] 'guifg=' . hl[1] 'guibg=' . norm_bg
+    endfor
+endfunction
 
 function! s:on_new() abort
     if get(b:, 'tabs_status_set', 0)
@@ -266,4 +267,6 @@ augroup Tabs
     " save the current window number before jumping to jump back, redrawing
     " the statusline to show which is the alt
     autocmd WinLeave * let g:tabs_alt_win = win_getid() " | if len(nvim_list_wins()) > 2 | redraws! | endif
+    " define highlightings
+    autocmd VimEnter * call s:define_hl()
 augroup END
