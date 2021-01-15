@@ -38,29 +38,32 @@ end
 
 ------------------ DIAGNOSTICS ----------------------
 
--- show underlines and signs for diagnostics
-function publish_diagnostics(show_all)
-    local bufnr = vim.api.nvim_get_current_buf()
-    local buffer_diags = vim.lsp.util.diagnostics_by_buf[bufnr]
-    if not buffer_diags then return end
-    local diags = {}
-    if show_all then
-        diags = buffer_diags
-    else
-        -- insert mode, filter out the current line's
-        local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-        for _, diag in ipairs(buffer_diags) do
-            if diag.range.start.line ~= line then
-                table.insert(diags, diag)
-            end
-        end
-    end
-    vim.lsp.util.buf_clear_diagnostics(bufnr)
-    vim.lsp.util.buf_diagnostics_underline(bufnr, diags)
-    vim.lsp.util.buf_diagnostics_signs(bufnr, diags)
-end
+-- -- show underlines and signs for diagnostics
+-- function publish_diagnostics(bufnr, client_id, show_all)
+--     vim.lsp.diagnostic.clear(bufnr, client_id)
+--     local buffer_diags = vim.lsp.diagnostic.get(bufnr, client_id)
+--     if not buffer_diags then return end
+--     local diags = {}
+--     if show_all then
+--         diags = buffer_diags
+--     else
+--         -- insert mode, filter out the current line's
+--         local line = vim.api.nvim_win_get_cursor(0)[1] - 1
+--         for _, diag in ipairs(buffer_diags) do
+--             if diag.range.start.line ~= line then
+--                 table.insert(diags, diag)
+--             end
+--         end
+--     end
+--     vim.lsp.diagnostic.set_underline(diags, bufnr, client_id)
+--     vim.lsp.diagnostic.set_signs(diags, bufnr, client_id)
+-- end
 
 -- for floating_line_diagnostics()
+local floating_diag_severity_hi = {}
+for name, value in pairs(require('vim.lsp.protocol').DiagnosticSeverity) do
+    floating_diag_severity_hi[value] = 'LspDiagnosticsVirtualText' .. name
+end
 local diag_buf = vim.api.nvim_create_buf(false, true)
 local diag_win = 1
 vim.api.nvim_buf_set_option(diag_buf, 'undolevels', -1)
@@ -70,13 +73,13 @@ function floating_line_diagnostics(show)
     if not show then return floating_win(diag_win) end  -- close
     local pos = vim.api.nvim_win_get_cursor(0)
     local line, col = pos[1] - 1, pos[2]
-    local diags = vim.lsp.util.get_line_diagnostics()
+    local diags = vim.lsp.diagnostic.get_line_diagnostics()
     -- vim.api.nvim_set_var('diaG', vim.inspect(diags))
     local lines, highlights = {}, {}
     for i, diagnostic in ipairs(diags) do
         local End = diagnostic.range['end']
         if End.line > line or diagnostic.range.start.character <= col and End.character >= col then
-            local hiname = vim.lsp.util.get_severity_highlight_name(diagnostic.severity)
+            local hiname = floating_diag_severity_hi[diagnostic.severity]
             local message_lines = vim.split(diagnostic.message, '\n')
             message_lines[1] = ((diagnostic.source .. ': ') or '• ') .. message_lines[1]
             for _, line in ipairs(message_lines) do
@@ -95,21 +98,26 @@ function floating_line_diagnostics(show)
     end
 end
 
--- custom diagnostics callback
-vim.lsp.callbacks["textDocument/publishDiagnostics"] = function(_, _, result)
-    if not result then return end
-    local bufnr = vim.uri_to_bufnr(result.uri)
-    if not bufnr then return end
-    vim.lsp.util.buf_diagnostics_save_positions(bufnr, result.diagnostics)
-    local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
-    publish_diagnostics(not_insert_mode)
-    floating_line_diagnostics(not_insert_mode)
-    vim.api.nvim_command("doautocmd User LspDiagnosticsChanged")
-end
+-- -- custom diagnostics callback
+-- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(_, _, result, client_id, _)
+--     local bufnr = vim.uri_to_bufnr(result.uri)
+--     if not result then return end
+--     vim.lsp.diagnostic.save(result.diagnostics, bufnr, client_id)
+--     local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
+--     publish_diagnostics(bufnr, client_id, not_insert_mode)
+--     floating_line_diagnostics(not_insert_mode)
+--     vim.api.nvim_command("doautocmd User LspDiagnosticsChanged")
+-- end
+vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+    vim.lsp.diagnostic.on_publish_diagnostics, {
+        virtual_text = false,
+        update_in_insert = false,
+    }
+)
 
 
----------------- SIGNATURE PARAMS HELP ----------------------
--- to be used with completion
+------------------ SIGNATURE PARAMS HELP ----------------------
+---- to be used with completion
 
 local sig_buf = vim.api.nvim_create_buf(false, true)
 vim.api.nvim_buf_set_option(sig_buf, 'undolevels', -1)
@@ -132,7 +140,7 @@ function signature_help(show)
     end
     last_col = col
     vim.lsp.buf_request(0, 'textDocument/signatureHelp', vim.lsp.util.make_position_params(), function(err, _, result)
-        vim.api.nvim_set_var('reS', vim.inspect(result))
+        -- vim.api.nvim_set_var('reS', vim.inspect(result))
         if not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.signatures[result.activeSignature + 1].parameters then
             return floating_win(sig_win)  -- close
         end
@@ -140,6 +148,10 @@ function signature_help(show)
         if not param then return end
         local text = param.label
         if param.documentation ~= nil and param.documentation ~= vim.NIL then
+            -- vim.api.nvim_set_var('DoC', vim.inspect(param.documentation))
+            if type(param.documentation) == 'table' then
+                param.documentation = param.documentation.value
+            end
             text = text .. ': ' .. param.documentation
         end
         local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col})
@@ -245,9 +257,11 @@ vim.api.nvim_command [[autocmd TextChangedI * lua complete()]]
 local function on_attach(client, bufnr)
     -- completion help
     vim.api.nvim_command [[autocmd CompleteChanged,CompleteDone <buffer> lua completion_help()]]
-    -- diagnostics
-    vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(false); floating_line_diagnostics(false)]]
-    vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(true); floating_line_diagnostics(true)]]
+    -- -- diagnostics
+    -- vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(0, nil, false); floating_line_diagnostics(false)]]
+    -- vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(0, nil, true); floating_line_diagnostics(true)]]
+    vim.api.nvim_command [[autocmd InsertEnter <buffer> lua floating_line_diagnostics(false)]]
+    vim.api.nvim_command [[autocmd InsertLeave <buffer> lua floating_line_diagnostics(true)]]
     vim.api.nvim_command [[autocmd CursorHold <buffer> lua floating_line_diagnostics(true)]]
     vim.api.nvim_command [[autocmd BufLeave <buffer> lua floating_line_diagnostics(false)]]
     -- floating signature parameters help
@@ -270,18 +284,16 @@ local function on_attach(client, bufnr)
 end
 
 -- setup language servers
-local nvim_lsp = require 'nvim_lsp'
 local servers = {
     pyls = {},
     texlab = {},
-    html = {
-        filetypes = {'html', 'svelte'},
-        cmd = {'html-languageserver.cmd', '--stdio'}
-    },
-    tsserver = {
-        cmd = {'typescript-language-server.cmd', '--stdio'}
-    }
+    -- html = {
+    --     filetypes = {'html', 'svelte'}
+    -- },
+    tsserver = {},
+    gopls = {}
 }
+local lspconfig = require 'lspconfig'
 for name, opts in pairs(servers) do
-    nvim_lsp[name].setup(vim.tbl_extend('keep', opts, {on_attach=on_attach}))
+    lspconfig[name].setup(vim.tbl_extend('keep', opts, {on_attach=on_attach}))
 end
