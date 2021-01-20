@@ -33,7 +33,7 @@ function! StatusLine(bufnr)
     let ft = getbufvar(a:bufnr, '&filetype')
     if exists('g:tabs_custom_stl') && has_key(g:tabs_custom_stl, ft)  " custom buffer
         let custom = substitute(g:tabs_custom_stl[ft], ':tabs\>', tabs_section, '')
-        return start . '%{&filetype} %#StatusLineNC# ' . custom " filetype and custom
+        return start . '%{&filetype} %#Tabs_Label_NC# ' . custom " filetype and custom
     endif
     let bt = getbufvar(a:bufnr, '&buftype')
     if len(bt) && bt != 'terminal'
@@ -52,7 +52,7 @@ function! TabsGetBufsText(bufnr)
     " get the section of the tabs
     let win = bufwinid(a:bufnr)
     let bufs = getwinvar(win, 'tabs_buflist', [a:bufnr])
-    let text = '%<%#StatusLineNC#'
+    let text = '%<%#Tabs_Label_NC#'
     let i_buf = 1
     let is_current_win = win_getid() == win
     let i_this = index(bufs, a:bufnr)
@@ -60,12 +60,12 @@ function! TabsGetBufsText(bufnr)
     for buf in bufs
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
-        if buf == a:bufnr
+        if buf == a:bufnr  " current buf
             let ft = getbufvar(buf, '&filetype')
             let hl_icon = 'TabsFt_' . ft " highlighting for the icons
-            let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'TabLineSel') . '#'
+            let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'Tabs_Label') . '#'
             let icon = hl_icon . ' %{IconGet()} '
-            let text .= icon . '%#TabLineSel#' . name . '%m %#StatusLineNC#'
+            let text .= icon . '%#Tabs_Label#' . name . '%m %#Tabs_Label_NC#'
         else
             let num = is_current_win ? (buf == alt ? '# ' : i_buf . ':') : ''
             let text .= ' ' . num . name . ' '
@@ -213,6 +213,7 @@ noremap <c-g> <cmd>file <bar> echon '  ft:'.&filetype '  eol:'.&fileformat<cr>
 " highlightings used
 let s:ft_hl = [
     \ ['vim', 'green'],
+    \ ['go', '#29BEB0'],
     \ ['jade', 'green'],
     \ ['ini', 'yellow'],
     \ ['md', 'blue'],
@@ -236,6 +237,8 @@ let s:ft_hl = [
     \ ['bashprofile', 'Gray',]]
 
 function s:define_hl()
+    hi link Tabs_Label TabLineSel
+    hi link Tabs_Label_NC StatusLineNC
     hi Tabs_Status guifg=white guibg=#0A7ACA
     hi link Tabs_Status_NC StatusLine
     hi Tabs_Error guifg=black guibg=red
