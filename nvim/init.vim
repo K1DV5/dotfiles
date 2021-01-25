@@ -187,7 +187,7 @@
         call minpac#add('k-takata/minpac', {'type': 'opt'})
         call minpac#add('tpope/vim-commentary')
         call minpac#add('tpope/vim-surround')
-        call minpac#add('neovim/nvim-lsp')
+        call minpac#add('neovim/nvim-lspconfig')
         call minpac#add('mhinz/vim-signify')
         call minpac#add('mbbill/undotree')
         call minpac#add('liuchengxu/vista.vim')
@@ -220,6 +220,7 @@
         endif
         let file = fnameescape(empty(file) ? stdpath('config') . '/Session' : file) . '.sess'
         if save " save session
+            call delete(file)
             execute 'mksession!' file
             return
         endif
@@ -346,8 +347,10 @@
         hi! default link Title Boolean
         hi! default link VimwikiMarkers Boolean
         hi! default link VimwikiLink markdownUrl
-        hi! LspDiagnosticsInformation guifg=Green
-        hi! LspDiagnosticsHint guifg=Cyan
+        hi! LspDiagnosticsVirtualTextInformation guifg=Green
+        hi! LspDiagnosticsVirtualTextHint guifg=Cyan
+        hi! LspDiagnosticsVirtualTextError guifg=Red
+        hi! LspDiagnosticsVirtualTextWarning guifg=Yellow
         hi! LspDiagnosticsUnderlineError gui=undercurl guisp=Red
         hi! LspDiagnosticsUnderlineWarning gui=undercurl guisp=Orange
         hi! LspDiagnosticsUnderlineHint gui=undercurl guisp=Cyan

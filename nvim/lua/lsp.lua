@@ -7,7 +7,7 @@ local floating_win_opts = {relative = 'cursor', row = -1, col = 0, style = 'mini
 local function floating_win(win, buf, lines, opts)
     if not buf then
         if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
+            pcall(vim.api.nvim_win_close, win, true)
         end
         return
     end
@@ -37,27 +37,6 @@ local function floating_win(win, buf, lines, opts)
 end
 
 ------------------ DIAGNOSTICS ----------------------
-
--- -- show underlines and signs for diagnostics
--- function publish_diagnostics(bufnr, client_id, show_all)
---     vim.lsp.diagnostic.clear(bufnr, client_id)
---     local buffer_diags = vim.lsp.diagnostic.get(bufnr, client_id)
---     if not buffer_diags then return end
---     local diags = {}
---     if show_all then
---         diags = buffer_diags
---     else
---         -- insert mode, filter out the current line's
---         local line = vim.api.nvim_win_get_cursor(0)[1] - 1
---         for _, diag in ipairs(buffer_diags) do
---             if diag.range.start.line ~= line then
---                 table.insert(diags, diag)
---             end
---         end
---     end
---     vim.lsp.diagnostic.set_underline(diags, bufnr, client_id)
---     vim.lsp.diagnostic.set_signs(diags, bufnr, client_id)
--- end
 
 -- for floating_line_diagnostics()
 local floating_diag_severity_hi = {}
@@ -98,16 +77,6 @@ function floating_line_diagnostics(show)
     end
 end
 
--- -- custom diagnostics callback
--- vim.lsp.handlers["textDocument/publishDiagnostics"] = function(_, _, result, client_id, _)
---     local bufnr = vim.uri_to_bufnr(result.uri)
---     if not result then return end
---     vim.lsp.diagnostic.save(result.diagnostics, bufnr, client_id)
---     local not_insert_mode = not vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
---     publish_diagnostics(bufnr, client_id, not_insert_mode)
---     floating_line_diagnostics(not_insert_mode)
---     vim.api.nvim_command("doautocmd User LspDiagnosticsChanged")
--- end
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
         virtual_text = false,
@@ -223,11 +192,12 @@ function complete(direction)
         if not direction and #prefix ~= chars or direction and prefix == '' then
             return keys.default  -- no possible suggestions or prevent useless refresh
         end
-        local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
-        if #omnifunc > 0 and omnifunc ~= 'v:lua.vim.lsp.omnifunc' then
-            vim.fn.feedkeys(keys.omni)
-        end
-        if vim.fn.pumvisible() == 0 then vim.fn.feedkeys(keys.next) end
+        -- local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
+        -- if #omnifunc > 0 and omnifunc ~= 'v:lua.vim.lsp.omnifunc' then
+        --     vim.fn.feedkeys(keys.omni)
+        -- end
+        -- if vim.fn.pumvisible() == 0 then vim.fn.feedkeys(keys.next) end
+        vim.fn.feedkeys(keys.next)
     end
     if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
         -- request standard lsp completion (taken from nvim core lsp code)
@@ -285,7 +255,7 @@ end
 
 -- setup language servers
 local servers = {
-    pyls = {},
+    pyright = {},
     texlab = {},
     -- html = {
     --     filetypes = {'html', 'svelte'}
