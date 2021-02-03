@@ -45,7 +45,10 @@ def _exec_cmd(cmd, shell=None):
     if executable == 'cd':
         chdir(args)
         return 0
-    return run(cmd, shell=shell).returncode
+    try:
+        return run(cmd, shell=shell).returncode
+    except KeyboardInterrupt:
+        return 1
 
 
 # convert to absolute path
@@ -271,8 +274,7 @@ def main():
     elif extension in ['.js', '.jsx', '.svelte']:
         javascript()
 
-    if returncode:
-        raise SystemExit(_color_text({'\nPREVIOUS COMMAND EXITED WITH ' + str(returncode): 'red'}))
+    exit(returncode)
 
 
 if __name__ == '__main__':
