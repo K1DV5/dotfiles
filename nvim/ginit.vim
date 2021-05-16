@@ -2,7 +2,7 @@
 
 " Builtins:
 	"set font
-    Guifont! Consolas NF:h10.5
+	GuiFont! CaskaydiaCove NF:h10.5
 	" increase the space between lines
 	" call GuiLinespace(1)
     " disable the gui tabline
