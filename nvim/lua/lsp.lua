@@ -93,6 +93,7 @@ vim.api.nvim_buf_set_option(sig_buf, 'undolevels', -1)
 vim.api.nvim_buf_set_option(sig_buf, 'filetype', 'coco')
 local sig_win = 1
 local last_col = 0
+local last_row = -1
 
 function signature_help(show)
     if not show then return floating_win(sig_win) end  -- close
@@ -104,13 +105,13 @@ function signature_help(show)
         if col > last_col then return floating_win(sig_win) end  -- same signature, no change, close
         sig_col = kw_start - #line_to_cursor - 1
     elseif string.find(line_to_cursor, '[ \t]$') then
-        local opts = {relative = 'cursor', row = -1, col = sig_col}
+        local opts = {relative = 'cursor', row = last_row, col = sig_col}
         return floating_win(sig_win, sig_buf, nil, opts)  -- move
     end
     last_col = col
     vim.lsp.buf_request(0, 'textDocument/signatureHelp', vim.lsp.util.make_position_params(), function(err, _, result)
         -- vim.api.nvim_set_var('reS', vim.inspect(result))
-        if not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.signatures[result.activeSignature + 1].parameters then
+        if not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.activeSignature or not result.signatures[result.activeSignature + 1].parameters then
             return floating_win(sig_win)  -- close
         end
         local param = result.signatures[result.activeSignature + 1].parameters[(result.activeParameter or 0) + 1]
@@ -123,8 +124,13 @@ function signature_help(show)
             end
             text = text .. ': ' .. param.documentation
         end
-        local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col})
-        sig_win = floating_win(sig_win, sig_buf, {text}, opts)
+        local lines = {}
+        for line in text:gmatch("([^\n]*)\n?") do
+            table.insert(lines, line)
+        end
+        last_row = -#lines
+        local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col, row = last_row})
+        sig_win = floating_win(sig_win, sig_buf, lines, opts)
     end)
 end
 
@@ -164,7 +170,7 @@ end
 local chars = 2 -- chars before triggering
 local triggers = {lua = ':\\|\\.'} -- trigger patterns
 local keys = {
-    next = '\14',  -- <c-n>
+    nxt = '\14',  -- <c-n>
     prev = '\16',  -- <c-p>
     omni = '\24\15',  -- <c-x><c-o>
     default = '\t'  -- <tab>, default key for mapping
@@ -179,7 +185,7 @@ local keys = {
 --    else force show completion
 function complete(direction)
     if vim.fn.pumvisible() == 1 then
-        if direction == 1 then return keys.next
+        if direction == 1 then return keys.nxt
         elseif direction == -1 then return keys.prev end
     end
     local col = vim.api.nvim_win_get_cursor(0)[2]
@@ -196,8 +202,8 @@ function complete(direction)
         -- if #omnifunc > 0 and omnifunc ~= 'v:lua.vim.lsp.omnifunc' then
         --     vim.fn.feedkeys(keys.omni)
         -- end
-        -- if vim.fn.pumvisible() == 0 then vim.fn.feedkeys(keys.next) end
-        vim.fn.feedkeys(keys.next)
+        -- if vim.fn.pumvisible() == 0 then vim.fn.feedkeys(keys.nxt) end
+        vim.fn.feedkeys(keys.nxt)
     end
     if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
         -- request standard lsp completion (taken from nvim core lsp code)
@@ -257,11 +263,11 @@ end
 local servers = {
     pyright = {},
     texlab = {},
-    -- html = {
-    --     filetypes = {'html', 'svelte'}
-    -- },
+    html = {},
+    cssls = {},
     tsserver = {},
-    gopls = {}
+    gopls = {},
+    intelephense = {cmd = { "intelephense.cmd", "--stdio" }}
 }
 local lspconfig = require 'lspconfig'
 for name, opts in pairs(servers) do
