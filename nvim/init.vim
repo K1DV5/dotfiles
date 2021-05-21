@@ -62,6 +62,8 @@
         set mouse=a
         " make windows aquashable to just the statusbar
         set winminheight=0
+        " titlebar
+        set title titlestring=%t
 
         "}}}
     "performance {{{
@@ -167,7 +169,7 @@
         " toggle spell check
         noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
         " quit
-        noremap <leader><esc> <cmd>xall!<cr>
+        noremap <leader><esc> <cmd>x!<cr>
         " undotree
         noremap <leader>u <cmd>UndotreeToggle<cr>
         " enter window commands
@@ -191,13 +193,13 @@
         call minpac#add('mhinz/vim-signify')
         call minpac#add('mbbill/undotree')
         call minpac#add('liuchengxu/vista.vim')
-        call minpac#add('tomasiser/vim-code-dark')
+        call minpac#add('Mofiqul/vim-code-dark')
         call minpac#add('ferrine/md-img-paste.vim', {'type': 'opt'})
         call minpac#add('mattn/emmet-vim')
         call minpac#add('lambdalisue/gina.vim')
         call minpac#add('justinmk/vim-sneak')
-        call minpac#add('sheerun/vim-polyglot')
         call minpac#add('vimwiki/vimwiki')
+        call minpac#add('nvim-treesitter/nvim-treesitter')
     endfunction
 
     " }}}
@@ -381,14 +383,6 @@
         let g:tabs_statusline_add = '%{!empty(gina#component#repo#name()) ? " ".gina#component#repo#branch() : ""}'
 
         " }}}
-    "python_syntax {{{
-        " enable all highlighting
-        let g:python_highlight_all = 1
-        let g:python_highlight_operators = 0
-        let g:python_highlight_space_errors = 0
-        let g:python_highlight_indent_errors = 0
-
-        " }}}
     "term {{{
         " set default shell to powershell
         let g:term_default_shell = 'powershell'
@@ -443,7 +437,7 @@
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require 'lsp'
+    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require 'lsp'; require 'treesitter'
     " save session
     autocmd VimLeavePre * call s:gate('out')
     " use emmet for html
