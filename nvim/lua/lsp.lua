@@ -208,7 +208,7 @@ function complete(direction)
     if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
         -- request standard lsp completion (taken from nvim core lsp code)
         vim.lsp.buf_request(0, 'textDocument/completion', vim.lsp.util.make_position_params(), function(err, _, result)
-            -- vim.api.nvim_set_var('ReS', vim.inspect(result))
+            vim.api.nvim_set_var('ReS', vim.inspect(result))
             local in_insert_mode = vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
             if err or not result or not in_insert_mode or vim.tbl_isempty(result) then return end
             local matches = vim.lsp.util.text_document_completion_list_to_complete_items(result, prefix)
@@ -261,11 +261,11 @@ end
 
 -- setup language servers
 local servers = {
-    pyright = {},
+    pyright = {cmd = {"pyright-langserver.cmd", "--stdio"}},
     texlab = {},
-    html = {},
-    cssls = {},
-    tsserver = {},
+    html = {cmd = {"html-languageserver.cmd", "--stdio"}},
+    cssls = {cmd = {"css-languageserver.cmd", "--stdio"}},
+    tsserver = {cmd = {"typescript-language-server.cmd", "--stdio"}},
     gopls = {},
     intelephense = {cmd = { "intelephense.cmd", "--stdio" }}
 }
