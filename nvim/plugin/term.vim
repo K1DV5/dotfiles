@@ -169,4 +169,5 @@ augroup term
     autocmd!
     " remove line numbers from the terminal windows and offsets
     autocmd TermOpen * setlocal nonumber norelativenumber nowrap
+    autocmd TermResponse * echo v:termresponse
 augroup END

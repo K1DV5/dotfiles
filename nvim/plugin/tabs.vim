@@ -18,6 +18,23 @@
 " g:tabs_statusline_add - additional things to add to statusline
 " g:tabs_custom_stl - list of filetypes to show in place of mode
 
+lua << EOF
+local devicons = require'nvim-web-devicons'
+function get_icon()
+    if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' then
+        local icon, hi = devicons.get_icon('', 'terminal')
+        return {icon, hi}
+    end
+    local fname = vim.fn.expand('%')
+    local ext = vim.fn.expand('%:e')
+    local icon, hi = devicons.get_icon(fname, ext)
+    if icon == nil then
+        return {'', 'Normal'}
+    end
+    return {icon, hi}
+end
+EOF
+
 function! StatusLine(bufnr)
     " this is what is set in the autocmds
     let tabs_section = TabsGetBufsText(a:bufnr)  " tabs
@@ -61,11 +78,14 @@ function! TabsGetBufsText(bufnr)
         let name = bufname(buf)
         let name = len(name) ? fnamemodify(name, ':t') : '[No name]'
         if buf == a:bufnr  " current buf
-            let ft = getbufvar(buf, '&filetype')
-            let hl_icon = 'TabsFt_' . ft " highlighting for the icons
-            let hl_icon = '%#' . (hlID(hl_icon) ? hl_icon : 'Tabs_Label') . '#'
-            let icon = hl_icon . ' %{IconGet()} '
-            let text .= icon . '%#Tabs_Label#' . name . '%m %#Tabs_Label_NC#'
+            if is_current_win
+                let [icon, hl_icon] = v:lua.get_icon()
+                let hl_icon = '%#' . hl_icon . '#'
+                let icon = hl_icon . ' ' . icon . ' '
+            else
+                let icon = '%#Normal# %{v:lua.get_icon()[0]} '
+            endif
+            let text .= icon . '%#Normal#' . name . '%m %#Tabs_Label_NC#'
         else
             let num = is_current_win ? (buf == alt ? '# ' : i_buf . ':') : ''
             let text .= ' ' . num . name . ' '
