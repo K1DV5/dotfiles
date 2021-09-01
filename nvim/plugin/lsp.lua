@@ -110,13 +110,16 @@ function signature_help(show)
     end
     last_col = col
     vim.lsp.buf_request(0, 'textDocument/signatureHelp', vim.lsp.util.make_position_params(), function(err, _, result)
-        -- vim.api.nvim_set_var('reS', vim.inspect(result))
         if not result or not result.signatures or vim.tbl_isempty(result.signatures) or not result.activeSignature or not result.signatures[result.activeSignature + 1].parameters then
             return floating_win(sig_win)  -- close
         end
-        local param = result.signatures[result.activeSignature + 1].parameters[(result.activeParameter or 0) + 1]
+        local sig = result.signatures[result.activeSignature + 1] 
+        local param = sig.parameters[(sig.activeParameter or result.activeParameter or 0) + 1]
         if not param then return end
         local text = param.label
+        if type(param.label) == 'table' then
+            text = sig.label:sub(param.label[1] + 1, param.label[2])
+        end
         if param.documentation ~= nil and param.documentation ~= vim.NIL then
             -- vim.api.nvim_set_var('DoC', vim.inspect(param.documentation))
             if type(param.documentation) == 'table' then
@@ -124,51 +127,16 @@ function signature_help(show)
             end
             text = text .. ': ' .. param.documentation
         end
-        local lines = {}
-        for line in text:gmatch("([^\n]*)\n?") do
-            table.insert(lines, line)
-        end
+        local lines = text:split("\n")
         last_row = -#lines
         local opts = vim.tbl_extend('force', floating_win_opts, {width = #text + 2, col = sig_col, row = last_row})
         sig_win = floating_win(sig_win, sig_buf, lines, opts)
     end)
 end
 
----------------- COMPLETION HELP --------------------
+-------------------- SETUP ------------------------
 
-local compl_buf = vim.api.nvim_create_buf(false, true)
-vim.api.nvim_buf_set_option(compl_buf, 'undolevels', -1)
-local compl_win = 2
-
-function completion_help()
-    local info = vim.api.nvim_get_vvar('event')
-    local item = info.completed_item
-    if not item or not item.info or #item.info < 2 then
-        return floating_win(compl_win)  -- close
-    end
-    vim.api.nvim_set_var('infO', vim.inspect(info))
-    local lines = vim.split(item.info, '\n')
-    local col = info.col[false] + info.width[false]
-    local width = 0
-    for i, line in pairs(lines) do width = math.max(width, #line + 2) end -- 2 is for the side spaces
-    width = math.min(width, vim.api.nvim_get_option('columns') - col)
-    if width < 5 then return end
-    local height = 0
-    for _, line in ipairs(lines) do
-        local displaywidth = vim.fn.strdisplaywidth(line) + 1
-        height = height + math.ceil(displaywidth / width)
-    end
-    height = math.min(height, vim.api.nvim_get_option('lines') - info.row[false] - 1)
-    local opts = {relative = 'editor', row = info.row[false], col = col, height = height, width = width, style = 'minimal'}
-    vim.loop.new_timer():start(0, 0, vim.schedule_wrap(function()
-        compl_win = floating_win(compl_win, compl_buf, lines, opts)
-    end))
-end
-
------------------- COMPLETION ----------------------
-
-local chars = 2 -- chars before triggering
-local triggers = {lua = ':\\|\\.'} -- trigger patterns
+-- completion
 local keys = {
     nxt = '\14',  -- <c-n>
     prev = '\16',  -- <c-p>
@@ -176,50 +144,20 @@ local keys = {
     default = '\t'  -- <tab>, default key for mapping
 }
 
--- go through suggestions or jump to snippet placeholders
--- if direction == 0 autocomplete, usable in autocmd TextChangedI
--- if direction == -1 or 1 usable in a mapping with <tab> and <s-tab>
---    if pumvisible
---        direction == -1 backward
---        direction == 1 forward
---    else force show completion
-function complete(direction)
-    if vim.fn.pumvisible() == 1 then
-        if direction == 1 then return keys.nxt
-        elseif direction == -1 then return keys.prev end
-    end
-    local col = vim.api.nvim_win_get_cursor(0)[2]
-    local line_to_cursor = vim.api.nvim_get_current_line():sub(1, col)
-    local current_keyword_start_col = vim.regex('\\k*$'):match_str(line_to_cursor) + 1
-    local prefix = line_to_cursor:sub(current_keyword_start_col)
-    -- trigger. default: most languages use a dot for class.property
-    local trigger = triggers[vim.api.nvim_buf_get_option(0, 'filetype')] or '\\.'
-    if not vim.regex(trigger):match_str(line_to_cursor:sub(-1)) then  -- not at trigger
-        if not direction and #prefix ~= chars or direction and prefix == '' then
-            return keys.default  -- no possible suggestions or prevent useless refresh
-        end
-        -- local omnifunc = vim.api.nvim_buf_get_option(0, 'omnifunc')
-        -- if #omnifunc > 0 and omnifunc ~= 'v:lua.vim.lsp.omnifunc' then
-        --     vim.fn.feedkeys(keys.omni)
-        -- end
-        -- if vim.fn.pumvisible() == 0 then vim.fn.feedkeys(keys.nxt) end
-        vim.fn.feedkeys(keys.nxt)
-    end
-    if not vim.tbl_isempty(vim.lsp.buf_get_clients(0)) then
-        -- request standard lsp completion (taken from nvim core lsp code)
-        vim.lsp.buf_request(0, 'textDocument/completion', vim.lsp.util.make_position_params(), function(err, _, result)
-            vim.api.nvim_set_var('ReS', vim.inspect(result))
-            local in_insert_mode = vim.tbl_contains({'i', 'ic'}, vim.api.nvim_get_mode().mode)
-            if err or not result or not in_insert_mode or vim.tbl_isempty(result) then return end
-            local matches = vim.lsp.util.text_document_completion_list_to_complete_items(result, prefix)
-            vim.list_extend(matches, vim.fn.complete_info().items)
-            vim.fn.complete(current_keyword_start_col, matches)
-        end)
-    end
-    return ''
+local function check_back_space()
+  local col = vim.fn.col '.' - 1
+  return col == 0 or vim.fn.getline('.'):sub(col, col):match '%s' ~= nil
 end
 
--------------------- SETUP ------------------------
+local cmp = require'cmp'
+function complete(direction)
+    if vim.fn.pumvisible() == 0 then
+        if check_back_space() then return keys.default
+        else cmp.mapping.complete() end
+    end
+    if direction == 1 then return keys.nxt
+    elseif direction == -1 then return keys.prev end
+end
 
 -- completion
 local map_opts = {noremap=true, silent=true}
@@ -227,13 +165,10 @@ local imap_opts = vim.tbl_extend('keep', map_opts, {expr = true})
 vim.api.nvim_set_keymap('i', '<tab>', 'v:lua.complete(1)', imap_opts)
 vim.api.nvim_set_keymap('i', '<s-tab>', 'v:lua.complete(-1)', imap_opts)
 vim.api.nvim_set_keymap('s', '<tab>', 'v:lua.complete(1)', imap_opts)
-vim.api.nvim_command [[autocmd TextChangedI * lua complete()]]
 
 -- setup func
 local function on_attach(client, bufnr)
-    -- completion help
-    vim.api.nvim_command [[autocmd CompleteChanged,CompleteDone <buffer> lua completion_help()]]
-    -- -- diagnostics
+    -- diagnostics
     -- vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(0, nil, false); floating_line_diagnostics(false)]]
     -- vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(0, nil, true); floating_line_diagnostics(true)]]
     vim.api.nvim_command [[autocmd InsertEnter <buffer> lua floating_line_diagnostics(false)]]
@@ -256,7 +191,7 @@ local function on_attach(client, bufnr)
     map(bufnr, 'n', '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
     map(bufnr, 'n', 'gr',        '<cmd>lua vim.lsp.buf.references()<CR>',      map_opts)
     map(bufnr, 'n', '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>',          map_opts)
-    map(bufnr, 'n', '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>',      map_opts)
+    -- map(bufnr, 'n', '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>',      map_opts)
 end
 
 -- setup language servers
@@ -269,7 +204,13 @@ local servers = {
     gopls = {},
     intelephense = {cmd = { "intelephense.cmd", "--stdio" }}
 }
+
 local lspconfig = require 'lspconfig'
 for name, opts in pairs(servers) do
-    lspconfig[name].setup(vim.tbl_extend('keep', opts, {on_attach=on_attach}))
+    lspconfig[name].setup(vim.tbl_extend('keep', opts, {
+        on_attach = on_attach,
+        flags = {
+            debounce_text_changes = 150
+        }
+    }))
 end

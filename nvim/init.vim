@@ -46,10 +46,6 @@
         filetype plugin indent on
         " default sql variant
         let g:sql_type_default = 'mysql'
-        " fold text for this file
-        set foldtext=MyFold()
-        " allow expressions in modelines
-        set modelineexpr
         " disable the tabline
         set showtabline=0
         " to show line numbers on <c-g>, disable on statusline
@@ -60,8 +56,6 @@
         set grepprg=rg\ --vimgrep
         " allow mouse interaction
         set mouse=a
-        " make windows aquashable to just the statusbar
-        set winminheight=0
         " titlebar
         set title titlestring=%t
 
@@ -71,15 +65,12 @@
         set hidden
         " Don’t update screen during macro and script execution
         set lazyredraw
-        " disable python 2
+        " disable remote hosts
         let g:loaded_python_provider = 1
-        " disable ruby
+        let g:loaded_python3_provider = 1
         let g:loaded_ruby_provider = 1
-        " disable node.js
         let g:loaded_node_provider = 1
-        " set python path
-        let g:python3_host_prog = 'D\DevPrograms\Python\python'
-        let g:python_host_prog = 'D\DevPrograms\Python\python'
+        let g:loaded_perl_provider = 1
         " disable builtin plugins
         let g:loaded_gzip = 1
         let g:loaded_netrw = 1
@@ -134,17 +125,6 @@
     "insert {{{
         " escape quick
         imap kj <esc>
-        " pairs
-        inoremap ( ()<left>
-        " inoremap ( <cmd>lua vim.lsp.buf.signature_help()<cr>
-        inoremap { {}<left>
-        inoremap [ []<left>
-        inoremap " ""<left>
-        inoremap ' ''<left>
-        inoremap ` ``<left>
-        inoremap <expr> <bs> <sid>delp()
-        inoremap <expr> <cr> <sid>cr(1)
-
         "}}}
     "visual {{{
         " escape quick
@@ -164,8 +144,8 @@
         " closing current buffer
         noremap <leader>bb <cmd>call TabsClose()<cr>
         tnoremap <leader>bb <cmd>call TabsClose()<cr>
-        " save file if changed and source if it is a vim file
-        noremap <expr> <leader>bu '<cmd>update!' . (&filetype == 'vim' ? '\| source %' : '') . '<cr>'
+        " save file if changed
+        noremap <leader>bu <cmd>update!<cr>
         " toggle spell check
         noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
         " quit
@@ -179,30 +159,11 @@
         " toggle file and tag (definition) trees
         noremap <leader>d <cmd>call <sid>tree('Vista', 'vista')<cr>
         noremap <leader>D <cmd>Vista!!<cr>
+        noremap <leader>f <cmd>call <sid>tree('NvimTreeOpen', 'NvimTree')<cr>
+        noremap <leader>F <cmd>NvimTreeClose<cr>
         "}}}
 " }}}
 " functions {{{
-    function! P() "{{{
-        " plugin management, lazy loads minpac first
-        packadd minpac
-        call minpac#init()
-        call minpac#add('k-takata/minpac', {'type': 'opt'})
-        call minpac#add('tpope/vim-commentary')
-        call minpac#add('tpope/vim-surround')
-        call minpac#add('neovim/nvim-lspconfig')
-        call minpac#add('mhinz/vim-signify')
-        call minpac#add('mbbill/undotree')
-        call minpac#add('liuchengxu/vista.vim')
-        call minpac#add('Mofiqul/vim-code-dark')
-        call minpac#add('ferrine/md-img-paste.vim', {'type': 'opt'})
-        call minpac#add('mattn/emmet-vim')
-        call minpac#add('lambdalisue/gina.vim')
-        call minpac#add('justinmk/vim-sneak')
-        call minpac#add('vimwiki/vimwiki')
-        call minpac#add('nvim-treesitter/nvim-treesitter')
-    endfunction
-
-    " }}}
     function! S(...) "{{{
         " session management
         if a:0 == 0
@@ -231,15 +192,6 @@
             silent execute 'source' file
             edit
         endif
-    endfunction
-
-    " }}}
-    function! MyFold() "{{{
-        " better folding
-        let patt = &commentstring[:stridx(&commentstring, '%s')-1].'\|{{{'
-        let fold_line = repeat('   ', v:foldlevel - 1) . ' ' . trim(substitute(getline(v:foldstart), patt, '', 'g'))
-        return fold_line
-        " }}}, keep the markers balanced
     endfunction
 
     " }}}
@@ -292,33 +244,12 @@
 
     " }}}
     function! s:cr(insert) "{{{
-        if a:insert
-            " put the cursor above and below, possibly with indent
-            let [_, lnum, cnum, _] = getpos('.')
-            let line = getline('.')
-            " html
-            let html_pairs = ['<\w\+.\{-}>', '</\w\+>']
-            let before = trim(line[:cnum-2])
-            let after = trim(line[cnum-1:])
-            if before =~ '^' . html_pairs[0] . '$' && after =~ '^' . html_pairs[1] . '$'
-                return "\<cr>\<esc>O"
-            endif
-            " other
-            let surround = ['([{', ')]}']
-            let [i_begin, i_end] = [stridx(surround[0], line[cnum-2]), stridx(surround[1], line[cnum-1])]
-            " let not_equal = count(line, surround[0][i_begin]) != count(line, surround[1][i_end])
-            if i_begin == -1 || i_begin != i_end || empty(line[cnum-2]) "|| not_equal
-                return "\<cr>"
-            endif
-            return "\<cr>\<esc>O"
+        " follow help links with enter
+        let l:supported = ['vim', 'help', 'python']
+        if index(l:supported, &filetype) != -1
+            norm K
         else
-            " follow help links with enter
-            let l:supported = ['vim', 'help', 'python']
-            if index(l:supported, &filetype) != -1
-                norm K
-            else
-                execute "norm! \<cr>"
-            endif
+            execute "norm! \<cr>"
         endif
     endfunction
 
@@ -360,20 +291,6 @@
     endfunction
 
     " }}}
-    function! s:delp() "{{{
-        " delete a pair of parens...
-        let col = col('.')
-        let line = getline('.')
-        let pairs = ['()', '[]', '{}', '""', "''", '``']
-        let left = line[col-2]
-        let right = line[col-1]
-        if index(pairs, line[col-2:col-1]) > -1 && count(line, left) == count(line, right)
-            return "\<bs>\<del>" 
-        endif
-        return "\<bs>"
-    endfunction
-
-    " }}}
 " }}}
 " pack config {{{
     "tabs {{{
@@ -399,7 +316,11 @@
         " work only with git
         let g:signify_vcs_list = ['git']
         " show only colors
-        let g:signify_sign_show_text = 0
+        " let g:signify_sign_add               = ' '
+        " let g:signify_sign_delete            = ' '
+        " let g:signify_sign_delete_first_line = ' '
+        " let g:signify_sign_change            = ' '
+        " let g:signify_sign_change_delete     = g:signify_sign_change . g:signify_sign_delete_first_line
 
         " }}}
     "undotree {{{
@@ -411,33 +332,17 @@
         let g:undotree_DiffAutoOpen = 0
 
         " }}}
-    "sneak {{{
-        " Make it like easymotion
-        let g:sneak#label = 1
-        " always ; forward
-        let g:sneak#absolute_dir = 1
-
-        "}}}
     " vista {{{
         " show definition in floating win
         let g:vista_echo_cursor_strategy = 'floating_win'
         " to use my own statusline
         let g:vista_disable_statusline = 1
         " }}}
-    "colorscheme {{{
-        if get(g:, 'colors_name', 'default') == 'default'
-            " Use colors that suit a dark background
-            set background=dark
-            " Change colorscheme
-            colorscheme codedark
-        endif
-
-        " }}}
 " }}}
 augroup init "{{{
     autocmd!
     "resume session, override some colors
-    autocmd VimEnter * nested call s:gate('in') | call s:highlight() | lua require 'lsp'; require 'treesitter'
+    autocmd VimEnter * nested call s:gate('in') | call s:highlight()
     " save session
     autocmd VimLeavePre * call s:gate('out')
     " use emmet for html
@@ -456,6 +361,8 @@ augroup init "{{{
     autocmd DirChanged * call S('Session', 0)
     " turn on spelling for prose filetypes
     autocmd FileType markdown,tex setlocal spell
+    " source configs on save
+    autocmd BufWritePost *.vim,*.lua source %
 augroup END
 " }}}
 
