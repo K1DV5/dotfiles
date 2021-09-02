@@ -60,7 +60,7 @@ function floating_line_diagnostics(show)
         if End.line > line or diagnostic.range.start.character <= col and End.character >= col then
             local hiname = floating_diag_severity_hi[diagnostic.severity]
             local message_lines = vim.split(diagnostic.message, '\n')
-            message_lines[1] = ((diagnostic.source .. ': ') or '• ') .. message_lines[1]
+            message_lines[1] = (diagnostic.source and (diagnostic.source .. ': ') or '• ') .. message_lines[1]
             for _, line in ipairs(message_lines) do
                 table.insert(lines, line)
                 table.insert(highlights, hiname)
@@ -194,15 +194,35 @@ local function on_attach(client, bufnr)
     -- map(bufnr, 'n', '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>',      map_opts)
 end
 
+-- enable snippets support on client
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+
 -- setup language servers
 local servers = {
     pyright = {cmd = {"pyright-langserver.cmd", "--stdio"}},
     texlab = {},
-    html = {cmd = {"html-languageserver.cmd", "--stdio"}},
-    cssls = {cmd = {"css-languageserver.cmd", "--stdio"}},
+    html = {
+        cmd = {"vscode-html-language-server.cmd", "--stdio"},
+        capabilities = capabilities
+    },
+    cssls = {
+        cmd = {"vscode-css-language-server.cmd", "--stdio"},
+        capabilities = capabilities
+    },
+    jsonls = {
+        capabilities = capabilities,
+        cmd = {"vscode-json-language-server.cmd", "--stdio"},
+        commands = {
+            Format = {
+                function()
+                    vim.lsp.buf.range_formatting({}, {0, 0}, {vim.fn.line("$"), 0})
+                end
+            }
+        }
+    },
     tsserver = {cmd = {"typescript-language-server.cmd", "--stdio"}},
     gopls = {},
-    intelephense = {cmd = { "intelephense.cmd", "--stdio" }}
 }
 
 local lspconfig = require 'lspconfig'

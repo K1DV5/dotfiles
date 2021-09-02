@@ -32,6 +32,7 @@ require "paq" {
         (function()
             local lspkind = require'lspkind'
             local cmp = require'cmp'
+            local luasnip = require'luasnip'
             cmp.setup{
                 formatting = {
                     format = function(entry, vim_item)
@@ -39,17 +40,22 @@ require "paq" {
                         return vim_item
                     end,
                 },
-                sources = { -- You should specify your *installed* sources.
-                  {name = 'nvim_lsp'},
-                  {name = 'path'},
-                  {name = 'buffer'},
-                },
                 mapping = {
                     ['<CR>'] = cmp.mapping.confirm({
                         behavior = cmp.ConfirmBehavior.Insert,
                         select = true,
                     })
-                }
+                },
+                snippet = {
+                    expand = function(args)
+                        luasnip.lsp_expand(args.body)
+                    end
+                },
+                sources = { -- You should specify your *installed* sources.
+                  {name = 'nvim_lsp'},
+                  {name = 'luasnip'},
+                  {name = 'buffer'},
+                },
             }
             -- require("nvim-autopairs.completion.cmp").setup({
             --   map_cr = true, --  map <CR> on insert mode
@@ -106,7 +112,8 @@ require "paq" {
             end
         end)();
     -- }}}
-    -- "norcalli/snippets.nvim";
+    "L3MON4D3/LuaSnip";
+    "saadparwaiz1/cmp_luasnip";
 
     -- look for alternatives
     "mattn/emmet-vim";
