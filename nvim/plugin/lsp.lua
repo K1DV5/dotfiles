@@ -38,45 +38,6 @@ end
 
 ------------------ DIAGNOSTICS ----------------------
 
--- for floating_line_diagnostics()
-local floating_diag_severity_hi = {}
-for name, value in pairs(require('vim.lsp.protocol').DiagnosticSeverity) do
-    floating_diag_severity_hi[value] = 'LspDiagnosticsVirtualText' .. name
-end
-local diag_buf = vim.api.nvim_create_buf(false, true)
-local diag_win = 1
-vim.api.nvim_buf_set_option(diag_buf, 'undolevels', -1)
-
--- show diagnostics for current line in a floating_win
-function floating_line_diagnostics(show)
-    if not show then return floating_win(diag_win) end  -- close
-    local pos = vim.api.nvim_win_get_cursor(0)
-    local line, col = pos[1] - 1, pos[2]
-    local diags = vim.lsp.diagnostic.get_line_diagnostics()
-    -- vim.api.nvim_set_var('diaG', vim.inspect(diags))
-    local lines, highlights = {}, {}
-    for i, diagnostic in ipairs(diags) do
-        local End = diagnostic.range['end']
-        if End.line > line or diagnostic.range.start.character <= col and End.character >= col then
-            local hiname = floating_diag_severity_hi[diagnostic.severity]
-            local message_lines = vim.split(diagnostic.message, '\n')
-            message_lines[1] = (diagnostic.source and (diagnostic.source .. ': ') or '• ') .. message_lines[1]
-            for _, line in ipairs(message_lines) do
-                table.insert(lines, line)
-                table.insert(highlights, hiname)
-            end
-        end
-    end
-    if #lines == 0 then return floating_win(diag_win) end
-    local new_opts
-    if #lines > line then new_opts = {anchor = 'NW', row = 1}
-    else new_opts = {anchor = 'SW', row = 0} end
-    diag_win = floating_win(diag_win, diag_buf, lines, vim.tbl_extend('keep', new_opts, floating_win_opts))
-    for i, hi in ipairs(highlights) do
-        vim.api.nvim_buf_add_highlight(diag_buf, -1, hi, i-1, 0, -1)
-    end
-end
-
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
         virtual_text = false,
@@ -193,12 +154,7 @@ end
 -- setup func
 local function on_attach(client, bufnr)
     -- diagnostics
-    -- vim.api.nvim_command [[autocmd InsertEnter <buffer> lua publish_diagnostics(0, nil, false); floating_line_diagnostics(false)]]
-    -- vim.api.nvim_command [[autocmd InsertLeave <buffer> lua publish_diagnostics(0, nil, true); floating_line_diagnostics(true)]]
-    vim.api.nvim_command [[autocmd InsertEnter <buffer> lua floating_line_diagnostics(false)]]
-    vim.api.nvim_command [[autocmd InsertLeave <buffer> lua floating_line_diagnostics(true)]]
-    vim.api.nvim_command [[autocmd CursorHold <buffer> lua floating_line_diagnostics(true)]]
-    vim.api.nvim_command [[autocmd BufLeave <buffer> lua floating_line_diagnostics(false)]]
+    vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.lsp.diagnostic.show_position_diagnostics({focusable = false})]]
     -- floating signature parameters help
     if client.server_capabilities.signatureHelpProvider then
         vim.api.nvim_command [[autocmd InsertEnter <buffer> lua signature_help(true)]]
@@ -215,6 +171,7 @@ local function on_attach(client, bufnr)
     map(bufnr, 'n', '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
     map(bufnr, 'n', 'gr',        '<cmd>lua vim.lsp.buf.references()<CR>',      map_opts)
     map(bufnr, 'n', '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>',          map_opts)
+    map(bufnr, 'n', 'ga',        '<cmd>lua vim.lsp.buf.code_action()<CR>',     map_opts)
     map(bufnr, 'n', 'gq',        '<cmd>lua format_range_operator()<cr>',       map_opts)
 end
 
@@ -231,12 +188,21 @@ capabilities.textDocument.completion.completionItem.tagSupport = {valueSet = {1}
 capabilities.textDocument.completion.completionItem.resolveSupport = {
     properties = {'documentation', 'detail', 'additionalTextEdits'}
 }
+-- better experience for completions
 vim.o.completeopt = 'menuone,noselect'
+
+-- change diagnostic signs shown in sign column
+vim.fn.sign_define("LspDiagnosticsSignError", {text = '', texthl = "LspDiagnosticsSignError"})
+vim.fn.sign_define("LspDiagnosticsSignWarning", {text = '', texthl = "LspDiagnosticsSignWarning"})
+vim.fn.sign_define("LspDiagnosticsSignInformation", {text = '', texthl = "LspDiagnosticsSignInformation"})
+vim.fn.sign_define("LspDiagnosticsSignHint", {text = '', texthl = "LspDiagnosticsSignHint"})
 
 -- setup language servers
 local servers = {
-    -- pyright = {cmd = {"pyright-langserver.cmd", "--stdio"}},
-    pylsp = {},
+    pyright = {
+        capabilities = capabilities,
+        cmd = {"pyright-langserver.cmd", "--stdio"}
+    },
     texlab = {},
     html = {
         cmd = {"vscode-html-language-server.cmd", "--stdio"},
