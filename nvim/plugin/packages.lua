@@ -85,7 +85,11 @@ require "paq" {
         });
         -- }}}
     "kyazdani42/nvim-tree.lua"; -- file manager
-    "kyazdani42/nvim-web-devicons";  -- pretty icons, for trouble.nvim, lspkind-nvim
+        (function()
+            vim.g.nvim_tree_show_icons = {git = 0, folders = 1, files = 1, folder_arrows = 1}
+            vim.g.nvim_tree_lsp_diagnostics = 1
+        end)();
+    "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree, lspkind-nvim
     -- diagnostics window
     "folke/trouble.nvim"; -- {{{
         setup('trouble', {});
