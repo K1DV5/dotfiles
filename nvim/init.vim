@@ -32,8 +32,6 @@
         set noshowmode
         " split to the right
         set splitright
-        " only show menu when completing
-        set completeopt=menuone,noinsert,noselect
         " only scan current and other windows for keyword completions
         set complete=.,w,b,t
         " dont be chatty on completions
@@ -125,6 +123,8 @@
     "insert {{{
         " escape quick
         imap kj <esc>
+        " nice brackets on cr
+        " imap <expr> <cr> <sid>cr(v:true)
         "}}}
     "visual {{{
         " escape quick
@@ -214,18 +214,18 @@
     " }}}
     function! s:do() "{{{
         " auto figure out what to do
-        wincmd k
-        let s:ext_part = expand('%:e')
         silent update!
-        let l:hidden = ['tex', 'texw', 'html', 'htm']
-        if index(l:hidden, s:ext_part) != -1
-            setlocal makeprg=do
-            execute 'make "'.expand('%:p').'"'
-            echo "Done."
-        else
-            call Term('do '.expand('%:p'))
+        wincmd k
+        " let s:ext_part = expand('%:e')
+        " let l:hidden = ['tex', 'texw', 'html', 'htm']
+        " if index(l:hidden, s:ext_part) != -1
+        "     setlocal makeprg=do
+        "     execute 'make "'.expand('%:p').'"'
+        "     echo "Done."
+        " else
+            call Term('python ' . stdpath('config') . '/do.py '.expand('%:p'))
             norm i
-        endif
+        " endif
     endfunction
 
     " }}}
@@ -244,12 +244,33 @@
 
     " }}}
     function! s:cr(insert) "{{{
-        " follow help links with enter
-        let l:supported = ['vim', 'help', 'python']
-        if index(l:supported, &filetype) != -1
-            norm K
+        if a:insert
+            " put the cursor above and below, possibly with indent
+            let [_, lnum, cnum, _] = getpos('.')
+            let line = getline('.')
+            " html
+            let html_pairs = ['<\w\+.\{-}>', '</\w\+>']
+            let before = trim(line[:cnum-2])
+            let after = trim(line[cnum-1:])
+            if before =~ '^' . html_pairs[0] . '$' && after =~ '^' . html_pairs[1] . '$'
+                return "\<cr>\<esc>O"
+            endif
+            " other
+            let surround = ['([{', ')]}']
+            let [i_begin, i_end] = [stridx(surround[0], line[cnum-2]), stridx(surround[1], line[cnum-1])]
+            " let not_equal = count(line, surround[0][i_begin]) != count(line, surround[1][i_end])
+            if i_begin == -1 || i_begin != i_end || empty(line[cnum-2]) "|| not_equal
+                return "\<cr>"
+            endif
+            return "\<cr>\<esc>O"
         else
-            execute "norm! \<cr>"
+            " follow help links with enter
+            let l:supported = ['vim', 'help', 'python']
+            if index(l:supported, &filetype) != -1
+                norm K
+            else
+                execute "norm! \<cr>"
+            endif
         endif
     endfunction
 
