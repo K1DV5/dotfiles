@@ -166,6 +166,30 @@ vim.api.nvim_set_keymap('i', '<tab>', 'v:lua.complete(1)', imap_opts)
 vim.api.nvim_set_keymap('i', '<s-tab>', 'v:lua.complete(-1)', imap_opts)
 vim.api.nvim_set_keymap('s', '<tab>', 'v:lua.complete(1)', imap_opts)
 
+-- range formatting
+function format_range_operator()
+    local has_range = false
+    for _, server in ipairs(vim.lsp.buf_get_clients(0)) do
+        if server.server_capabilities.documentRangeFormattingProvider == true then
+            has_range = true
+        end
+    end
+    if not has_range then
+        vim.lsp.buf.formatting()
+        return
+    end
+    local old_func = vim.go.operatorfunc
+    _G.op_func_formatting = function()
+        local start = vim.api.nvim_buf_get_mark(0, '[')
+        local finish = vim.api.nvim_buf_get_mark(0, ']')
+        vim.lsp.buf.range_formatting({}, start, finish)
+        vim.go.operatorfunc = old_func
+        _G.op_func_formatting = nil
+    end
+    vim.o.operatorfunc = 'v:lua.op_func_formatting'
+    vim.api.nvim_feedkeys('g@', 'n', false)
+end
+
 -- setup func
 local function on_attach(client, bufnr)
     -- diagnostics
@@ -191,16 +215,28 @@ local function on_attach(client, bufnr)
     map(bufnr, 'n', '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
     map(bufnr, 'n', 'gr',        '<cmd>lua vim.lsp.buf.references()<CR>',      map_opts)
     map(bufnr, 'n', '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>',          map_opts)
-    -- map(bufnr, 'n', '<leader>f', '<cmd>lua vim.lsp.buf.formatting()<cr>',      map_opts)
+    map(bufnr, 'n', 'gq',        '<cmd>lua format_range_operator()<cr>',       map_opts)
 end
 
 -- enable snippets support on client
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
+capabilities.textDocument.completion.completionItem.preselectSupport = true
+capabilities.textDocument.completion.completionItem.preselectSupport = true
+capabilities.textDocument.completion.completionItem.insertReplaceSupport = true
+capabilities.textDocument.completion.completionItem.labelDetailsSupport = true
+capabilities.textDocument.completion.completionItem.deprecatedSupport = true
+capabilities.textDocument.completion.completionItem.commitCharactersSupport = true
+capabilities.textDocument.completion.completionItem.tagSupport = {valueSet = {1}}
+capabilities.textDocument.completion.completionItem.resolveSupport = {
+    properties = {'documentation', 'detail', 'additionalTextEdits'}
+}
+vim.o.completeopt = 'menuone,noselect'
 
 -- setup language servers
 local servers = {
-    pyright = {cmd = {"pyright-langserver.cmd", "--stdio"}},
+    -- pyright = {cmd = {"pyright-langserver.cmd", "--stdio"}},
+    pylsp = {},
     texlab = {},
     html = {
         cmd = {"vscode-html-language-server.cmd", "--stdio"},
@@ -221,7 +257,9 @@ local servers = {
             }
         }
     },
-    tsserver = {cmd = {"typescript-language-server.cmd", "--stdio"}},
+    tsserver = {
+        capabilities = capabilities,
+    },
     gopls = {},
 }
 
