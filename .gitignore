@@ -3,3 +3,4 @@ nvim/paqs.lnk
 nvim/Session.sess
 nvim/parser
 nvim/do.py
+nvim/lua/fzy.lua

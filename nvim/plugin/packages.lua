@@ -54,7 +54,8 @@ require "paq" {
                 sources = { -- You should specify your *installed* sources.
                   {name = 'nvim_lsp'},
                   {name = 'luasnip'},
-                  {name = 'buffer'},
+                  {name = 'treesitter'},
+                  -- {name = 'buffer'},
                 },
             }
             -- require("nvim-autopairs.completion.cmp").setup({
@@ -64,6 +65,7 @@ require "paq" {
         end)(); -- }}}
     "hrsh7th/cmp-buffer";
     "hrsh7th/cmp-nvim-lsp";
+    "ray-x/cmp-treesitter";
 
     "windwp/nvim-autopairs"; -- {{{
         setup('nvim-autopairs', {}); -- }}}
@@ -118,15 +120,28 @@ require "paq" {
     -- }}}
     "L3MON4D3/LuaSnip";
     "saadparwaiz1/cmp_luasnip";
+    "simrat39/symbols-outline.nvim";
+    "tversteeg/registers.nvim";
+    "jakewvincent/mkdnflow.nvim";  -- {{{
+        setup('mkdnflow', {});
+    -- }}}
+    {"camspiers/snap", run='curl https://raw.githubusercontent.com/swarn/fzy-lua/main/src/fzy_lua.lua -o ' .. fn.stdpath('config') ..  '/lua/fzy.lua'}; -- {{{
+        (function()
+            local snap = require'snap'
+            snap.maps{
+                {"<Leader><Leader>", snap.config.file {producer = "ripgrep.file", consumer = "fzy"}},
+                {"<Leader>fb", snap.config.file {producer = "vim.buffer", consumer = "fzy"}},
+                {"<Leader>fo", snap.config.file {producer = "vim.oldfile", consumer = "fzy"}},
+                {"<Leader>ff", snap.config.vimgrep {consumer = "fzy"}},
+            }
+        end
+        )(); -- }}}
 
     -- look for alternatives
     "mattn/emmet-vim";
-    "liuchengxu/vista.vim";
-    "mhinz/vim-signify";
     "mbbill/undotree";
+    "mhinz/vim-signify";
     "lambdalisue/gina.vim";
-    "vimwiki/vimwiki";
-    {"ferrine/md-img-paste.vim", opt=true};
 }
 
 -- vim:foldmethod=marker:foldlevel=0

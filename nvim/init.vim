@@ -157,8 +157,8 @@
         " use system clipboard
         noremap <leader>c "+
         " toggle file and tag (definition) trees
-        noremap <leader>d <cmd>call <sid>tree('Vista', 'vista')<cr>
-        noremap <leader>D <cmd>Vista!!<cr>
+        noremap <leader>d <cmd>call <sid>tree('SymbolsOutline', 'Outline')<cr>
+        noremap <leader>D <cmd>SymbolsOutlineClose<cr>
         noremap <leader>f <cmd>call <sid>tree('NvimTreeOpen', 'NvimTree')<cr>
         noremap <leader>F <cmd>NvimTreeClose<cr>
         "}}}
@@ -377,7 +377,7 @@ augroup init "{{{
     autocmd BufWinEnter *.txt if &buftype == 'help'
         \| wincmd L
         \| vertical resize 83
-        \| silent! execute 'Vista!'
+        \| silent! execute 'SymbolsOutlineClose'
         \| endif
     autocmd DirChanged * call S('Session', 0)
     " turn on spelling for prose filetypes
