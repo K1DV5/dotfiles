@@ -100,7 +100,7 @@
         " switch windows using `
         noremap ` <cmd>call TabsGo(v:count/1.0)<cr>
         " fuzzy find file
-        noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
+        " noremap - <cmd>call Fuzzy('rg --files ' . repeat('../', v:count))<cr>
         " to return to normal mode in terminal and operator pending
         tnoremap kj <C-\><C-n>
         onoremap kj <esc>

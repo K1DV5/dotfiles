@@ -30,13 +30,11 @@ require "paq" {
 
     "hrsh7th/nvim-cmp"; -- {{{
         (function()
-            local lspkind = require'lspkind'
             local cmp = require'cmp'
             local luasnip = require'luasnip'
             cmp.setup{
                 formatting = {
                     format = function(entry, vim_item)
-                        vim_item.kind = lspkind.presets.default[vim_item.kind]
                         return vim_item
                     end,
                 },
@@ -54,8 +52,7 @@ require "paq" {
                 sources = { -- You should specify your *installed* sources.
                   {name = 'nvim_lsp'},
                   {name = 'luasnip'},
-                  {name = 'treesitter'},
-                  -- {name = 'buffer'},
+                  {name = 'buffer'},
                 },
             }
             -- require("nvim-autopairs.completion.cmp").setup({
@@ -65,7 +62,6 @@ require "paq" {
         end)(); -- }}}
     "hrsh7th/cmp-buffer";
     "hrsh7th/cmp-nvim-lsp";
-    "ray-x/cmp-treesitter";
 
     "windwp/nvim-autopairs"; -- {{{
         setup('nvim-autopairs', {}); -- }}}
@@ -86,22 +82,17 @@ require "paq" {
             mappings_style = "surround"
         });
         -- }}}
-    "kyazdani42/nvim-tree.lua"; -- file manager
+    "kyazdani42/nvim-tree.lua"; -- {{{
         (function()
             vim.g.nvim_tree_show_icons = {git = 0, folders = 1, files = 1, folder_arrows = 1}
             vim.g.nvim_tree_lsp_diagnostics = 1
-        end)();
-    "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree, lspkind-nvim
+        end)(); -- }}}
+    "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree
     -- diagnostics window
     "folke/trouble.nvim"; -- {{{
         setup('trouble', {});
         -- }}}
     -- pretty icons on lsp completion items
-    "onsails/lspkind-nvim"; -- {{{
-        setup('lspkind', {
-            with_text = false
-        }, 'init');
-        -- }}}
     "ggandor/lightspeed.nvim";  -- move fast in nvim
     "p00f/nvim-ts-rainbow";
     "JoosepAlviste/nvim-ts-context-commentstring";
@@ -120,7 +111,13 @@ require "paq" {
     -- }}}
     "L3MON4D3/LuaSnip";
     "saadparwaiz1/cmp_luasnip";
-    "simrat39/symbols-outline.nvim";
+    "simrat39/symbols-outline.nvim"; -- {{{
+        (function()
+            vim.g.symbols_outline = {
+                symbol_blacklist = {'Variable', 'Constant'},
+            }
+        end)();
+    -- }}}
     "tversteeg/registers.nvim";
     "jakewvincent/mkdnflow.nvim";  -- {{{
         setup('mkdnflow', {});
@@ -129,10 +126,10 @@ require "paq" {
         (function()
             local snap = require'snap'
             snap.maps{
-                {"<Leader><Leader>", snap.config.file {producer = "ripgrep.file", consumer = "fzy"}},
-                {"<Leader>fb", snap.config.file {producer = "vim.buffer", consumer = "fzy"}},
-                {"<Leader>fo", snap.config.file {producer = "vim.oldfile", consumer = "fzy"}},
-                {"<Leader>ff", snap.config.vimgrep {consumer = "fzy"}},
+                {"-", snap.config.file {producer = "ripgrep.file", consumer = "fzy"}},
+                -- {"<Leader>fb", snap.config.file {producer = "vim.buffer", consumer = "fzy"}},
+                -- {"<Leader>fo", snap.config.file {producer = "vim.oldfile", consumer = "fzy"}},
+                -- {"<Leader>ff", snap.config.vimgrep {consumer = "fzy"}},
             }
         end
         )(); -- }}}
