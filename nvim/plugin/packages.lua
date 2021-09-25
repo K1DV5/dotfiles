@@ -86,6 +86,7 @@ require "paq" {
         (function()
             vim.g.nvim_tree_show_icons = {git = 0, folders = 1, files = 1, folder_arrows = 1}
             vim.g.nvim_tree_lsp_diagnostics = 1
+            vim.g.nvim_tree_window_picker_exclude = {filetype = {"packer", "qf", "Outline"}}
         end)(); -- }}}
     "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree
     -- diagnostics window
@@ -94,7 +95,6 @@ require "paq" {
         -- }}}
     -- pretty icons on lsp completion items
     "ggandor/lightspeed.nvim";  -- move fast in nvim
-    "p00f/nvim-ts-rainbow";
     "JoosepAlviste/nvim-ts-context-commentstring";
     "terrortylor/nvim-comment";  -- {{{
         setup('nvim_comment', {
