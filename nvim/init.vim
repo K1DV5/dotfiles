@@ -149,7 +149,7 @@
         " toggle spell check
         noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
         " quit
-        noremap <leader><esc> <cmd>x!<cr>
+        noremap <leader><esc> <cmd>call <sid>gate('out')<cr>
         " undotree
         noremap <leader>u <cmd>UndotreeToggle<cr>
         " enter window commands
@@ -206,8 +206,14 @@
             endif
         elseif !argc()
             " delete terminal buffers
-            bufdo if &buftype == 'terminal' | bwipeout! | endif
+            let bufs = nvim_list_bufs()
+            for buf in bufs
+                if nvim_buf_get_option(buf, 'buftype') == 'terminal'
+                    execute 'bwipeout!' buf
+                endif
+            endfor
             call S('', 1)
+            xall!
         endif
     endfunction
 
@@ -364,8 +370,6 @@ augroup init "{{{
     autocmd!
     "resume session, override some colors
     autocmd VimEnter * nested call s:gate('in') | call s:highlight()
-    " save session
-    autocmd VimLeavePre * call s:gate('out')
     " use emmet for html
     autocmd FileType html,php,svelte inoremap <c-space> <cmd>call emmet#expandAbbr(0, "")<cr><right>
     " reset tab for vimwiki
