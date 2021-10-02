@@ -67,7 +67,10 @@ require "paq" {
         setup('nvim-autopairs', {}); -- }}}
     "nvim-treesitter/nvim-treesitter"; -- {{{
         setup('nvim-treesitter.configs', {
-            highlight = { enable = true },
+            highlight = {
+                enable = true,
+                additional_vim_regex_highlighting = false,
+            },
             incremental_selection = { enable = true },
             textobjects = { enable = true },
             rainbow = {
@@ -83,11 +86,40 @@ require "paq" {
         });
         -- }}}
     "kyazdani42/nvim-tree.lua"; -- {{{
-        (function()
-            vim.g.nvim_tree_show_icons = {git = 0, folders = 1, files = 1, folder_arrows = 1}
-            vim.g.nvim_tree_lsp_diagnostics = 1
-            vim.g.nvim_tree_window_picker_exclude = {filetype = {"packer", "qf", "Outline"}}
-        end)(); -- }}}
+        setup('nvim-tree', {
+              (function()
+                  vim.g.nvim_tree_window_picker_exclude = {filetype = {"packer", "qf", "Outline"}}
+                  vim.g.nvim_tree_show_icons = {git = 0, folders = 1, files = 1, folder_arrows = 1}
+              end)(),
+              disable_netrw       = true,
+              hijack_netrw        = true,
+              open_on_setup       = false,
+              ignore_ft_on_setup  = {},
+              update_to_buf_dir   = true,
+              auto_close          = false,
+              open_on_tab         = false,
+              hijack_cursor       = false,
+              update_cwd          = false,
+              lsp_diagnostics     = true,
+              update_focused_file = {
+                  enable      = false,
+                  update_cwd  = false,
+                  ignore_list = {}
+              },
+              system_open = {
+                  cmd  = nil,
+                  args = {}
+              },
+              view = {
+                  width = 30,
+                  side = 'left',
+                  auto_resize = false,
+                  mappings = {
+                      custom_only = false,
+                      list = {}
+                  }
+              }
+        }); -- }}}
     "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree
     -- diagnostics window
     "folke/trouble.nvim"; -- {{{
@@ -122,7 +154,11 @@ require "paq" {
     "jakewvincent/mkdnflow.nvim";  -- {{{
         setup('mkdnflow', {});
     -- }}}
-    {"camspiers/snap", run='curl https://raw.githubusercontent.com/swarn/fzy-lua/main/src/fzy_lua.lua -o ' .. fn.stdpath('config') ..  '/lua/fzy.lua'}; -- {{{
+    {"camspiers/snap", run =
+     'curl https://raw.githubusercontent.com/swarn/fzy-lua/main/src/fzy_lua.lua -o '
+     .. fn.stdpath('config')
+     ..  '/lua/fzy.lua'
+     }; -- {{{
         (function()
             local snap = require'snap'
             snap.maps{
