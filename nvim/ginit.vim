@@ -10,7 +10,7 @@
     " disable the gui popup menu
     GuiPopupmenu 0
 
-	if argc() == 0
+	if get(g:, 'init_argc') == 0
 		" start maximized
 		" call GuiWindowMaximized(1)
 		" start fullscreen

@@ -181,15 +181,19 @@
             let file = a:1
             let save = a:2
         endif
-        let file = fnameescape(empty(file) ? stdpath('config') . '/Session' : file) . '.sess'
+        let file = fnameescape(empty(file) ? stdpath('config') . '/Session' : file) . '.vim'
         if save " save session
-            call delete(file)
             execute 'mksession!' file
             return
         endif
         " restore
         if filereadable(file)
+            let args = argv()
             silent execute 'source' file
+            %argdel
+            for arg in args
+                execute 'argadd' arg
+            endfor
             edit
         endif
     endfunction
@@ -198,13 +202,17 @@
     function! s:gate(direc) "{{{
         " what to do at startup, and exit
         if a:direc == 'in'
+            let g:init_argc = argc()
             if argc()
                 execute 'cd' expand('%:p:h')
             else
                 call S('', 0)
                 call TabsAllBuffers()
             endif
-        elseif !argc()
+        else
+            if !g:init_argc
+                call S('', 1)
+            endif
             " delete terminal buffers
             let bufs = nvim_list_bufs()
             for buf in bufs
@@ -212,7 +220,6 @@
                     execute 'bwipeout!' buf
                 endif
             endfor
-            call S('', 1)
             xall!
         endif
     endfunction
@@ -307,14 +314,14 @@
         hi! default link Title Boolean
         hi! default link VimwikiMarkers Boolean
         hi! default link VimwikiLink markdownUrl
-        hi! LspDiagnosticsVirtualTextInformation guifg=Green
-        hi! LspDiagnosticsVirtualTextHint guifg=Cyan
-        hi! LspDiagnosticsVirtualTextError guifg=Red
-        hi! LspDiagnosticsVirtualTextWarning guifg=Yellow
-        hi! LspDiagnosticsUnderlineError gui=undercurl guisp=Red
-        hi! LspDiagnosticsUnderlineWarning gui=undercurl guisp=Orange
-        hi! LspDiagnosticsUnderlineHint gui=undercurl guisp=Cyan
-        hi! LspDiagnosticsUnderlineInformation gui=undercurl guisp=Green
+        hi! DiagnosticSignInformation guifg=Green
+        hi! DiagnosticSignHint guifg=Cyan
+        hi! DiagnosticSignError guifg=Red
+        hi! DiagnosticSignWarning guifg=Yellow
+        hi! DiagnosticUnderlineError gui=undercurl guisp=Red
+        hi! DiagnosticUnderlineWarning gui=undercurl guisp=Orange
+        hi! DiagnosticUnderlineHint gui=undercurl guisp=Cyan
+        hi! DiagnosticUnderlineInformation gui=undercurl guisp=Green
     endfunction
 
     " }}}
