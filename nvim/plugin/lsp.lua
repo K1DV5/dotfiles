@@ -192,10 +192,10 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 vim.o.completeopt = 'menuone,noselect'
 
 -- change diagnostic signs shown in sign column
-vim.fn.sign_define("LspDiagnosticsSignError", {text = '', texthl = "LspDiagnosticsSignError"})
-vim.fn.sign_define("LspDiagnosticsSignWarning", {text = '', texthl = "LspDiagnosticsSignWarning"})
-vim.fn.sign_define("LspDiagnosticsSignInformation", {text = '', texthl = "LspDiagnosticsSignInformation"})
-vim.fn.sign_define("LspDiagnosticsSignHint", {text = '', texthl = "LspDiagnosticsSignHint"})
+vim.fn.sign_define("DiagnosticSignError", {text = '', texthl = "DiagnosticSignError"})
+vim.fn.sign_define("DiagnosticSignWarning", {text = '', texthl = "DiagnosticSignWarning"})
+vim.fn.sign_define("DiagnosticSignInformation", {text = '', texthl = "DiagnosticSignInformation"})
+vim.fn.sign_define("DiagnosticSignHint", {text = '', texthl = "DiagnosticSignHint"})
 
 -- setup language servers
 local servers = {
