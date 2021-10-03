@@ -214,8 +214,7 @@
                 call S('', 1)
             endif
             " delete terminal buffers
-            let bufs = nvim_list_bufs()
-            for buf in bufs
+            for buf in nvim_list_bufs()
                 if nvim_buf_get_option(buf, 'buftype') == 'terminal'
                     execute 'bwipeout!' buf
                 endif

@@ -150,7 +150,6 @@ require "paq" {
             }
         end)();
     -- }}}
-    "tversteeg/registers.nvim";
     "jakewvincent/mkdnflow.nvim";  -- {{{
         setup('mkdnflow', {});
     -- }}}
