@@ -60,8 +60,6 @@
         set foldtext=MyFoldText()
         " system clipboard
         set clipboard+=unnamedplus
-        " hide command line by default
-        set cmdheight=0
 
         "}}}
     "performance {{{
