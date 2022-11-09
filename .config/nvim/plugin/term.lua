@@ -30,7 +30,12 @@ local function terminals(wins)
         list = vim.api.nvim_list_bufs()
         get_buffer = function(buf) return buf end
     end
-    local filter_func = function(item) return vim.api.nvim_buf_get_option(get_buffer(item), 'buftype') == 'terminal' end
+    local function filter_func(item)
+        local buffer = get_buffer(item)
+        local is_terminal = vim.api.nvim_buf_get_option(buffer, 'buftype') == 'terminal'
+        local is_listed = vim.api.nvim_buf_get_option(buffer, 'buflisted') == true
+        return is_terminal and is_listed
+    end
     return vim.tbl_filter(filter_func, list)
 end
 
@@ -99,11 +104,15 @@ local function clear_existing(tbuflist, cmd, dir)
         local name = vim.fn.substitute(vim.api.nvim_buf_get_name(buf), '//\\d\\+:', '//', '')
         name = string.sub(name, cmp_start)
         local i_sep = string.find(name, '//')
+        if i_sep == nil then
+            goto continue
+        end
         local t_dir = string.sub(name, 1, i_sep - 1)
         local t_cmd = string.sub(name, i_sep + 2)
         if vim.fn.fnamemodify(t_dir, ':p') == cmp_dir and t_cmd == cmd then
             vim.api.nvim_command('bdelete! ' .. buf)
         end
+        ::continue::
     end
 end
 
