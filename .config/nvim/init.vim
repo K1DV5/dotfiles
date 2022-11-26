@@ -58,8 +58,6 @@
         set title titlestring=%t
         " foldtext
         set foldtext=MyFoldText()
-        " system clipboard
-        set clipboard+=unnamedplus
 
         "}}}
     "performance {{{
@@ -143,6 +141,7 @@
         tnoremap <leader>T <cmd>call v:lua.term(1)<cr>
         " show git status
         noremap <leader>g <cmd>call <sid>git()<cr>
+        tnoremap <leader>g <cmd>call <sid>git()<cr>
         " closing current buffer
         noremap <leader>bb <cmd>lua tabs_close()<cr>
         tnoremap <leader>bb <cmd>lua tabs_close()<cr>
@@ -181,13 +180,15 @@
     " }}}
     function! s:git() "{{{
         " show git status
-        if index(['NeogitStatus'], &filetype) != -1
-            let l:to_be_closed = bufnr()
-            call win_gotoid(1000)
-            execute 'bdelete' l:to_be_closed
+        " if index(['NeogitStatus'], &filetype) != -1
+        if index(['LazyGit'], &filetype) != -1
+            call feedkeys('q')
+            " let l:to_be_closed = bufnr()
+            " call win_gotoid(1000)
+            " execute 'bdelete' l:to_be_closed
         elseif &modifiable
             execute 'vs term://' . expand('%:h') . '//lazygit'
-            " vs +term\ lazygit
+            set filetype=LazyGit
             norm i
             augroup git
                 autocmd!
