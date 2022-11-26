@@ -191,7 +191,7 @@
             norm i
             augroup git
                 autocmd!
-                autocmd TermClose <buffer> close
+                autocmd TermClose <buffer> bd!
             augroup END
             " lua require'neogit'.open{cwd = vim.fn.expand('%:h'), kind = 'vsplit'}
         else
