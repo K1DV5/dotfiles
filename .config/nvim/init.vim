@@ -186,7 +186,14 @@
             call win_gotoid(1000)
             execute 'bdelete' l:to_be_closed
         elseif &modifiable
-            lua require'neogit'.open{cwd = vim.fn.expand('%:h'), kind = 'vsplit'}
+            execute 'vs term://' . expand('%:h') . '//lazygit'
+            " vs +term\ lazygit
+            norm i
+            augroup git
+                autocmd!
+                autocmd TermClose <buffer> close
+            augroup END
+            " lua require'neogit'.open{cwd = vim.fn.expand('%:h'), kind = 'vsplit'}
         else
             echo 'Must be on a file'
         endif
