@@ -115,8 +115,8 @@ EOF
             endif
         elseif &modifiable
             execute 'tabe term://' . expand('%:h') . '//lazygit'
-            set filetype=LazyGit nobuflisted
-            norm i
+            setlocal filetype=LazyGit nobuflisted
+            startinsert
             augroup git
                 autocmd!
                 autocmd TermClose <buffer> bd!
