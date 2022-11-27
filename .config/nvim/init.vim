@@ -196,21 +196,16 @@ EOF
     " }}}
     function! s:git() "{{{
         " show git status
-        " if index(['NeogitStatus'], &filetype) != -1
         if index(['LazyGit'], &filetype) != -1
             call feedkeys('q')
-            " let l:to_be_closed = bufnr()
-            " call win_gotoid(1000)
-            " execute 'bdelete' l:to_be_closed
         elseif &modifiable
-            execute 'vs term://' . expand('%:h') . '//lazygit'
-            set filetype=LazyGit
+            execute 'tabe term://' . expand('%:h') . '//lazygit'
+            set filetype=LazyGit nobuflisted
             norm i
             augroup git
                 autocmd!
                 autocmd TermClose <buffer> bd!
             augroup END
-            " lua require'neogit'.open{cwd = vim.fn.expand('%:h'), kind = 'vsplit'}
         else
             echo 'Must be on a file'
         endif
