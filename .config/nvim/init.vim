@@ -100,16 +100,8 @@ EOF
         " auto figure out what to do
         silent update!
         wincmd k
-        " let s:ext_part = expand('%:e')
-        " let l:hidden = ['tex', 'texw', 'html', 'htm']
-        " if index(l:hidden, s:ext_part) != -1
-        "     setlocal makeprg=do
-        "     execute 'make "'.expand('%:p').'"'
-        "     echo "Done."
-        " else
-            call v:lua.term('python ' . stdpath('config') . '/do.py '.expand('%:p'))
-            norm i
-        " endif
+        call v:lua.term('python ' . stdpath('config') . '/do.py '.expand('%:p'))
+        norm i
     endfunction
 
     " }}}
