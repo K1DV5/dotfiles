@@ -95,87 +95,6 @@ local g = vim.g
 -- }}}
 EOF
 
-" mappings {{{
-    "normal {{{
-        " do what needs to be done
-        noremap <c-p> <cmd>call <sid>do()<cr>
-        "scroll by page
-        noremap <space> <c-f>
-        noremap <c-space> <c-b>
-        noremap <s-space> <c-b>
-        " copy till the end of line
-        noremap Y y$
-        "also for wrapped lines
-        noremap j gj
-        noremap k gk
-        noremap ^ g^
-        noremap 0 g0
-        noremap $ g$
-        noremap <Up> g<Up>
-        noremap <Down> g<Down>
-        "using tab for switching buffers
-        noremap <tab> <cmd>call v:lua.tabs_go(v:count)<cr>
-        " switch windows using `
-        noremap ` <cmd>call v:lua.tabs_go(v:count, v:true)<cr>
-        " to return to normal mode in terminal and operator pending
-        tnoremap kj <C-\><C-n>
-        onoremap kj <esc>
-        " do the same thing as normal mode in terminal for do
-        tnoremap <c-p> <C-\><C-n><cmd>call <sid>do()<cr>
-        " lookup help for something under cursor with enter
-        nnoremap <cr> <cmd>call <sid>cr(0)<cr>
-        " go forward (back) with backspace
-        noremap <bs> <c-o>
-        noremap <s-bs> <c-i>
-
-        "}}}
-    "command {{{
-        " go normal
-        cnoremap kj <esc>
-        " delete a character
-        cnoremap <c-h> <c-bs>
-
-        "}}}
-    "insert {{{
-        " escape quick
-        imap kj <esc>
-        " nice brackets on cr
-        " imap <expr> <cr> <sid>cr(v:true)
-        "}}}
-    "visual {{{
-        " escape quick
-        vnoremap kj <esc>
-
-        "}}}
-    " leader {{{
-        let mapleader = ','
-        " open/close terminal pane
-        noremap <leader>t <cmd>call v:lua.term()<cr>
-        tnoremap <leader>t <cmd>call v:lua.term()<cr>
-        " open big terminal window
-        noremap <leader>T <cmd>call v:lua.term(1)<cr>
-        tnoremap <leader>T <cmd>call v:lua.term(1)<cr>
-        " show git status
-        noremap <leader>g <cmd>call <sid>git()<cr>
-        tnoremap <leader>g <cmd>call <sid>git()<cr>
-        " closing current buffer
-        noremap <leader>bb <cmd>lua tabs_close()<cr>
-        tnoremap <leader>bb <cmd>lua tabs_close()<cr>
-        " save file if changed
-        noremap <leader>bu <cmd>update!<cr>
-        " toggle spell check
-        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
-        " quit
-        noremap <leader><esc> <cmd>qa<cr>
-        " enter window commands
-        noremap <leader>w <c-w>
-        " use system clipboard
-        noremap <leader>c "+
-        " toggle file and tag (definition) trees
-        noremap <leader>d <cmd>call <sid>tree('AerialOpen', 'aerial')<cr>
-        noremap <leader>D <cmd>AerialClose<cr>
-        "}}}
-" }}}
 " functions {{{
     function! s:do() "{{{
         " auto figure out what to do
@@ -197,7 +116,11 @@ EOF
     function! s:git() "{{{
         " show git status
         if index(['LazyGit'], &filetype) != -1
-            call feedkeys('q')
+            if mode() == 'n'
+                bdelete!
+            else
+                call feedkeys('q')
+            endif
         elseif &modifiable
             execute 'tabe term://' . expand('%:h') . '//lazygit'
             set filetype=LazyGit nobuflisted
@@ -297,6 +220,87 @@ EOF
     
     "}}}
 
+" }}}
+" mappings {{{
+    "normal {{{
+        " do what needs to be done
+        noremap <c-p> <cmd>call <sid>do()<cr>
+        "scroll by page
+        noremap <space> <c-f>
+        noremap <c-space> <c-b>
+        noremap <s-space> <c-b>
+        " copy till the end of line
+        noremap Y y$
+        "also for wrapped lines
+        noremap j gj
+        noremap k gk
+        noremap ^ g^
+        noremap 0 g0
+        noremap $ g$
+        noremap <Up> g<Up>
+        noremap <Down> g<Down>
+        "using tab for switching buffers
+        noremap <tab> <cmd>call v:lua.tabs_go(v:count)<cr>
+        " switch windows using `
+        noremap ` <cmd>call v:lua.tabs_go(v:count, v:true)<cr>
+        " to return to normal mode in terminal and operator pending
+        tnoremap kj <C-\><C-n>
+        onoremap kj <esc>
+        " do the same thing as normal mode in terminal for do
+        tnoremap <c-p> <C-\><C-n><cmd>call <sid>do()<cr>
+        " lookup help for something under cursor with enter
+        nnoremap <cr> <cmd>call <sid>cr(0)<cr>
+        " go forward (back) with backspace
+        noremap <bs> <c-o>
+        noremap <s-bs> <c-i>
+
+        "}}}
+    "command {{{
+        " go normal
+        cnoremap kj <esc>
+        " delete a character
+        cnoremap <c-h> <c-bs>
+
+        "}}}
+    "insert {{{
+        " escape quick
+        imap kj <esc>
+        " nice brackets on cr
+        " imap <expr> <cr> <sid>cr(v:true)
+        "}}}
+    "visual {{{
+        " escape quick
+        vnoremap kj <esc>
+
+        "}}}
+    " leader {{{
+        let mapleader = ','
+        " open/close terminal pane
+        noremap <leader>t <cmd>call v:lua.term()<cr>
+        tnoremap <leader>t <cmd>call v:lua.term()<cr>
+        " open big terminal window
+        noremap <leader>T <cmd>call v:lua.term(1)<cr>
+        tnoremap <leader>T <cmd>call v:lua.term(1)<cr>
+        " show git status
+        noremap <leader>g <cmd>call <sid>git()<cr>
+        tnoremap <leader>g <cmd>call <sid>git()<cr>
+        " closing current buffer
+        noremap <leader>bb <cmd>lua tabs_close()<cr>
+        tnoremap <leader>bb <cmd>lua tabs_close()<cr>
+        " save file if changed
+        noremap <leader>bu <cmd>update!<cr>
+        " toggle spell check
+        noremap <leader>z <cmd>setlocal spell! spelllang=en_us<cr>
+        " quit
+        noremap <leader><esc> <cmd>qa<cr>
+        " enter window commands
+        noremap <leader>w <c-w>
+        " use system clipboard
+        noremap <leader>c "+
+        " toggle file and tag (definition) trees
+        noremap <leader>d <cmd>call <sid>tree('AerialOpen', 'aerial')<cr>
+        noremap <leader>D <cmd>AerialClose<cr>
+        "}}}
 " }}}
 " pack config {{{
     "term {{{
