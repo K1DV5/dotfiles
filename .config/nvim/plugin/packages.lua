@@ -86,22 +86,15 @@ require "paq" {
             },
             sources = { -- You should specify your *installed* sources.
               {name = 'nvim_lsp'},
-              {name = 'luasnip'},
               {name = 'buffer'},
             },
         }
         vim.api.nvim_set_keymap('s', '<tab>', '<cmd>lua require("luasnip").jump(1)<cr>', {noremap = true, silent = true})
         vim.api.nvim_set_keymap('s', '<s-tab>', '<cmd>lua require("luasnip").jump(-1)<cr>', {noremap = true, silent = true})
-        require("luasnip.loaders.from_vscode").lazy_load()
-        -- require("nvim-autopairs.completion.cmp").setup({
-        --   map_cr = true, --  map <CR> on insert mode
-        --   map_complete = true, -- it will auto insert `(` after select function or method item
-        -- })
     end);
 
     "hrsh7th/cmp-buffer";
     "hrsh7th/cmp-nvim-lsp";
-    "rafamadriz/friendly-snippets";
 
     setup("windwp/nvim-autopairs", 'nvim-autopairs', { check_ts = true });
 
@@ -137,8 +130,6 @@ require "paq" {
 
     "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree
 
-    "ggandor/lightspeed.nvim";  -- move fast in nvim
-
     "JoosepAlviste/nvim-ts-context-commentstring";
 
     setup("terrortylor/nvim-comment", 'nvim_comment', {
@@ -151,11 +142,6 @@ require "paq" {
             vim.cmd[[colorscheme vscode]]
         end
     end);
-
-    "L3MON4D3/LuaSnip";
-    "saadparwaiz1/cmp_luasnip";
-
-    setup("jakewvincent/mkdnflow.nvim", 'mkdnflow');
 
     setup("nvim-telescope/telescope.nvim", 'telescope', function()
         require'telescope'.setup{
@@ -192,8 +178,6 @@ require "paq" {
     "RRethy/nvim-treesitter-textsubjects";
 
     "nvim-lua/plenary.nvim"; -- for neogit, gitsigns
-
-    setup("TimUntersberger/neogit", 'neogit', { auto_refresh = false });
 
     setup("rmagatti/auto-session", 'auto-session', {
         log_level = 'info',
