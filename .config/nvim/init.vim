@@ -1,84 +1,100 @@
 " init script for neovim
 
-" builtins {{{
-    "miscellaneous {{{
-        " continue wrapped lines with the same indent
-        set breakindent
-        " use four spaces for tabs
-        set tabstop=4 shiftwidth=4 expandtab
-        " keep changes persistent after quitting
-        set undofile
-        " dont highlight matches from last search
-        set nohlsearch
-        "auto change search to case sensitive when there are upper cases
-        set smartcase
-        "turn on line numbers where the cursor is (revert: set nonumber)
-        set number relativenumber
-        "highlight current line
-        set cursorline
-        " enable true color on terminal
-        set termguicolors
-        " set the time to update misc things
-        set updatetime=100
-        " disable swapfiles, allow editing outside nvim
-        set noswapfile
-        " keep windows the same size when adding/removing
-        set noequalalways
-        " hide the ~'s at the end of files and other chars
-        set fillchars=eob:\ ,diff:\ ,fold:\ ,stl:\  "make it disappear
-        " read options only from the first and last lines
-        set modelines=1
-        " dont show the mode on command line
-        set noshowmode
-        " split to the right
-        set splitright
-        " only scan current and other windows for keyword completions
-        set complete=.,w,b,t
-        " dont be chatty on completions
-        set shortmess+=c
-        " show diff with vertical split
-        set diffopt+=vertical
-        " always have a space for signs
-        set signcolumn=yes
-        " some filetype specific features
-        filetype plugin indent on
-        " default sql variant
-        let g:sql_type_default = 'mysql'
-        " disable the tabline
-        set showtabline=0
-        " to show line numbers on <c-g>, disable on statusline
-        set noruler
-        " store buffers and cd accross sessions
-        set ssop=buffers,curdir
-        " use ripgrep
-        set grepprg=rg\ --vimgrep
-        " allow mouse interaction
-        set mouse=a
-        " titlebar
-        set title titlestring=%t
-        " foldtext
-        set foldtext=MyFoldText()
+lua << EOF
+local o = vim.opt
+local g = vim.g
 
-        "}}}
-    "performance {{{
-        " hide buffers when not shown in window
-        set hidden
-        " Don’t update screen during macro and script execution
-        set lazyredraw
-        " disable remote hosts
-        let g:loaded_python_provider = 1
-        let g:loaded_python3_provider = 1
-        let g:loaded_ruby_provider = 1
-        let g:loaded_node_provider = 1
-        let g:loaded_perl_provider = 1
-        " disable builtin plugins
-        let g:loaded_gzip = 1
-        let g:loaded_netrw = 1
-        let g:loaded_zipPlugin = 1
-        let g:loaded_2html_plugin = 1
-        let g:loaded_tarPlugin = 1
-        "}}}
-" }}}
+-- builtins {{{
+    -- miscellaneous {{{
+        -- continue wrapped lines with the same indent
+        o.breakindent = true
+        -- use four spaces for tabs
+        o.tabstop = 4
+        o.shiftwidth = 4
+        o.expandtab = true
+        -- keep changes persistent after quitting
+        o.undofile = true
+        -- dont highlight matches from last search
+        o.hlsearch = false
+        -- auto change search to case sensitive when there are upper cases
+        o.smartcase = true
+        -- turn on line numbers where the cursor is (revert: set nonumber)
+        o.number = true
+        o.relativenumber = true
+        -- highlight current line
+        o.cursorline = true
+        -- enable true color on terminal
+        o.termguicolors = true
+        -- set the time to update misc things
+        o.updatetime = 100
+        -- disable swapfiles, allow editing outside nvim
+        o.swapfile = false
+        -- keep windows the same size when adding/removing
+        o.equalalways = false
+        -- hide the ~'s at the end of files and other chars
+        o.fillchars = {eob = ' ',diff = ' ',fold = ' ',stl = ' '}
+        -- read options only from the first and last lines
+        o.modelines = 1
+        -- dont show the mode on command line
+        o.showmode = false
+        -- split to the right
+        o.splitright = true
+        -- only scan current and other windows for keyword completions
+        o.complete='.,w,b,t'
+        -- dont be chatty on completions
+        o.shortmess:append('c')
+        -- show diff with vertical split
+        o.diffopt:append('vertical')
+        -- always have a space for signs
+        o.signcolumn = 'yes'
+        -- some filetype specific features
+        vim.cmd'filetype plugin indent on'
+        -- default sql variant
+        g.sql_type_default = 'mysql'
+        -- disable the tabline
+        o.showtabline = 0
+        -- to show line numbers on <c-g>, disable on statusline
+        o.ruler = false
+        -- store buffers and cd accross sessions
+        o.ssop = 'buffers,curdir'
+        -- use ripgrep
+        o.grepprg = 'rg'
+        -- allow mouse interaction
+        o.mouse = 'a'
+        -- foldtext
+        o.foldtext = 'MyFoldText()'
+
+        -- }}}
+    -- performance {{{
+        -- disable builtins plugins
+        local disabled_built_ins = {
+            "netrw",
+            "netrwPlugin",
+            "netrwSettings",
+            "netrwFileHandlers",
+            "gzip",
+            "zip",
+            "zipPlugin",
+            "tar",
+            "tarPlugin",
+            "getscript",
+            "getscriptPlugin",
+            "vimball",
+            "vimballPlugin",
+            "2html_plugin",
+            "logipat",
+            "rrhelper",
+            "spellfile_plugin",
+            "matchit"
+        }
+
+        for _, plugin in pairs(disabled_built_ins) do
+            vim.g["loaded_" .. plugin] = 1
+        end
+        -- }}}
+-- }}}
+EOF
+
 " mappings {{{
     "normal {{{
         " do what needs to be done
