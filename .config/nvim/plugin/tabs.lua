@@ -68,7 +68,7 @@ function tabs_reload()
                 end
             end
         end
-        if not current_included then  -- maybe added
+        if not current_included and vim.fn.buflisted(current_buf) ~= 0 then  -- maybe added
             table.insert(win_bufs_new, current_buf)
         end
         vim.api.nvim_win_set_var(0, 'tabs_buflist', win_bufs_new)
@@ -146,7 +146,7 @@ function tabs_close()
 end
 
 vim.api.nvim_create_augroup("tabs", { clear = true })
-vim.api.nvim_create_autocmd({'BufRead', 'BufNewFile', 'FileType', 'TermOpen'}, {
+vim.api.nvim_create_autocmd({'BufRead', 'BufNewFile', 'BufLeave', 'FileType', 'TermOpen'}, {
     group = "tabs",
     callback = tabs_reload,
 })
