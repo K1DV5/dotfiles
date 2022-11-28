@@ -1,2 +1,13 @@
 gui:
+  theme:
+    activeBorderColor:
+      - '#084671'
+      - bold
+    inactiveBorderColor:
+      - '#555555'
+    selectedLineBgColor:
+      - '#084671'
+    unstagedChangesColor:
+      - red
+      - bold
   showIcons: true
