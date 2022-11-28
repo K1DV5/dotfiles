@@ -126,7 +126,7 @@ EOF
             endif
             startinsert
             if lg_buf != -1
-                call feedkeys("R")
+                call feedkeys("2R")
             endif
         else
             echo 'Must be on a file'
