@@ -105,7 +105,7 @@ EOF
     endfunction
 
     " }}}
-    function! s:git() "{{{
+    function! s:git(force) "{{{
         " show git status
         if index(['LazyGit'], &filetype) != -1
             stopinsert
@@ -118,6 +118,10 @@ EOF
                     break
                 endif
             endfor
+            if a:force == 1 && lg_buf != -1
+                execute 'bdelete!' lg_buf
+                let lg_buf = -1
+            endif
             if lg_buf == -1
                 execute 'e term://' . expand('%:h') . '//lazygit'
                 setlocal filetype=LazyGit nobuflisted
@@ -281,8 +285,9 @@ EOF
         noremap <leader>T <cmd>call v:lua.term(1)<cr>
         tnoremap <leader>T <cmd>call v:lua.term(1)<cr>
         " show git status
-        noremap <leader>g <cmd>call <sid>git()<cr>
-        tnoremap <leader>g <cmd>call <sid>git()<cr>
+        noremap <leader>g <cmd>call <sid>git(0)<cr>
+        noremap <leader>G <cmd>call <sid>git(1)<cr>
+        tnoremap <leader>g <cmd>call <sid>git(0)<cr>
         " closing current buffer
         noremap <leader>bb <cmd>lua tabs_close()<cr>
         tnoremap <leader>bb <cmd>lua tabs_close()<cr>
