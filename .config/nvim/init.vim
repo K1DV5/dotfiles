@@ -108,19 +108,28 @@ EOF
     function! s:git() "{{{
         " show git status
         if index(['LazyGit'], &filetype) != -1
-            if mode() == 'n'
-                bdelete!
-            else
-                call feedkeys('q')
-            endif
+            stopinsert
+            call feedkeys("\<c-^>")
+            lua tabs_reload()
         elseif &modifiable
-            execute 'tabe term://' . expand('%:h') . '//lazygit'
-            setlocal filetype=LazyGit nobuflisted
+            let lg_buf = -1
+            for nr in nvim_list_bufs()
+                if nvim_buf_get_option(nr, 'filetype') == 'LazyGit'
+                    let lg_buf = nr
+                    break
+                endif
+            endfor
+            if lg_buf == -1
+                execute 'e term://' . expand('%:h') . '//lazygit'
+                setlocal filetype=LazyGit nobuflisted
+                tnoremap <buffer> q <cmd>stopinsert \| bdelete! \| lua tabs_reload()<cr>
+            else
+                execute 'buffer' lg_buf
+            endif
             startinsert
-            augroup git
-                autocmd!
-                autocmd TermClose <buffer> bd!
-            augroup END
+            if lg_buf != -1
+                call feedkeys("R")
+            endif
         else
             echo 'Must be on a file'
         endif
