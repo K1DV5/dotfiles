@@ -110,7 +110,6 @@ EOF
         if index(['LazyGit'], &filetype) != -1
             stopinsert
             call feedkeys("\<c-^>")
-            lua tabs_reload()
         elseif &modifiable
             let lg_buf = -1
             for nr in nvim_list_bufs()
@@ -122,7 +121,6 @@ EOF
             if lg_buf == -1
                 execute 'e term://' . expand('%:h') . '//lazygit'
                 setlocal filetype=LazyGit nobuflisted
-                tnoremap <buffer> q <cmd>stopinsert \| bdelete! \| lua tabs_reload()<cr>
             else
                 execute 'buffer' lg_buf
             endif
