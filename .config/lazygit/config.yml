@@ -11,3 +11,4 @@ gui:
       - red
       - bold
   showIcons: true
+  showBottomLine: false
