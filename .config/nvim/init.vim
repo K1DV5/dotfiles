@@ -125,6 +125,12 @@ EOF
             if lg_buf == -1
                 execute 'e term://' . expand('%:h') . '//lazygit'
                 setlocal filetype=LazyGit nobuflisted
+                let b:old_map = maparg('kj', 't')
+                augroup lazygit
+                autocmd!
+                autocmd TermEnter <buffer> tunmap kj
+                autocmd TermLeave <buffer> execute 'tnoremap kj' b:old_map
+                augroup END
             else
                 execute 'buffer' lg_buf
             endif
