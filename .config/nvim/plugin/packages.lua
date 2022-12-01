@@ -42,7 +42,6 @@ require "paq" {
 
     setup("hrsh7th/nvim-cmp", 'cmp', function()
         local cmp = require'cmp'
-        local luasnip = require'luasnip'
         local function complete(direction)
             local key
             if direction == 1 then key = 'select_next_item'
@@ -51,9 +50,6 @@ require "paq" {
                 if cmp.visible() then
                     cmp.mapping[key]()()
                     return
-                end
-                if luasnip.expand_or_jumpable() then
-                    return luasnip.expand_or_jump()
                 end
                 local col = vim.fn.col '.' - 1
                 local not_needed = col == 0 or vim.fn.getline('.'):sub(col, col):match '%s' ~= nil
@@ -79,18 +75,11 @@ require "paq" {
                 ['<Tab>'] = complete(1),
                 ['<S-Tab>'] = complete(-1),
             },
-            snippet = {
-                expand = function(args)
-                    luasnip.lsp_expand(args.body)
-                end
-            },
             sources = { -- You should specify your *installed* sources.
               {name = 'nvim_lsp'},
               {name = 'buffer'},
             },
         }
-        vim.api.nvim_set_keymap('s', '<tab>', '<cmd>lua require("luasnip").jump(1)<cr>', {noremap = true, silent = true})
-        vim.api.nvim_set_keymap('s', '<s-tab>', '<cmd>lua require("luasnip").jump(-1)<cr>', {noremap = true, silent = true})
     end);
 
     "hrsh7th/cmp-buffer";
