@@ -100,7 +100,7 @@ EOF
         " auto figure out what to do
         silent update!
         wincmd k
-        call v:lua.term('python ' . stdpath('config') . '/do.py '.expand('%:p'))
+        call v:lua.term('python3 ' . stdpath('config') . '/do.py '.expand('%:p'))
         norm i
     endfunction
 
