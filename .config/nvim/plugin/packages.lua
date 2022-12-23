@@ -75,6 +75,7 @@ require "paq" {
                 ['<Tab>'] = complete(1),
                 ['<S-Tab>'] = complete(-1),
             },
+            preselect = cmp.PreselectMode.None,
             sources = { -- You should specify your *installed* sources.
               {name = 'nvim_lsp'},
               {name = 'buffer'},
