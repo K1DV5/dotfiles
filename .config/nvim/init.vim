@@ -1,5 +1,7 @@
 " init script for neovim
 
+let mapleader = ','
+
 lua << EOF
 local o = vim.opt
 local g = vim.g
@@ -299,7 +301,6 @@ EOF
 
         "}}}
     " leader {{{
-        let mapleader = ','
         " open/close terminal pane
         noremap <leader>t <cmd>call v:lua.term()<cr>
         tnoremap <leader>t <cmd>call v:lua.term()<cr>

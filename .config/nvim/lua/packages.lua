@@ -90,9 +90,11 @@ return {
 
     "JoosepAlviste/nvim-ts-context-commentstring",
 
-    {"terrortylor/nvim-comment", config = {
-        comment_empty = false
-    }},
+    {"terrortylor/nvim-comment", config = function()
+        require'nvim_comment'.setup{
+            comment_empty = false
+        }
+    end},
 
     {"Mofiqul/vscode.nvim", config = function()
         if vim.g.vscode_style == nil then
