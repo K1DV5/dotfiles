@@ -1,46 +1,12 @@
 -- init script in lua (WIP)
 
-local fn = vim.fn
-local install_path = fn.stdpath('data') .. '/site/pack/paqs/start/paq-nvim'
-if fn.empty(fn.glob(install_path)) > 0 then
-  fn.system({'git', 'clone', '--depth=1', 'git@github.com:savq/paq-nvim.git', install_path})
-end
+return {
 
--- setup packages only if they exist, to not prevent loading other parts
-local function setup(path, name, config, setup_func)
-    if config == nil then
-        config = {}
-    elseif type(config) == 'function' then
-        local success = pcall(config)
-        if not success then
-            print('package', name, 'setup error')
-        end
-        return path
-    end
-    if setup_func == nil then
-        setup_func = 'setup'
-    end
-    local exists, package = pcall(require, name)
-    if exists then
-        if package[setup_func] == nil then
-            print(name .. '.' .. setup_func, 'not found')
-        else
-            package[setup_func](config)
-        end
-    else
-        print('package', name, 'not found')
-    end
-    return path
-end
+    "neovim/nvim-lspconfig", -- config in lsp.lua
+    {"williamboman/mason.nvim", config = true},
+    {"RRethy/vim-illuminate", lazy = false},
 
-require "paq" {
-    "savq/paq-nvim";                  -- Let Paq manage itself
-
-    "neovim/nvim-lspconfig"; -- config in lsp.lua
-    setup("williamboman/mason.nvim", "mason");
-    "RRethy/vim-illuminate";
-
-    setup("hrsh7th/nvim-cmp", 'cmp', function()
+    {"hrsh7th/nvim-cmp", config = function()
         local cmp = require'cmp'
         local function complete(direction)
             local key
@@ -81,59 +47,61 @@ require "paq" {
               {name = 'buffer'},
             },
         }
-    end);
+    end},
 
-    "hrsh7th/cmp-buffer";
-    "hrsh7th/cmp-nvim-lsp";
+    "hrsh7th/cmp-buffer",
+    {"hrsh7th/cmp-nvim-lsp", lazy = false},
 
-    setup("windwp/nvim-autopairs", 'nvim-autopairs', { check_ts = true });
+    {"windwp/nvim-autopairs", config = { check_ts = true }},
 
-    setup("nvim-treesitter/nvim-treesitter", 'nvim-treesitter.configs', {
-        highlight = {
-            enable = true,
-            additional_vim_regex_highlighting = false,
-        },
-        incremental_selection = { enable = true },
-        textobjects = { enable = true },
-        rainbow = {
-            enable = true,
-        },
-        context_commentstring = {
-            enable = true
-        },
-        textsubjects = {
-            enable = true,
-            keymaps = {
-                ['.'] = 'textsubjects-smart',
-                [';'] = 'textsubjects-container-outer',
-            }
-        },
-        indent = {
-            enable = true
-        },
+    {"nvim-treesitter/nvim-treesitter", config = function()
+        require'nvim-treesitter.configs'.setup({
+            highlight = {
+                enable = true,
+                additional_vim_regex_highlighting = false,
+            },
+            incremental_selection = { enable = true },
+            textobjects = { enable = true },
+            rainbow = {
+                enable = true,
+            },
+            context_commentstring = {
+                enable = true
+            },
+            textsubjects = {
+                enable = true,
+                keymaps = {
+                    ['.'] = 'textsubjects-smart',
+                    [','] = 'textsubjects-container-outer',
+                }
+            },
+            indent = {
+                enable = true
+            },
+        })
         vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
-    });
+    end},
 
-    setup("ur4ltz/surround.nvim", 'surround', {
+    {"ur4ltz/surround.nvim", config = {
         mappings_style = "surround"
-    });
+    }},
 
-    "kyazdani42/nvim-web-devicons";  -- pretty icons, for nvim-tree
+    "kyazdani42/nvim-web-devicons",  -- pretty icons, for nvim-tree
 
-    "JoosepAlviste/nvim-ts-context-commentstring";
+    "JoosepAlviste/nvim-ts-context-commentstring",
 
-    setup("terrortylor/nvim-comment", 'nvim_comment', {
+    {"terrortylor/nvim-comment", config = {
         comment_empty = false
-    });
+    }},
 
-    setup("Mofiqul/vscode.nvim", 'vscode', function()
+    {"Mofiqul/vscode.nvim", config = function()
         if vim.g.vscode_style == nil then
             vim.g.vscode_style = "dark"
             vim.cmd[[colorscheme vscode]]
         end
-    end);
+    end},
 
-    setup("nvim-telescope/telescope.nvim", 'telescope', function()
+    {"nvim-telescope/telescope.nvim", config = function()
         require'telescope'.setup{
             defaults = {
                 preview = false,
@@ -143,9 +111,9 @@ require "paq" {
             }
         }
         vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files<CR>', {noremap = true, silent = true})
-    end);
+    end},
 
-    setup("hoob3rt/lualine.nvim", 'lualine', {
+    {"hoob3rt/lualine.nvim", config = {
         options = {
             theme = 'codedark',
             section_separators = {'', ''},
@@ -163,22 +131,22 @@ require "paq" {
             },
             lualine_z = {{'progress', color = 'FocusedSymbol'}},
         },
-    });
+    }},
 
-    "RRethy/nvim-treesitter-textsubjects";
+    "RRethy/nvim-treesitter-textsubjects",
 
-    "nvim-lua/plenary.nvim"; -- for neogit, gitsigns
+    "nvim-lua/plenary.nvim", -- for neogit, gitsigns
 
-    setup("rmagatti/auto-session", 'auto-session', {
+    {"rmagatti/auto-session", config = {
         log_level = 'info',
         auto_session_suppress_dirs = {'~/', '~/projects'},
         post_restore_cmds = {'lua tabs_all_buffers()'},
         pre_save_cmds = {'lua clear_terms()'},
-    });
-    setup("stevearc/aerial.nvim", "aerial", {
+    }},
+    {"stevearc/aerial.nvim", config = {
         default_direction = "prefer_left",
         width = 0.17,
-    });
+    }},
 }
 
 -- vim:foldmethod=marker:foldlevel=0
