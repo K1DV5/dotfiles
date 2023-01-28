@@ -58,18 +58,18 @@ function format_range_operator()
         end
     end
     if not has_range then
-        vim.lsp.buf.formatting()
+        vim.lsp.buf.format{async = true}
         return
     end
     local old_func = vim.go.operatorfunc
-    _G.op_func_formatting = function()
+    _G.op_func_format = function()
         local start = vim.api.nvim_buf_get_mark(0, '[')
         local finish = vim.api.nvim_buf_get_mark(0, ']')
-        vim.lsp.buf.range_formatting({}, start, finish)
+        vim.lsp.buf.format{async = true, range = {start = start, ["end"] = finish}}
         vim.go.operatorfunc = old_func
-        _G.op_func_formatting = nil
+        _G.op_func_format = nil
     end
-    vim.o.operatorfunc = 'v:lua.op_func_formatting'
+    vim.o.operatorfunc = 'v:lua.op_func_format'
     vim.api.nvim_feedkeys('g@', 'n', false)
 end
 
@@ -110,15 +110,7 @@ local servers = {
     -- texlab = {},
     html = {},
     cssls = {},
-    jsonls = {
-        commands = {
-            Format = {
-                function()
-                    vim.lsp.buf.range_formatting({}, {0, 0}, {vim.fn.line("$"), 0})
-                end
-            }
-        }
-    },
+    jsonls = {},
     tsserver = {},
     gopls = {},
 }
