@@ -54,6 +54,10 @@ return {
 
     {"windwp/nvim-autopairs", config = { check_ts = true }},
 
+    {"chrisgrieser/nvim-various-textobjs", config = function ()
+		require("various-textobjs").setup({ useDefaultKeymaps = true })
+	end},
+
     {"nvim-treesitter/nvim-treesitter", config = function()
         require'nvim-treesitter.configs'.setup({
             highlight = {
