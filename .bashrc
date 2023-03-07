@@ -119,7 +119,9 @@ fi
 function workon {
     if [ -d ~/projects/$1 ]; then
         cd ~/projects/$1
-        if [ -f Pipfile ]; then
+        if [ -f pyproject.toml ]; then
+            pdm run nvim
+        elif [ -f Pipfile ]; then
             pipenv run nvim
         else
             nvim
@@ -130,4 +132,4 @@ function workon {
     cd -
 }
 
-export PATH="$HOME/bin:$(go env GOPATH)/bin:$PATH"
+export PATH="$HOME/.local/bin:$(go env GOPATH)/bin:$PATH"
