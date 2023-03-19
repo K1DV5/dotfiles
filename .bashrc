@@ -132,4 +132,4 @@ function workon {
     cd -
 }
 
-export PATH="$HOME/.local/bin:$(go env GOPATH)/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
