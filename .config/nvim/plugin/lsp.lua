@@ -113,6 +113,7 @@ local servers = {
     jsonls = {},
     tsserver = {},
     gopls = {},
+    eslint = {},
 }
 
 local lspconfig = require 'lspconfig'
