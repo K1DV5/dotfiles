@@ -116,7 +116,7 @@ return {
                 },
             }
         }
-        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files<CR>', {noremap = true, silent = true})
+        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files hidden=true<CR>', {noremap = true, silent = true})
     end},
 
     {"hoob3rt/lualine.nvim", config = {
