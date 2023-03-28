@@ -114,9 +114,14 @@ return {
                 mappings = {
                     i = {["<esc>"] = require("telescope.actions").close},
                 },
-            }
+            },
+            pickers = {
+                find_files = {
+                    find_command = {'rg', '--files', '--hidden', '-g', '!.git'},
+                },
+            },
         }
-        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files hidden=true<CR>', {noremap = true, silent = true})
+        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files<cr>', {noremap = true, silent = true})
     end},
 
     {"hoob3rt/lualine.nvim", config = {
