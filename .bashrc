@@ -121,15 +121,13 @@ function workon {
         cd ~/projects/$1
         if [ -f pyproject.toml ]; then
             pdm run nvim
-        elif [ -f Pipfile ]; then
-            pipenv run nvim
         else
             nvim
         fi
+        cd -
     else
         echo No project named $1
     fi
-    cd -
 }
 
 export PATH="$HOME/.local/bin:$PATH"
