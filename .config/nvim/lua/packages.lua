@@ -6,6 +6,9 @@ return {
     {"williamboman/mason.nvim", config = true},
     {"RRethy/vim-illuminate", lazy = false},
 
+    {"L3MON4D3/LuaSnip"},
+    {"saadparwaiz1/cmp_luasnip"},
+
     {"hrsh7th/nvim-cmp", config = function()
         local cmp = require'cmp'
         local function complete(direction)
@@ -28,6 +31,12 @@ return {
         end
 
         cmp.setup{
+            snippet = {
+                -- REQUIRED - you must specify a snippet engine
+                expand = function(args)
+                    require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+                end,
+            },
             formatting = {
                 format = function(entry, vim_item)
                     return vim_item
@@ -44,6 +53,7 @@ return {
             preselect = cmp.PreselectMode.None,
             sources = { -- You should specify your *installed* sources.
               {name = 'nvim_lsp'},
+              {name = 'luasnip'},
               {name = 'buffer'},
             },
         }
