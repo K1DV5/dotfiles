@@ -114,6 +114,7 @@ local servers = {
     tsserver = {},
     gopls = {},
     eslint = {},
+    ruff_lsp = {},
 }
 
 local lspconfig = require 'lspconfig'
