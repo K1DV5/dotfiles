@@ -106,7 +106,21 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 -- setup language servers
 local servers = {
-    pyright = {},
+    pyright = {
+      settings = {
+        pyright = {
+          autoImportCompletion = true,
+        },
+        python = {
+          analysis = {
+            autoSearchPaths = true,
+            diagnosticMode = 'openFilesOnly',
+            useLibraryCodeForTypes = true,
+            typeCheckingMode = 'off'
+          }
+        }
+      }
+    },
     -- texlab = {},
     html = {},
     cssls = {},
