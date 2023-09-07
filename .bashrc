@@ -131,3 +131,4 @@ function workon {
 }
 
 export PATH="$HOME/.local/bin:$PATH"
+rm -rf /tmp/podman-run-*
