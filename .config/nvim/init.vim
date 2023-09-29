@@ -193,6 +193,12 @@ EOF
             endif
             return "\<cr>\<esc>O"
         else
+            let current_file = expand("<cfile>")
+            if current_file != ""
+                call nvim_set_current_win(1000)
+                execute "edit" current_file
+                return
+            endif
             " follow help links with enter
             let l:supported = ['vim', 'help', 'python']
             if index(l:supported, &filetype) != -1
