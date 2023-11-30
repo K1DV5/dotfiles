@@ -79,9 +79,6 @@ return {
             rainbow = {
                 enable = true,
             },
-            context_commentstring = {
-                enable = true
-            },
             textsubjects = {
                 enable = true,
                 keymaps = {
