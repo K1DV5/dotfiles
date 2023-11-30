@@ -120,19 +120,27 @@ require"lazy".setup"packages"
             vim.g["loaded_" .. plugin] = 1
         end
         -- }}}
+    -- }}}
+
+-- functions {{{
+    local function do_this() -- {{{
+        vim.cmd[[silent update!]]
+        vim.cmd[[wincmd k]]
+        term('python3 ' .. vim.fn.stdpath('config') .. '/do.py ' .. vim.fn.expand('%:p'))
+        vim.cmd[[norm i]]
+    end
+    -- }}}
+
 -- }}}
+
+-- mappings {{{
+    -- do what needs to be done
+    vim.keymap.set("n", "<c-p>", do_this)
+-- }}}
+
 EOF
 
 " functions {{{
-    function! s:do() "{{{
-        " auto figure out what to do
-        silent update!
-        wincmd k
-        call v:lua.term('python3 ' . stdpath('config') . '/do.py '.expand('%:p'))
-        norm i
-    endfunction
-
-    " }}}
     function! s:git(force) "{{{
         " show git status
         if index(['LazyGit'], &filetype) != -1
@@ -266,8 +274,6 @@ EOF
 " }}}
 " mappings {{{
     "normal {{{
-        " do what needs to be done
-        noremap <c-p> <cmd>call <sid>do()<cr>
         "scroll by page
         noremap <space> <c-f>
         noremap <c-space> <c-b>
