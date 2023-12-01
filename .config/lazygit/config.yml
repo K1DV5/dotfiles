@@ -10,5 +10,5 @@ gui:
     unstagedChangesColor:
       - red
       - bold
-  showIcons: true
+  showIcons: false
   showBottomLine: false
