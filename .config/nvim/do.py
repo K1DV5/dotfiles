@@ -1,16 +1,17 @@
+# `export FOO=111 && echo $FOO
 '''
 My General purpose build script
 K1DV5
 '''
 
-from os import chdir, remove, rename, path, environ, makedirs, getcwd
-from shutil import move, copy
-from subprocess import run, call
+import os
+import sys
 from glob import glob
-from time import sleep
 from json import load
-
-import os, sys
+from os import chdir, environ, getcwd, makedirs, path, remove, rename
+from shutil import copy, move
+from subprocess import call, run
+from time import sleep
 
 use_shell = False
 
@@ -21,41 +22,12 @@ def open_file(filename):
         opener = "open" if sys.platform == "darwin" else "xdg-open"
         call([opener, filename])
 
-if sys.platform == 'win32':
-    # ENABLE_VIRTUAL_TERMINAL_PROCESSING
-    import ctypes
-    k = ctypes.windll.kernel32
-    k.SetConsoleMode(k.GetStdHandle(-11), 7)
-    use_shell = True
-
-console_colors = {
-    "cyan": 96,
-    "green": 92,
-    "red": 91,
-    "yellow": 93,
-    'default': ''
-}
-
-
-def _color_text(pairs: dict):
-    '''color text for print'''
-    printed = ''
-    for text, color in pairs.items():
-        printed += f'\x1b[{console_colors[color]}m{text}'
-    printed += f'\x1b[{console_colors["default"]}m'
-    return printed
-
-
 def _exec_cmd(cmd, shell=use_shell):
     '''
     color print the command and execute it
     return the exitcode
     '''
-    executable, args = cmd[0], ' '.join(cmd[1:])
-    print(_color_text({'$ ': 'cyan', executable + ' ': 'yellow', args: 'default'}))
-    if executable == 'cd':
-        chdir(args)
-        return 0
+    print('$', cmd)
     try:
         return run(cmd, shell=shell).returncode
     except KeyboardInterrupt:
@@ -75,7 +47,9 @@ FOLDER = path.dirname(path.abspath(sys.argv[1]))
 # change working directory to where the file is: folder
 chdir(FOLDER)
 with open(FILE_NAME, 'r', encoding='utf-8') as file:
-    LINE_1 = file.readline()
+    LINE_1 = file.readline().strip()
+    if ' ' in LINE_1:
+        LINE_1 = LINE_1.split(' ', 1)[1]
 
 
 def autohotkey():
@@ -99,7 +73,6 @@ def python():
           as a cython extension
         if there is no region delimiter, the whole file will be converted
     '''
-
     if '-(' in LINE_1:
         # extract arguments to be passed to the script from first line
         b_ind = LINE_1.find('-(') + len('-(')
@@ -234,32 +207,8 @@ def javascript():
 
 
 def generic():
-    returncode = 0
-    b_ind = LINE_1.find('-{') + len('-{')
-    e_ind = LINE_1.find('}', b_ind)
-    commands = LINE_1[b_ind: e_ind].replace('%f', FILE_NAME).replace('%n', NAME_PART).split('|')
-    for command in commands:
-        if not command.strip():
-            continue
-        # handle quoted arguments
-        parts = []
-        by_quote = command.split('"')
-        quoted = False
-        for part in by_quote:
-            if quoted:
-                if parts and parts[-1].endswith('='):
-                    parts[-1] += '"' + part + '"'
-                else:
-                    parts.append(part)
-                quoted = False
-            else:
-                if part.strip():
-                    parts += part.split()
-                quoted = True
-        returncode = _exec_cmd(parts)
-        if returncode:
-            return returncode
-    return 0
+    cmd = LINE_1[1:].replace('%f', FILE_NAME).replace('%n', NAME_PART)
+    return _exec_cmd(cmd, True)
 
 
 def main():
@@ -267,7 +216,7 @@ def main():
 
     returncode = 0
     extension = path.splitext(FILE_NAME)[1]
-    if '-{' in LINE_1:
+    if LINE_1.startswith('`'):
         returncode = generic()
     elif extension == '.py':
         returncode = python()
