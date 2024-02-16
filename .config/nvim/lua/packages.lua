@@ -99,13 +99,7 @@ return {
 
     "kyazdani42/nvim-web-devicons",  -- pretty icons, for nvim-tree
 
-    "JoosepAlviste/nvim-ts-context-commentstring",
-
-    {"terrortylor/nvim-comment", config = function()
-        require'nvim_comment'.setup{
-            comment_empty = false
-        }
-    end},
+    {"numToStr/Comment.nvim", opts = {ignore = '^$'}, lazy = false},
 
     {"Mofiqul/vscode.nvim", config = function()
         if vim.g.vscode_style == nil then
