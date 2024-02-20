@@ -242,8 +242,6 @@ EOF
         hi! DiffChange guibg=#18384B
         hi! DiffDelete guifg=Grey
         hi! default link Title Boolean
-        hi! default link VimwikiMarkers Boolean
-        hi! default link VimwikiLink markdownUrl
         hi! DiagnosticSignInfo guifg=Green
         hi! DiagnosticSignHint guifg=Cyan
         hi! DiagnosticSignError guifg=Red
@@ -350,45 +348,6 @@ EOF
         noremap <leader>d <cmd>call <sid>tree('AerialOpen', 'aerial')<cr>
         noremap <leader>D <cmd>AerialClose<cr>
         "}}}
-" }}}
-" pack config {{{
-    "term {{{
-        " set default shell to powershell
-
-        " }}}
-    "vimwiki {{{
-        " disable tab in insert
-        let g:vimwiki_table_mappings = 0
-        " custom path
-        let g:vimwiki_list = [{'path': 'D:\Documents\Notes\', 'syntax': 'markdown', 'ext': '.md'}]
-
-        " }}}
-    "signify {{{
-        " work only with git
-        let g:signify_vcs_list = ['git']
-        " show only colors
-        " let g:signify_sign_add               = ' '
-        " let g:signify_sign_delete            = ' '
-        " let g:signify_sign_delete_first_line = ' '
-        " let g:signify_sign_change            = ' '
-        " let g:signify_sign_change_delete     = g:signify_sign_change . g:signify_sign_delete_first_line
-
-        " }}}
-    "undotree {{{
-        " short timestamps
-        let g:undotree_ShortIndicators = 1
-        " autofocus
-        let g:undotree_SetFocusWhenToggle = 1
-        " disable diff win
-        let g:undotree_DiffAutoOpen = 0
-
-        " }}}
-    " vista {{{
-        " show definition in floating win
-        let g:vista_echo_cursor_strategy = 'floating_win'
-        " to use my own statusline
-        let g:vista_disable_statusline = 1
-        " }}}
 " }}}
 augroup init "{{{
     autocmd!
