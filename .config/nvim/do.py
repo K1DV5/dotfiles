@@ -1,4 +1,4 @@
-# `export FOO=111 && echo $FOO
+# $ export FOO=111 && echo $FOO
 '''
 My General purpose build script
 K1DV5
@@ -207,7 +207,7 @@ def javascript():
 
 
 def generic():
-    cmd = LINE_1[1:].replace('%f', FILE_NAME).replace('%n', NAME_PART)
+    cmd = LINE_1[1:].replace('%f', FILE_NAME).replace('%n', NAME_PART).strip()
     return _exec_cmd(cmd, True)
 
 
@@ -216,7 +216,7 @@ def main():
 
     returncode = 0
     extension = path.splitext(FILE_NAME)[1]
-    if LINE_1.startswith('`'):
+    if LINE_1.startswith('$'):
         returncode = generic()
     elif extension == '.py':
         returncode = python()
