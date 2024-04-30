@@ -123,7 +123,7 @@ require"lazy".setup"packages"
     -- }}}
 
 -- functions {{{
-    local function doit()
+    local function doit() -- {{{
         vim.cmd[[silent update!]]
         vim.cmd[[wincmd k]]
         local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
@@ -147,56 +147,67 @@ require"lazy".setup"packages"
     end
     -- }}}
 
+    local function git(force) -- {{{
+        -- show git status
+        if vim.api.nvim_buf_get_option(0, 'filetype') == 'LazyGit' then
+            vim.cmd('stopinsert')
+            vim.api.nvim_input("<c-^>")
+        elseif vim.api.nvim_buf_get_option(0, 'modifiable') == true then
+            local lg_buf = -1
+            for i, nr in pairs(vim.api.nvim_list_bufs()) do
+                if vim.api.nvim_buf_get_option(nr, 'filetype') == 'LazyGit' then
+                    lg_buf = nr
+                    break
+                end
+            end
+            if force == 1 and lg_buf ~= -1 then
+                vim.cmd('bdelete! ' .. lg_buf)
+                lg_buf = -1
+            end
+            if lg_buf == -1 then
+                vim.cmd('e :lazygit_placeholder:')
+                vim.fn.termopen('lazygit', {cwd = vim.fn.expand('%:h')})
+                vim.api.nvim_buf_set_option(0, 'filetype', 'LazyGit')
+                vim.api.nvim_buf_set_option(0, 'buflisted', false)
+                local old_map = vim.fn.maparg('kj', 't')
+                local augroup = vim.api.nvim_create_augroup('lazygit', {})
+                vim.api.nvim_create_autocmd('TermEnter', {
+                    group = augroup,
+                    buffer = 0,
+                    command = 'tunmap kj',
+                })
+                vim.api.nvim_create_autocmd('TermLeave', {
+                    group = augroup,
+                    buffer = 0,
+                    callback = function() vim.cmd('tnoremap kj ' .. old_map) end
+                })
+            else
+                vim.cmd('buffer ' .. lg_buf)
+            end
+            vim.cmd('startinsert')
+            if lg_buf ~= -1 then
+                vim.api.nvim_input("2R")
+            end
+        else
+            print('Must be on a file')
+        end
+    end
+    -- }}}
+
 -- }}}
 
 -- mappings {{{
     -- do what needs to be done
     vim.keymap.set("n", "<c-p>", doit)
-    vim.keymap.set("t", "<c-p>", doit)
+    -- show git status
+    vim.keymap.set('n', '<leader>g', function() git(0) end)
+    vim.keymap.set('n', '<leader>G', function() git(1) end)
+    vim.keymap.set('t', '<leader>g', function() git(0) end)
 -- }}}
 
 EOF
 
 " functions {{{
-    function! s:git(force) "{{{
-        " show git status
-        if index(['LazyGit'], &filetype) != -1
-            stopinsert
-            call feedkeys("\<c-^>")
-        elseif &modifiable
-            let lg_buf = -1
-            for nr in nvim_list_bufs()
-                if nvim_buf_get_option(nr, 'filetype') == 'LazyGit'
-                    let lg_buf = nr
-                    break
-                endif
-            endfor
-            if a:force == 1 && lg_buf != -1
-                execute 'bdelete!' lg_buf
-                let lg_buf = -1
-            endif
-            if lg_buf == -1
-                execute 'e term://' . expand('%:h') . '//lazygit'
-                setlocal filetype=LazyGit nobuflisted
-                let b:old_map = maparg('kj', 't')
-                augroup lazygit
-                autocmd!
-                autocmd TermEnter <buffer> tunmap kj
-                autocmd TermLeave <buffer> execute 'tnoremap kj' b:old_map
-                augroup END
-            else
-                execute 'buffer' lg_buf
-            endif
-            startinsert
-            if lg_buf != -1
-                call feedkeys("2R")
-            endif
-        else
-            echo 'Must be on a file'
-        endif
-    endfunction
-
-    " }}}
     function! s:cr(insert) "{{{
         if a:insert
             " put the cursor above and below, possibly with indent
@@ -342,10 +353,6 @@ EOF
         " open big terminal window
         noremap <leader>T <cmd>call v:lua.term(1)<cr>
         tnoremap <leader>T <cmd>call v:lua.term(1)<cr>
-        " show git status
-        noremap <leader>g <cmd>call <sid>git(0)<cr>
-        noremap <leader>G <cmd>call <sid>git(1)<cr>
-        tnoremap <leader>g <cmd>call <sid>git(0)<cr>
         " closing current buffer
         noremap <leader>bb <cmd>lua tabs_close()<cr>
         tnoremap <leader>bb <cmd>lua tabs_close()<cr>
