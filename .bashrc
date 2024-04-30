@@ -28,11 +28,18 @@ unset rc
 
 PS1='\[\e[m\][\[\e[m\]\[\e[35m\]\u\[\e[m\]\[\e[33m\]@\[\e[m\]\[\e[32m\]\h\[\e[m\]:\[\e[36m\]\w\[\e[m\]\[\e[m\]]\[\e[m\]\$ '
 
+export PROJECTSDIR=~/projects
+export LOCALVENVDIR=~/.local/venvs
+
 function workon {
-    if [ -d ~/projects/$1 ]; then
-        cd ~/projects/$1
+    if [ -d $PROJECTSDIR/$1 ]; then
+        cd $PROJECTSDIR/$1
         if [ -d .venv ]; then
-            source ./.venv/bin/activate
+            local venvdir=./.venv
+            if [ -d ./.venv/Scripts ]; then
+                local venvdir=$LOCALVENVDIR/$1
+            fi
+            source $venvdir/bin/activate
             nvim
             deactivate
         else
