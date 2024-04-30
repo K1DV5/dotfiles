@@ -122,20 +122,9 @@ require"lazy".setup"packages"
         -- }}}
     -- }}}
 
--- functions {{{
-    local function do_this() -- {{{
-        vim.cmd[[silent update!]]
-        vim.cmd[[wincmd k]]
-        term('python3 ' .. vim.fn.stdpath('config') .. '/do.py ' .. vim.fn.expand('%:p'))
-        vim.cmd[[norm i]]
-    end
-    -- }}}
-
--- }}}
-
 -- mappings {{{
     -- do what needs to be done
-    vim.keymap.set("n", "<c-p>", do_this)
+    vim.keymap.set("n", "<c-p>", require'do'.doit)
 -- }}}
 
 EOF
