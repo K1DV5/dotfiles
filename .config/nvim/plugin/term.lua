@@ -1,6 +1,7 @@
 local tabs = require'tabs'
 
 local default_shell = vim.api.nvim_get_option('shell')
+local placeholder_bufname = ':terminal_placeholder:'
 local default_height = 0.3
 
 local function height(size)
@@ -135,15 +136,15 @@ function term(cmd, dir)
     if not dir then
         dir = vim.fn.fnamemodify('.', ':p')
     end
-    -- remove trailing backslashes from dir on windows
-    dir = vim.fn.substitute(dir, '[\\/]\\+$', '', '')
-    local buf_name = buf_prefix .. dir .. '//' .. cmd
     if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' or go() then
-        -- open a new terminal
-        vim.api.nvim_command('edit ' .. buf_name)
+        -- already on a terminal buffer. open a new terminal
+        -- if current one is the same, will be removed by clear_existing below
+        vim.api.nvim_command('e ' .. placeholder_bufname) -- to avoid buffer modified error
+        vim.fn.termopen(cmd, {cwd = dir})
     else
         -- create a new terminal in split
-        vim.api.nvim_command('belowright ' .. height(term_height) .. ' split ' .. buf_name)
+        vim.api.nvim_command('belowright ' .. height(term_height) .. ' split ' .. placeholder_bufname)
+        vim.fn.termopen(cmd, {cwd = dir})
         -- bring other terminal buffers into this window
         vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
         if cmd == 1 then

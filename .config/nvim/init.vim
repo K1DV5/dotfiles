@@ -122,9 +122,37 @@ require"lazy".setup"packages"
         -- }}}
     -- }}}
 
+-- functions {{{
+    local function doit()
+        vim.cmd[[silent update!]]
+        vim.cmd[[wincmd k]]
+        local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
+        if first_line == '' then
+            return
+        end
+        local i_start_cmd = string.find(first_line, ' $', 1, true)
+        if i_start_cmd == nil then
+            return
+        end
+        i_start_cmd = i_start_cmd + 2 -- without the prompt
+        if string.sub(first_line, i_start_cmd, i_start_cmd) == ' ' then
+            i_start_cmd = i_start_cmd + 1 -- without the preceding space
+        end
+        local cmd = string.sub(first_line, i_start_cmd)
+        cmd = string.gsub(cmd, '%%f', vim.fn.expand('%:p'))
+        cmd = string.gsub(cmd, '%%n', vim.fn.expand('%:t'))
+        local dir = vim.fn.expand('%:h')
+        term(cmd, dir)
+        vim.cmd[[norm i]]
+    end
+    -- }}}
+
+-- }}}
+
 -- mappings {{{
     -- do what needs to be done
-    vim.keymap.set("n", "<c-p>", require'do'.doit)
+    vim.keymap.set("n", "<c-p>", doit)
+    vim.keymap.set("t", "<c-p>", doit)
 -- }}}
 
 EOF
@@ -282,8 +310,6 @@ EOF
         " to return to normal mode in terminal and operator pending
         tnoremap kj <C-\><C-n>
         onoremap kj <esc>
-        " do the same thing as normal mode in terminal for do
-        tnoremap <c-p> <C-\><C-n><cmd>call <sid>do()<cr>
         " lookup help for something under cursor with enter
         nnoremap <cr> <cmd>call <sid>cr(0)<cr>
         " go forward (back) with backspace
