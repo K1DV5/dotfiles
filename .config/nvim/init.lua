@@ -126,6 +126,14 @@ end
         -- }}}
     -- }}}
 
+-- local plugins {{{
+    local tabs = require'tabs'
+    tabs.setup()
+    local term = require'term'
+    term.setup()
+    require'lsp'
+-- }}}
+
 -- functions {{{
     local function exec_first_line_cmd() -- {{{
         vim.cmd[[silent update!]]
@@ -146,7 +154,7 @@ end
         cmd = string.gsub(cmd, '%%f', vim.fn.expand('%:p'))
         cmd = string.gsub(cmd, '%%n', vim.fn.expand('%:t'))
         local dir = vim.fn.expand('%:h')
-        term(cmd, dir)
+        term.open(cmd, dir)
         vim.cmd[[norm i]]
     end
 
@@ -267,9 +275,9 @@ end
     vim.keymap.set('n', '<Up>', 'g<Up>')
     vim.keymap.set('n', '<Down>', 'g<Down>')
     -- using tab for switching buffers
-    vim.keymap.set('n', '<tab>', function() tabs_go(vim.api.nvim_get_vvar('count')) end)
+    vim.keymap.set('n', '<tab>', function() tabs.go(vim.api.nvim_get_vvar('count')) end)
     -- switch windows using `
-    vim.keymap.set('n', '`', function() tabs_go(vim.api.nvim_get_vvar('count'), true) end)
+    vim.keymap.set('n', '`', function() tabs.go(vim.api.nvim_get_vvar('count'), true) end)
     -- go forward (back) with backspace
     vim.keymap.set('n', '<bs>', '<c-o>')
     vim.keymap.set('n', '<s-bs>', '<c-i>')
@@ -279,11 +287,11 @@ end
     -- delete a character
     vim.keymap.set('c', '<c-h>', '<c-bs>')
     -- open/close terminal pane
-    vim.keymap.set('n', '<leader>t', term)
+    vim.keymap.set('n', '<leader>t', term.open)
     -- open big terminal window / maximize
-    vim.keymap.set('n', '<leader>T', function() term(1) end)
+    vim.keymap.set('n', '<leader>T', function() term.open(1) end)
     -- closing current buffer
-    vim.keymap.set({'n', 't'}, '<leader>bb', tabs_close)
+    vim.keymap.set({'n', 't'}, '<leader>bb', tabs.close)
     -- save file if changed
     vim.keymap.set('n', '<leader>bu', function() vim.cmd('update!') end)
     -- toggle spell check

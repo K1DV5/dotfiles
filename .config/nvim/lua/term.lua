@@ -117,7 +117,7 @@ local function clear_existing(tbuflist, cmd, dir)
     end
 end
 
-function term(cmd, dir)
+local function open(cmd, dir)
     -- cmd - string | number - the cmd name or the desired win height
     local term_height = default_height
     if type(cmd) == 'number' or cmd == nil then
@@ -155,10 +155,10 @@ function term(cmd, dir)
         end
     end
     clear_existing(tbuflist, cmd, dir)
-    tabs_reload()
+    tabs.reload()
 end
 
-function clear_terms()
+local function clear()
     for i, buf in pairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_get_option(buf, 'buftype') == 'terminal' then
             vim.api.nvim_buf_delete(buf, {force = true})
@@ -166,15 +166,23 @@ function clear_terms()
     end
 end
 
-vim.api.nvim_create_user_command("T", function(opts)
-    if vim.tbl_count(opts.fargs) == 0 then
-        opts.fargs = {''}
-    end
-    term(unpack(opts.fargs))
-end, {complete = 'shellcmd', nargs = '*'})
+local function setup()
+    vim.api.nvim_create_user_command("T", function(opts)
+        if vim.tbl_count(opts.fargs) == 0 then
+            opts.fargs = {''}
+        end
+        term(unpack(opts.fargs))
+    end, {complete = 'shellcmd', nargs = '*'})
 
-vim.api.nvim_create_augroup("term", { clear = true })
-vim.api.nvim_create_autocmd("TermOpen", {
-    group = "term",
-    command = "setlocal nonumber norelativenumber nowrap",
-})
+    vim.api.nvim_create_augroup("term", { clear = true })
+    vim.api.nvim_create_autocmd("TermOpen", {
+        group = "term",
+        command = "setlocal nonumber norelativenumber nowrap",
+    })
+end
+
+return {
+    setup = setup,
+    open = open,
+    clear = clear,
+}

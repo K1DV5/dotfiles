@@ -1,4 +1,4 @@
--- K1DV5's custom lsp config
+-- custom lsp config
 
 -------------------------------------------------
 -- this is to be used to work with floating wins
@@ -47,10 +47,8 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
 
 -------------------- SETUP ------------------------
 
-local map_opts = {noremap=true, silent=true}
-
 -- range formatting
-function format_range_operator()
+local function format_range_operator()
     local has_range = false
     for _, server in ipairs(vim.lsp.buf_get_clients(0)) do
         if server.server_capabilities.documentRangeFormattingProvider == true then
@@ -77,22 +75,26 @@ local illuminate = require'illuminate'
 -- setup func
 local function on_attach(client, bufnr)
     -- diagnostics
-    vim.api.nvim_command [[autocmd CursorHold <buffer> lua vim.diagnostic.open_float({focusable = false, scope = 'cursor'})]]
+    vim.api.nvim_create_autocmd('CursorHold', {
+        group = augroup,
+        buffer = bufnr,
+        callback = function() vim.diagnostic.open_float({focusable = false, scope = 'cursor'}) end,
+    })
     -- Mappings
     local map = vim.api.nvim_buf_set_keymap
-    map(bufnr, 'n', '<c-]>',     '<cmd>lua vim.lsp.buf.declaration()<CR>',     map_opts)
-    map(bufnr, 'n', 'gd',        '<cmd>lua vim.lsp.buf.definition()<CR>',      map_opts)
-    map(bufnr, 'n', 'K',         '<cmd>lua vim.lsp.buf.hover()<CR>',           map_opts)
-    map(bufnr, 'n', 'gD',        '<cmd>lua vim.lsp.buf.implementation()<CR>',  map_opts)
-    map(bufnr, 'i', '<c-k>',     '<cmd>lua vim.lsp.buf.signature_help()<CR>',  map_opts)
-    map(bufnr, 'n', '1gD',       '<cmd>lua vim.lsp.buf.type_definition()<CR>', map_opts)
-    map(bufnr, 'n', 'gr',        '<cmd>lua vim.lsp.buf.references()<CR>',      map_opts)
-    map(bufnr, 'n', '<f2>',      '<cmd>lua vim.lsp.buf.rename()<CR>',          map_opts)
-    map(bufnr, 'n', 'ga',        '<cmd>lua vim.lsp.buf.code_action()<CR>',     map_opts)
-    map(bufnr, 'n', 'gq',        '<cmd>lua format_range_operator()<cr>',       map_opts)
+    vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration,     { buffer = bufnr })
+    vim.keymap.set('n', 'gd',    vim.lsp.buf.definition,      { buffer = bufnr })
+    vim.keymap.set('n', 'K',     vim.lsp.buf.hover,           { buffer = bufnr })
+    vim.keymap.set('n', 'gD',    vim.lsp.buf.implementation,  { buffer = bufnr })
+    vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help,  { buffer = bufnr })
+    vim.keymap.set('n', '1gD',   vim.lsp.buf.type_definition, { buffer = bufnr })
+    vim.keymap.set('n', 'gr',    vim.lsp.buf.references,      { buffer = bufnr })
+    vim.keymap.set('n', '<f2>',  vim.lsp.buf.rename,          { buffer = bufnr })
+    vim.keymap.set('n', 'ga',    vim.lsp.buf.code_action,     { buffer = bufnr })
+    vim.keymap.set('n', 'gq',    format_range_operator,       { buffer = bufnr })
     illuminate.on_attach(client)
-    vim.api.nvim_set_keymap('n', '<a-n>', '<cmd>lua require"illuminate".next_reference{wrap=true}<cr>', map_opts)
-    vim.api.nvim_set_keymap('n', '<a-p>', '<cmd>lua require"illuminate".next_reference{reverse=true,wrap=true}<cr>', map_opts)
+    vim.keymap.set('n', '<a-n>', function() illuminate.next_reference{wrap=true} end)
+    vim.keymap.set('n', '<a-p>', function() illuminate.next_reference{reverse=true,wrap=true} end)
 end
 
 -- change diagnostic signs shown in sign column

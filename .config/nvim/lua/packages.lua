@@ -1,5 +1,3 @@
--- init script in lua (WIP)
-
 return {
 
     "neovim/nvim-lspconfig", -- config in lsp.lua
@@ -145,7 +143,7 @@ return {
         sections = {
             lualine_a = {{function() return vim.api.nvim_get_mode().mode:upper() end, color = 'FocusedSymbol'}},
             lualine_b = {},
-            lualine_c = {"tabs_status_text()"},
+            lualine_c = {"require'tabs'.status_text()"},
             lualine_x = {'diagnostics'},
             lualine_y = {
                 {'fileformat', color = 'FocusedSymbol'},
@@ -162,7 +160,7 @@ return {
     {"rmagatti/auto-session", config = {
         log_level = 'info',
         auto_session_suppress_dirs = {'~/', '~/projects'},
-        post_restore_cmds = {'lua tabs_all_buffers()'},
+        post_restore_cmds = {'lua require"tabs".all_buffers()'},
         pre_save_cmds = {'lua clear_terms()'},
     }},
     {"stevearc/aerial.nvim", config = {
