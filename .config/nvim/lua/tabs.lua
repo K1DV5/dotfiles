@@ -1,6 +1,8 @@
 local devicons = require'nvim-web-devicons'
 
-local function get_var(name, scope, id)
+local M = {}
+
+function M.get_var(name, scope, id)
     local args = {vim.api.nvim_buf_get_var}
     if scope == 'w' then  -- w:
         args[1] = vim.api.nvim_win_get_var
@@ -26,12 +28,12 @@ local function get_var(name, scope, id)
 end
 
 local function get_alt_buf(win)  -- get the alternate buffer for the given window
-    local bufs = get_var('tabs_buflist', 'w', win) or {}
+    local bufs = M.get_var('tabs_buflist', 'w', win) or {}
     local l_bufs = vim.tbl_count(bufs)
     if l_bufs < 2 then
         return
     end
-    local alt = get_var('tabs_alt_file', 'w', win)
+    local alt = M.get_var('tabs_alt_file', 'w', win)
     local current = vim.api.nvim_win_get_buf(win)
     if vim.tbl_contains(bufs, alt) and alt ~= current then
         return alt
@@ -47,7 +49,7 @@ local function get_alt_buf(win)  -- get the alternate buffer for the given windo
 end
 
 local function get_alt_win(current)
-    local alt_win = get_var('tabs_alt_win')
+    local alt_win = M.get_var('tabs_alt_win')
     local wins = vim.api.nvim_list_wins()
     if vim.tbl_contains(wins, alt_win) and current ~= alt_win then
         return alt_win
@@ -68,7 +70,7 @@ local function get_alt_win(current)
 end
 
 
-local function get_icon()
+function M.get_icon()
     if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' then
         local icon, hi = devicons.get_icon('', 'terminal')
         return {icon, hi}
@@ -82,7 +84,7 @@ local function get_icon()
     return {icon, hi}
 end
 
-local function status_text()
+function M.status_text()
     local bufnr = vim.api.nvim_get_current_buf()
     local win = vim.fn.bufwinid(bufnr)
     local bufs = vim.api.nvim_win_get_var(win, 'tabs_buflist') or {bufnr}
@@ -99,11 +101,11 @@ local function status_text()
         if buf == bufnr then  -- current buf
             local icon
             if is_current_win then
-                local iconhl = get_icon()
+                local iconhl = M.get_icon()
                 local hl_icon = '%#' .. iconhl[2] .. '#'
                 icon = hl_icon .. ' ' .. iconhl[1] .. ' '
             else
-                icon = '%#Normal# %{v:lua.get_icon()[1]} '
+                icon = '%#Normal# %{v:lua.require("tabs").get_icon()[1]} '
             end
             text = text .. icon .. '%#Normal#' .. name .. '%m %#StatuslineNC#'
         else
@@ -121,13 +123,13 @@ local function status_text()
     return text
 end
 
-local function reload()
+function M.reload()
     local current_buf = vim.api.nvim_get_current_buf()
-    local win_bufs = get_var('tabs_buflist', 'w')
+    local win_bufs = M.get_var('tabs_buflist', 'w')
     if win_bufs then
         local win_bufs_new = {}
         local current_included = false
-        for i, buf in pairs(win_bufs) do
+        for _, buf in pairs(win_bufs) do
             if vim.fn.buflisted(buf) ~= 0 then
                 table.insert(win_bufs_new, buf)
                 if buf == current_buf then
@@ -146,20 +148,19 @@ local function reload()
     end
 end
 
-local function all_buffers()
-    local win_bufs = get_var('tabs_buflist', 'w')
+function M.all_buffers()
     local win_bufs_new = {}
-    for i, buf in pairs(vim.api.nvim_list_bufs()) do
-        local empty = vim.api.nvim_buf_get_name(buf) == '' and not get_var('modified', 'b', buf)
+    for _, buf in pairs(vim.api.nvim_list_bufs()) do
+        local empty = vim.api.nvim_buf_get_name(buf) == '' and not M.get_var('modified', 'b', buf)
         if vim.api.nvim_buf_is_valid(buf) and not empty then
             table.insert(win_bufs_new, buf)
         end
     end
     vim.api.nvim_win_set_var(0, 'tabs_buflist', win_bufs_new)
-    reload()
+    M.reload()
 end
 
-local function go(where, win)
+function M.go(where, win)
     -- go to the specified buffer or win
     if win then
         if where == 0 then  -- jump to alt
@@ -175,7 +176,7 @@ local function go(where, win)
                 vim.api.nvim_set_current_buf(alt)
             end
         else  -- to is an index (shown on the bar)
-            local bufs = get_var('tabs_buflist', 'w')
+            local bufs = M.get_var('tabs_buflist', 'w')
             if where <= vim.tbl_count(bufs) then
                 vim.api.nvim_set_current_buf(bufs[where])
             else
@@ -191,7 +192,7 @@ local function go(where, win)
     end
 end
 
-local function close()
+function M.close()
     -- close current tab
     if vim.api.nvim_buf_get_option(0, 'modified') then
         print("File modified")
@@ -209,14 +210,14 @@ local function close()
         cmd = cmd .. '!'
     end
     vim.api.nvim_command(cmd .. ' ' .. current)
-    reload()
+    M.reload()
 end
 
-local function setup()
-    augroup = vim.api.nvim_create_augroup("tabs", {})
+function M.setup()
+    local augroup = vim.api.nvim_create_augroup("tabs", {})
     vim.api.nvim_create_autocmd({'BufRead', 'BufNewFile', 'BufLeave', 'FileType', 'TermOpen'}, {
         group = augroup,
-        callback = reload,
+        callback = M.reload,
     })
     vim.api.nvim_create_autocmd('WinLeave', {
         group = augroup,
@@ -224,12 +225,4 @@ local function setup()
     })
 end
 
-return {
-    setup = setup,
-    reload = reload,
-    go = go,
-    all_buffers = all_buffers,
-    status_text = status_text,
-    close = close,
-    get_var = get_var,
-}
+return M

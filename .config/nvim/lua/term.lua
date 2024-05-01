@@ -1,33 +1,35 @@
-local tabs = require'tabs'
+local tabs = require 'tabs'
 
 local default_shell = vim.api.nvim_get_option('shell')
 local placeholder_bufname = ':terminal_placeholder:'
 local default_height = 0.3
 
+local M = {}
+
 local function height(size)
-	-- if the size is less than 1, it will be taken as the fraction of the file
-	-- window
+    -- if the size is less than 1, it will be taken as the fraction of the file
+    -- window
     local term_height
     size = size or default_height
-	if size > 1 then
-		term_height = size
-	else
+    if size > 1 then
+        term_height = size
+    else
         if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' then
             term_height = math.floor((vim.api.nvim_get_option('lines') - 2) * size)
         else
-            term_height = vim.api.nvim_win_get_height(0) * size 
+            term_height = vim.api.nvim_win_get_height(0) * size
         end
     end
-	return term_height
+    return term_height
 end
 
 -- get terminal buffers or windows
 local function terminals(wins)
     local list
     local get_buffer = vim.api.nvim_win_get_buf
-    if wins then  -- windows
+    if wins then -- windows
         list = vim.api.nvim_list_wins()
-    else  -- buffers
+    else         -- buffers
         list = vim.api.nvim_list_bufs()
         get_buffer = function(buf) return buf end
     end
@@ -42,8 +44,8 @@ end
 
 -- find and go to terminal pane, return success
 local function go()
-	-- terminal windows
-	local tbufwins = terminals(true)
+    -- terminal windows
+    local tbufwins = terminals(true)
     -- if there is a terminal window
     if vim.tbl_count(tbufwins) > 0 then
         -- go to that window
@@ -55,21 +57,21 @@ end
 
 local function toggle(size)
     -- size - number | float - the desired size of the pane
-	-- work only if buffer is a normal file or a terminal
+    -- work only if buffer is a normal file or a terminal
     local current_is_terminal = vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal'
-	if not vim.api.nvim_buf_get_option(0, 'modifiable') and not current_is_terminal then
+    if not vim.api.nvim_buf_get_option(0, 'modifiable') and not current_is_terminal then
         print("Not a file buffer, aborted")
-		return true
-	end
-	local term_height = height(size)
-	-- if in terminal pane
-	if current_is_terminal then
-		if vim.api.nvim_win_get_height(0) < term_height then -- maximize
+        return true
+    end
+    local term_height = height(size)
+    -- if in terminal pane
+    if current_is_terminal then
+        if vim.api.nvim_win_get_height(0) < term_height then -- maximize
             vim.api.nvim_win_set_height(0, term_height)
-		else
+        else
             vim.api.nvim_set_var('term_current_buf', vim.api.nvim_get_current_buf())
             vim.api.nvim_win_hide(0)
-		end
+        end
         return true
     elseif go() then
         return true
@@ -83,7 +85,7 @@ local function toggle(size)
         vim.api.nvim_command(cmd_start .. current_buf)
     elseif vim.tbl_count(tbuflist) > 0 then -- choose one of the others
         vim.api.nvim_command(cmd_start .. tbuflist[1])
-    else -- create a new one
+    else                                    -- create a new one
         return
     end
     -- bring other terminal buffers into this window
@@ -94,13 +96,13 @@ end
 local buf_prefix = 'term://'
 
 local function clear_existing(tbuflist, cmd, dir)
-	-- if the cmd has argumets, delete existing with the same cmd
+    -- if the cmd has argumets, delete existing with the same cmd
     if not string.find(cmd, ' ') then
         return
     end
     local cmp_dir = vim.fn.fnamemodify(dir, ':p')
     local cmp_start = string.len(buf_prefix) + 1
-    for i, buf in pairs(tbuflist) do
+    for _, buf in pairs(tbuflist) do
         -- without the pid of the job
         local name = vim.fn.substitute(vim.api.nvim_buf_get_name(buf), '//\\d\\+:', '//', '')
         name = string.sub(name, cmp_start)
@@ -117,7 +119,7 @@ local function clear_existing(tbuflist, cmd, dir)
     end
 end
 
-local function open(cmd, dir)
+function M.open(cmd, dir)
     -- cmd - string | number - the cmd name or the desired win height
     local term_height = default_height
     if type(cmd) == 'number' or cmd == nil then
@@ -130,8 +132,8 @@ local function open(cmd, dir)
         cmd = default_shell
     end
     -- NEW TERMINAL
-	-- terminal buffer numbers like [1, 56, 78]
-	local tbuflist = terminals()
+    -- terminal buffer numbers like [1, 56, 78]
+    local tbuflist = terminals()
     -- same command terminal buffers
     if not dir then
         dir = vim.fn.fnamemodify('.', ':p')
@@ -140,11 +142,11 @@ local function open(cmd, dir)
         -- already on a terminal buffer. open a new terminal
         -- if current one is the same, will be removed by clear_existing below
         vim.api.nvim_command('e ' .. placeholder_bufname) -- to avoid buffer modified error
-        vim.fn.termopen(cmd, {cwd = dir})
+        vim.fn.termopen(cmd, { cwd = dir })
     else
         -- create a new terminal in split
         vim.api.nvim_command('belowright ' .. height(term_height) .. ' split ' .. placeholder_bufname)
-        vim.fn.termopen(cmd, {cwd = dir})
+        vim.fn.termopen(cmd, { cwd = dir })
         -- bring other terminal buffers into this window
         vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
         if cmd == 1 then
@@ -158,21 +160,21 @@ local function open(cmd, dir)
     tabs.reload()
 end
 
-local function clear()
-    for i, buf in pairs(vim.api.nvim_list_bufs()) do
+function M.clear()
+    for _, buf in pairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_get_option(buf, 'buftype') == 'terminal' then
-            vim.api.nvim_buf_delete(buf, {force = true})
+            vim.api.nvim_buf_delete(buf, { force = true })
         end
     end
 end
 
-local function setup()
+function M.setup()
     vim.api.nvim_create_user_command("T", function(opts)
         if vim.tbl_count(opts.fargs) == 0 then
-            opts.fargs = {''}
+            opts.fargs = { '' }
         end
-        term(unpack(opts.fargs))
-    end, {complete = 'shellcmd', nargs = '*'})
+        M.open(unpack(opts.fargs))
+    end, { complete = 'shellcmd', nargs = '*' })
 
     vim.api.nvim_create_augroup("term", { clear = true })
     vim.api.nvim_create_autocmd("TermOpen", {
@@ -181,8 +183,4 @@ local function setup()
     })
 end
 
-return {
-    setup = setup,
-    open = open,
-    clear = clear,
-}
+return M
