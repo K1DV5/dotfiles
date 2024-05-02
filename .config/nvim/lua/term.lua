@@ -1,12 +1,11 @@
 local tabs = require 'tabs'
 
 local default_shell = vim.api.nvim_get_option('shell')
-local placeholder_bufname = ':terminal_placeholder:'
 local default_height = 0.3
 
 local M = {}
 
-local function height(size)
+local function get_height(size)
     -- if the size is less than 1, it will be taken as the fraction of the file
     -- window
     local term_height
@@ -24,12 +23,12 @@ local function height(size)
 end
 
 -- get terminal buffers or windows
-local function terminals(wins)
+local function get_terminals(get_windows)
     local list
     local get_buffer = vim.api.nvim_win_get_buf
-    if wins then -- windows
+    if get_windows then
         list = vim.api.nvim_list_wins()
-    else         -- buffers
+    else
         list = vim.api.nvim_list_bufs()
         get_buffer = function(buf) return buf end
     end
@@ -45,7 +44,7 @@ end
 -- find and go to terminal pane, return success
 local function go()
     -- terminal windows
-    local tbufwins = terminals(true)
+    local tbufwins = get_terminals(true)
     -- if there is a terminal window
     if vim.tbl_count(tbufwins) > 0 then
         -- go to that window
@@ -63,7 +62,7 @@ local function toggle(size)
         print("Not a file buffer, aborted")
         return true
     end
-    local term_height = height(size)
+    local term_height = get_height(size)
     -- if in terminal pane
     if current_is_terminal then
         if vim.api.nvim_win_get_height(0) < term_height then -- maximize
@@ -77,7 +76,7 @@ local function toggle(size)
         return true
     end
     -- terminal buffers
-    local tbuflist = terminals()
+    local tbuflist = get_terminals()
     -- if last opened terminal is hidden but exists
     local current_buf = tabs.get_var('term_current_buf')
     local cmd_start = 'belowright ' .. term_height .. ' split +buffer\\ '
@@ -93,29 +92,17 @@ local function toggle(size)
     return true
 end
 
-local buf_prefix = 'term://'
-
 local function clear_existing(tbuflist, cmd, dir)
     -- if the cmd has argumets, delete existing with the same cmd
     if not string.find(cmd, ' ') then
         return
     end
-    local cmp_dir = vim.fn.fnamemodify(dir, ':p')
-    local cmp_start = string.len(buf_prefix) + 1
     for _, buf in pairs(tbuflist) do
-        -- without the pid of the job
-        local name = vim.fn.substitute(vim.api.nvim_buf_get_name(buf), '//\\d\\+:', '//', '')
-        name = string.sub(name, cmp_start)
-        local i_sep = string.find(name, '//')
-        if i_sep == nil then
-            goto continue
+        local buf_cmd = vim.api.nvim_buf_get_var(buf, 'term_cmd')
+        local buf_dir = vim.api.nvim_buf_get_var(buf, 'term_dir')
+        if buf_cmd == cmd and buf_dir == dir then
+            vim.api.nvim_buf_delete(buf, {force = true})
         end
-        local t_dir = string.sub(name, 1, i_sep - 1)
-        local t_cmd = string.sub(name, i_sep + 2)
-        if vim.fn.fnamemodify(t_dir, ':p') == cmp_dir and t_cmd == cmd then
-            vim.api.nvim_command('bdelete! ' .. buf)
-        end
-        ::continue::
     end
 end
 
@@ -132,31 +119,33 @@ function M.open(cmd, dir)
         cmd = default_shell
     end
     -- NEW TERMINAL
-    -- terminal buffer numbers like [1, 56, 78]
-    local tbuflist = terminals()
-    -- same command terminal buffers
-    if not dir then
-        dir = vim.fn.fnamemodify('.', ':p')
-    end
-    if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' or go() then
-        -- already on a terminal buffer. open a new terminal
-        -- if current one is the same, will be removed by clear_existing below
-        vim.api.nvim_command('e ' .. placeholder_bufname) -- to avoid buffer modified error
-        vim.fn.termopen(cmd, { cwd = dir })
-    else
-        -- create a new terminal in split
-        vim.api.nvim_command('belowright ' .. height(term_height) .. ' split ' .. placeholder_bufname)
-        vim.fn.termopen(cmd, { cwd = dir })
-        -- bring other terminal buffers into this window
-        vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
+    if vim.api.nvim_buf_get_option(0, 'buftype') ~= 'terminal' and not go() then
+        -- not in a terminal buffer and no terminal window to go to.
+        -- prepare split window
+        vim.api.nvim_command('belowright ' .. get_height(term_height) .. ' split')
         if cmd == 1 then
-            local h = height(term_height)
+            local h = get_height(term_height)
             if vim.api.nvim_win_get_height(0) < h then -- maximize
                 vim.api.nvim_command('resize ' .. h)
             end
         end
     end
+    -- terminal buffer numbers like [1, 56, 78]
+    local tbuflist = get_terminals()
+    -- same command terminal buffers
+    if not dir then
+        dir = vim.fn.fnamemodify('.', ':p')
+    end
+    -- avoid buffer modified error
+    local buf = vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_win_set_buf(0, buf)
+    vim.fn.termopen(cmd, { cwd = dir })
+    -- bring other terminal buffers into this window
+    vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
     clear_existing(tbuflist, cmd, dir)
+    -- for future clears
+    vim.api.nvim_buf_set_var(buf, 'term_cmd', cmd)
+    vim.api.nvim_buf_set_var(buf, 'term_dir', dir)
     tabs.reload()
 end
 
