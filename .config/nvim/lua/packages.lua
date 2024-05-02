@@ -1,18 +1,33 @@
-return {
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+    vim.fn.system({
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/folke/lazy.nvim.git",
+        "--branch=stable", -- latest stable release
+        lazypath,
+    })
+end
+vim.opt.rtp:prepend(lazypath)
 
+require "lazy".setup {
     "neovim/nvim-lspconfig", -- config in lsp.lua
-    {"williamboman/mason.nvim", config = true},
-    {"RRethy/vim-illuminate", lazy = false},
+    { "williamboman/mason.nvim", config = true },
+    { "RRethy/vim-illuminate",   lazy = false },
 
-    {"L3MON4D3/LuaSnip"},
-    {"saadparwaiz1/cmp_luasnip"},
+    { "L3MON4D3/LuaSnip" },
+    { "saadparwaiz1/cmp_luasnip" },
 
-    {"hrsh7th/nvim-cmp", config = function()
-        local cmp = require'cmp'
+    { "hrsh7th/nvim-cmp", config = function()
+        local cmp = require 'cmp'
         local function complete(direction)
             local key
-            if direction == 1 then key = 'select_next_item'
-            else key = 'select_prev_item' end
+            if direction == 1 then
+                key = 'select_next_item'
+            else
+                key = 'select_prev_item'
+            end
             return function(fallback)
                 if cmp.visible() then
                     cmp.mapping[key]()()
@@ -28,7 +43,7 @@ return {
             end
         end
 
-        cmp.setup{
+        cmp.setup {
             snippet = {
                 -- REQUIRED - you must specify a snippet engine
                 expand = function(args)
@@ -50,25 +65,25 @@ return {
             },
             preselect = cmp.PreselectMode.None,
             sources = { -- You should specify your *installed* sources.
-              {name = 'nvim_lsp'},
-              {name = 'luasnip'},
-              {name = 'buffer'},
+                { name = 'nvim_lsp' },
+                { name = 'luasnip' },
+                { name = 'buffer' },
             },
         }
-    end},
+    end },
 
     "hrsh7th/cmp-buffer",
-    {"hrsh7th/cmp-nvim-lsp", lazy = false},
+    { "hrsh7th/cmp-nvim-lsp",  lazy = false },
 
-    {"windwp/nvim-autopairs", config = { check_ts = true }},
+    { "windwp/nvim-autopairs", config = { check_ts = true } },
 
-    {"chrisgrieser/nvim-various-textobjs", opts = {
+    { "chrisgrieser/nvim-various-textobjs", opts = {
         useDefaultKeymaps = true,
-        disabledKeymaps = {"gc"},
-    }},
+        disabledKeymaps = { "gc" },
+    } },
 
-    {"nvim-treesitter/nvim-treesitter", config = function()
-        require'nvim-treesitter.configs'.setup({
+    { "nvim-treesitter/nvim-treesitter", config = function()
+        require 'nvim-treesitter.configs'.setup({
             highlight = {
                 enable = true,
                 additional_vim_regex_highlighting = false,
@@ -90,11 +105,11 @@ return {
             },
         })
         vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
-    end},
+    end },
 
-    {"ur4ltz/surround.nvim", config = {
+    { "ur4ltz/surround.nvim", config = {
         mappings_style = "surround"
-    }},
+    } },
 
     {
         "jiaoshijie/undotree",
@@ -105,68 +120,68 @@ return {
         },
     },
 
-    "kyazdani42/nvim-web-devicons",  -- pretty icons, for nvim-tree
+    "kyazdani42/nvim-web-devicons", -- pretty icons, for nvim-tree
 
-    {"numToStr/Comment.nvim", opts = {ignore = '^$'}, lazy = false},
+    { "numToStr/Comment.nvim", opts = { ignore = '^$' }, lazy = false },
 
-    {"Mofiqul/vscode.nvim", config = function()
+    { "Mofiqul/vscode.nvim", config = function()
         if vim.g.vscode_style == nil then
             vim.g.vscode_style = "dark"
-            vim.cmd[[colorscheme vscode]]
+            vim.cmd [[colorscheme vscode]]
         end
-    end},
+    end },
 
-    {"nvim-telescope/telescope.nvim", config = function()
-        require'telescope'.setup{
+    { "nvim-telescope/telescope.nvim", config = function()
+        require 'telescope'.setup {
             defaults = {
                 preview = false,
                 mappings = {
-                    i = {["<esc>"] = require("telescope.actions").close},
+                    i = { ["<esc>"] = require("telescope.actions").close },
                 },
             },
             pickers = {
                 find_files = {
-                    find_command = {'rg', '--files', '--hidden', '-g', '!.git'},
+                    find_command = { 'rg', '--files', '--hidden', '-g', '!.git' },
                 },
             },
         }
-        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files<cr>', {noremap = true, silent = true})
-    end},
+        vim.api.nvim_set_keymap('n', '-', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
+    end },
 
-    {"hoob3rt/lualine.nvim", config = {
+    { "hoob3rt/lualine.nvim", config = {
         options = {
             theme = 'codedark',
-            section_separators = {'', ''},
-            component_separators = {'', ''},
-            disabled_filetypes = {'aerial'},
+            section_separators = { '', '' },
+            component_separators = { '', '' },
+            disabled_filetypes = { 'aerial' },
         },
         sections = {
-            lualine_a = {{function() return vim.api.nvim_get_mode().mode:upper() end, color = 'FocusedSymbol'}},
+            lualine_a = { { function() return vim.api.nvim_get_mode().mode:upper() end, color = 'FocusedSymbol' } },
             lualine_b = {},
-            lualine_c = {"require'tabs'.status_text()"},
-            lualine_x = {'diagnostics'},
+            lualine_c = { "require'tabs'.status_text()" },
+            lualine_x = { 'diagnostics' },
             lualine_y = {
-                {'fileformat', color = 'FocusedSymbol'},
-                {'filetype', color = 'FocusedSymbol'}
+                { 'fileformat', color = 'FocusedSymbol' },
+                { 'filetype',   color = 'FocusedSymbol' }
             },
-            lualine_z = {{'progress', color = 'FocusedSymbol'}},
+            lualine_z = { { 'progress', color = 'FocusedSymbol' } },
         },
-    }},
+    } },
 
     "RRethy/nvim-treesitter-textsubjects",
 
     "nvim-lua/plenary.nvim", -- for neogit, gitsigns
 
-    {"rmagatti/auto-session", config = {
+    { "rmagatti/auto-session", config = {
         log_level = 'info',
-        auto_session_suppress_dirs = {'~/', '~/projects'},
-        post_restore_cmds = {'lua require"tabs".all_buffers()'},
-        pre_save_cmds = {'lua clear_terms()'},
-    }},
-    {"stevearc/aerial.nvim", config = {
+        auto_session_suppress_dirs = { '~/', '~/projects' },
+        post_restore_cmds = { 'lua require"tabs".all_buffers()' },
+        pre_save_cmds = { 'lua clear_terms()' },
+    } },
+    { "stevearc/aerial.nvim", config = {
         default_direction = "prefer_left",
         width = 0.17,
-    }},
+    } },
 }
 
 -- vim:foldmethod=marker:foldlevel=0

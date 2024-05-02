@@ -6,24 +6,6 @@ local g = vim.g
 -- set mapleader, should be before lazy
 g.mapleader = ','
 
--- setup lazy {{{
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-    vim.fn.system({
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/folke/lazy.nvim.git",
-        "--branch=stable", -- latest stable release
-        lazypath,
-    })
-end
-vim.opt.rtp:prepend(lazypath)
-
-require "lazy".setup "packages"
-
--- }}}
-
 -- system clipboard {{{
 if os.getenv('WSL_DISTRO_NAME') ~= nil then
     vim.g.clipboard = {
@@ -126,12 +108,17 @@ end
 -- }}}
 -- }}}
 
--- local plugins {{{
+-- packages {{{
+
+require 'packages'
+
 local tabs = require 'tabs'
 tabs.setup()
 local term = require 'term'
 term.setup()
+
 require 'lsp'
+
 -- }}}
 
 -- functions {{{
