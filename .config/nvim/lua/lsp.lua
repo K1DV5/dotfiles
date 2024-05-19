@@ -39,8 +39,9 @@ local illuminate = require 'illuminate'
 -- setup func
 local function on_attach(client, bufnr)
     -- diagnostics
+    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
     vim.api.nvim_create_autocmd('CursorHold', {
-        group = augroup,
+        augroup = augroup,
         buffer = bufnr,
         callback = function() vim.diagnostic.open_float({ focusable = false, scope = 'cursor' }) end,
     })
