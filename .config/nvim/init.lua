@@ -153,7 +153,7 @@ local function git(force)     -- {{{
         vim.api.nvim_input("<c-^>")
     elseif vim.api.nvim_buf_get_option(0, 'modifiable') == true then
         local lg_buf = -1
-        for i, nr in pairs(vim.api.nvim_list_bufs()) do
+        for _, nr in pairs(vim.api.nvim_list_bufs()) do
             if vim.api.nvim_buf_get_option(nr, 'filetype') == 'LazyGit' then
                 lg_buf = nr
                 break
@@ -164,8 +164,9 @@ local function git(force)     -- {{{
             lg_buf = -1
         end
         if lg_buf == -1 then
+            local dir = vim.fn.expand('%:h')
             vim.cmd('e :lazygit_placeholder:')
-            vim.fn.termopen('lazygit', { cwd = vim.fn.expand('%:h') })
+            vim.fn.termopen('lazygit', { cwd = dir })
             vim.api.nvim_buf_set_option(0, 'filetype', 'LazyGit')
             vim.api.nvim_buf_set_option(0, 'buflisted', false)
             local old_map = vim.fn.maparg('kj', 't')
@@ -288,7 +289,7 @@ vim.keymap.set('n', '<leader><esc>', function() vim.cmd('qa') end)
 -- enter window commands
 vim.keymap.set('n', '<leader>w', '<c-w>')
 -- use system clipboard
-vim.keymap.set('n', '<leader>c', '--+')
+vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
 
 -- }}}
 
