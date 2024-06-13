@@ -38,13 +38,6 @@ end
 local illuminate = require 'illuminate'
 -- setup func
 local function on_attach(client, bufnr)
-    -- diagnostics
-    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-    vim.api.nvim_create_autocmd('CursorHold', {
-        augroup = augroup,
-        buffer = bufnr,
-        callback = function() vim.diagnostic.open_float({ focusable = false, scope = 'cursor' }) end,
-    })
     -- Mappings
     vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = bufnr })
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr })
@@ -59,6 +52,14 @@ local function on_attach(client, bufnr)
     illuminate.on_attach(client)
     vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end)
     vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end)
+    -- diagnostics
+    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
+    local id = vim.api.nvim_create_autocmd('CursorHold', {
+        augroup = augroup,
+        buffer = bufnr,
+        callback = function() vim.diagnostic.open_float({ focusable = false, scope = 'cursor' }) end,
+    })
+    print(id)
 end
 
 -- change diagnostic signs shown in sign column
