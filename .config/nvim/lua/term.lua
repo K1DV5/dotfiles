@@ -165,9 +165,9 @@ function M.setup()
         M.open(unpack(opts.fargs))
     end, { complete = 'shellcmd', nargs = '*' })
 
-    vim.api.nvim_create_augroup("term", { clear = true })
+    local augroup = vim.api.nvim_create_augroup("term", {})
     vim.api.nvim_create_autocmd("TermOpen", {
-        group = "term",
+        group = augroup,
         command = "setlocal nonumber norelativenumber nowrap",
     })
 end

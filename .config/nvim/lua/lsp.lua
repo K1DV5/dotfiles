@@ -54,12 +54,11 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end)
     -- diagnostics
     local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-    local id = vim.api.nvim_create_autocmd('CursorHold', {
-        augroup = augroup,
+    vim.api.nvim_create_autocmd('CursorHold', {
+        group = augroup,
         buffer = bufnr,
         callback = function() vim.diagnostic.open_float({ focusable = false, scope = 'cursor' }) end,
     })
-    print(id)
 end
 
 -- change diagnostic signs shown in sign column
