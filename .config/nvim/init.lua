@@ -148,13 +148,15 @@ end
 -- }}}
 local function git(force)     -- {{{
     -- show git status
-    if vim.api.nvim_buf_get_option(0, 'filetype') == 'LazyGit' then
-        vim.cmd('stopinsert')
-        vim.api.nvim_input("<c-^>")
-    elseif vim.api.nvim_buf_get_option(0, 'modifiable') == true then
+    if vim.api.nvim_get_option_value('filetype', {buf = 0}) == 'LazyGit' then
+        -- already showing git, close/hide
+        -- vim.cmd('stopinsert')
+        -- vim.api.nvim_input("<c-^>")
+        vim.cmd('buf #')
+    elseif vim.api.nvim_get_option_value('modifiable', {buf = 0}) == true then
         local lg_buf = -1
         for _, nr in pairs(vim.api.nvim_list_bufs()) do
-            if vim.api.nvim_buf_get_option(nr, 'filetype') == 'LazyGit' then
+            if vim.api.nvim_get_option_value('filetype', {buf = nr}) == 'LazyGit' then
                 lg_buf = nr
                 break
             end
@@ -163,29 +165,29 @@ local function git(force)     -- {{{
             vim.cmd('bdelete! ' .. lg_buf)
             lg_buf = -1
         end
-        if lg_buf == -1 then
+        if lg_buf < 0 then
             local dir = vim.fn.expand('%:h')
             vim.cmd('e :lazygit_placeholder:')
             vim.fn.termopen('lazygit', { cwd = dir })
-            vim.api.nvim_buf_set_option(0, 'filetype', 'LazyGit')
-            vim.api.nvim_buf_set_option(0, 'buflisted', false)
+            vim.api.nvim_set_option_value('filetype', 'LazyGit', {buf = 0})
+            vim.api.nvim_set_option_value('buflisted', false, {buf = 0})
             local old_map = vim.fn.maparg('kj', 't')
             local augroup = vim.api.nvim_create_augroup('lazygit', {})
-            vim.api.nvim_create_autocmd('TermEnter', {
+            vim.api.nvim_create_autocmd('BufEnter', {
                 group = augroup,
                 buffer = 0,
                 callback = function() vim.keymap.del('t', 'kj') end
             })
-            vim.api.nvim_create_autocmd('TermLeave', {
+            vim.api.nvim_create_autocmd('BufLeave', {
                 group = augroup,
                 buffer = 0,
                 callback = function() vim.cmd('tnoremap kj ' .. old_map) end
             })
         else
-            vim.cmd('buffer ' .. lg_buf)
+            vim.cmd('b ' .. lg_buf)
         end
         vim.cmd('startinsert')
-        if lg_buf ~= -1 then
+        if lg_buf >= 0 then
             vim.api.nvim_input("2R")
         end
     else
@@ -197,7 +199,7 @@ local function tree(command, file_type)     -- {{{
     -- tree jumping and/or opening
     local first_tree_win
     for i, win in pairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_buf_get_option(vim.api.nvim_win_get_buf(win), 'filetype') == file_type then
+        if vim.api.nvim_get_option_value('filetype', {buf = vim.api.nvim_win_get_buf(win)}) == file_type then
             first_tree_win = win
         end
     end
