@@ -70,7 +70,7 @@ o.showtabline = 0
 -- to show line numbers on <c-g>, disable on statusline
 o.ruler = false
 -- store buffers and cd accross sessions
-o.ssop = 'buffers,curdir'
+o.ssop = 'buffers,curdir,localoptions'
 -- use ripgrep
 o.grepprg = 'rg'
 -- allow mouse interaction
