@@ -169,19 +169,25 @@ require "lazy".setup {
     } },
 
     "RRethy/nvim-treesitter-textsubjects",
-
     "nvim-lua/plenary.nvim", -- for neogit, gitsigns
-
-    { "rmagatti/auto-session", config = {
-        log_level = 'info',
-        auto_session_suppress_dirs = { '~/', '~/projects' },
-        post_restore_cmds = { 'lua require"tabs".all_buffers()' },
-        pre_save_cmds = { 'lua clear_terms()' },
-    } },
-    { "stevearc/aerial.nvim", config = {
+    {
+        "rmagatti/auto-session",
+        lazy = false,
+        ---enables autocomplete for opts
+        ---@module "auto-session"
+        ---@diagnostic disable-next-line: undefined-doc-name
+        ---@type AutoSession.Config
+        opts = {
+            enabled = true,
+            log_level = 'info',
+            suppressed_dirs = { "~/", "~/projects" },
+            post_restore_cmds = { 'lua require"tabs".all_buffers()' },
+            pre_save_cmds = { 'lua require"term".clear()' },
+        }
+    },
+    { "stevearc/aerial.nvim", opts = {
         default_direction = "prefer_left",
         width = 0.17,
     } },
 }
-
 -- vim:foldmethod=marker:foldlevel=0
