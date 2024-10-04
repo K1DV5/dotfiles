@@ -71,7 +71,7 @@ end
 
 
 function M.get_icon()
-    if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' then
+    if vim.api.nvim_get_option_value('buftype', {buf = 0}) == 'terminal' then
         local icon, hi = devicons.get_icon('', 'terminal')
         return {icon, hi}
     end
@@ -141,7 +141,7 @@ function M.reload()
             table.insert(win_bufs_new, current_buf)
         end
         vim.api.nvim_win_set_var(0, 'tabs_buflist', win_bufs_new)
-    elseif vim.api.nvim_buf_get_name(current_buf) == '' and not vim.api.nvim_buf_get_option(current_buf, 'modified') then -- empty
+    elseif vim.api.nvim_buf_get_name(current_buf) == '' and not vim.api.nvim_get_option_value('modified', {buf = current_buf}) then -- empty
         vim.api.nvim_win_set_var(0, 'tabs_buflist', {})
     else
         vim.api.nvim_win_set_var(0, 'tabs_buflist', {current_buf})
@@ -163,53 +163,52 @@ end
 function M.go(where, win)
     -- go to the specified buffer or win
     if win then
-        if where == 0 then  -- jump to alt
-            vim.api.nvim_set_current_win(get_alt_win(vim.api.nvim_get_current_win()))
-        else
+        if where > 0 then  -- jump to alt
             vim.api.nvim_set_current_win(where)
+            return
         end
-    else  -- buffer
-        local last = vim.api.nvim_get_current_buf()
-        if where == 0 then  -- alt
-            local alt = get_alt_buf(vim.api.nvim_get_current_win())
-            if alt then
-                vim.api.nvim_set_current_buf(alt)
-            end
-        else  -- to is an index (shown on the bar)
-            local bufs = M.get_var('tabs_buflist', 'w')
-            if where <= vim.tbl_count(bufs) then
-                vim.api.nvim_set_current_buf(bufs[where])
-            else
-                print('No buffer at ' .. where)
-            end
+        local alt_win = get_alt_win(vim.api.nvim_get_current_win())
+        if alt_win ~= nil then
+            vim.api.nvim_set_current_win(alt_win)
         end
-        local current_buf = vim.api.nvim_get_current_buf()
-        if last ~= current_buf then
-            vim.api.nvim_win_set_var(0, 'tabs_alt_file', last)
+        return
+    end
+    -- buffer
+    local last = vim.api.nvim_get_current_buf()
+    if where == 0 then  -- alt
+        local alt = get_alt_buf(vim.api.nvim_get_current_win())
+        if alt then
+            vim.api.nvim_set_current_buf(alt)
+        end
+    else  -- to is an index (shown on the bar)
+        local bufs = M.get_var('tabs_buflist', 'w')
+        if where <= vim.tbl_count(bufs) then
+            vim.api.nvim_set_current_buf(bufs[where])
         else
-            vim.api.nvim_win_set_var(0, 'tabs_alt_file', current_buf)
+            print('No buffer at ' .. where)
         end
+    end
+    local current_buf = vim.api.nvim_get_current_buf()
+    if last ~= current_buf then
+        vim.api.nvim_win_set_var(0, 'tabs_alt_file', last)
+    else
+        vim.api.nvim_win_set_var(0, 'tabs_alt_file', current_buf)
     end
 end
 
 function M.close()
     -- close current tab
-    if vim.api.nvim_buf_get_option(0, 'modified') then
+    if vim.api.nvim_get_option_value('modified', {buf = 0}) then
         print("File modified")
         return
     end
-    local buftype = vim.api.nvim_buf_get_option(0, 'buftype')
+    local buftype = vim.api.nvim_get_option_value('buftype', {buf = 0})
     local alt = get_alt_buf(0)
     local current = vim.api.nvim_get_current_buf()
     if alt then
         vim.api.nvim_set_current_buf(alt)
     end
-    -- vim.api.nvim_buf_delete(current, {force = buftype == 'terminal'})
-    local cmd = 'bdelete'
-    if buftype == 'terminal' then
-        cmd = cmd .. '!'
-    end
-    vim.api.nvim_command(cmd .. ' ' .. current)
+    vim.api.nvim_buf_delete(current, {force = buftype == 'terminal'})
     M.reload()
 end
 

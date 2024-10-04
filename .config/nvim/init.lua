@@ -75,8 +75,6 @@ o.ssop = 'buffers,curdir,localoptions'
 o.grepprg = 'rg'
 -- allow mouse interaction
 o.mouse = 'a'
--- -- foldtext
--- o.foldtext = 'lua.MyFoldText()'
 
 -- }}}
 -- performance {{{
@@ -150,8 +148,6 @@ local function git(force)     -- {{{
     -- show git status
     if vim.api.nvim_get_option_value('filetype', {buf = 0}) == 'LazyGit' then
         -- already showing git, close/hide
-        -- vim.cmd('stopinsert')
-        -- vim.api.nvim_input("<c-^>")
         vim.cmd('buf #')
     elseif vim.api.nvim_get_option_value('modifiable', {buf = 0}) == true then
         local lg_buf = -1
@@ -198,7 +194,7 @@ end
 local function tree(command, file_type)     -- {{{
     -- tree jumping and/or opening
     local first_tree_win
-    for i, win in pairs(vim.api.nvim_list_wins()) do
+    for _, win in pairs(vim.api.nvim_list_wins()) do
         if vim.api.nvim_get_option_value('filetype', {buf = vim.api.nvim_win_get_buf(win)}) == file_type then
             first_tree_win = win
         end
@@ -218,7 +214,7 @@ local function tree(command, file_type)     -- {{{
 end
 
 -- }}}
-function highlight()     -- {{{
+local function highlight()     -- {{{
     -- override some highlights
     vim.cmd [[
             hi! link Folded Boolean
@@ -314,15 +310,15 @@ vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'WinEnte
     group = augroup,
     pattern = '*',
     callback = function()
-        if vim.api.nvim_win_get_option(0, 'number') and vim.api.nvim_get_mode().mode ~= 'i' then
-            vim.api.nvim_win_set_option(0, 'relativenumber', true)
+        if vim.api.nvim_get_option_value('number', {win = 0}) and vim.api.nvim_get_mode().mode ~= 'i' then
+            vim.api.nvim_set_option_value('relativenumber', true, {win = 0})
         end
     end
 })
 vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'WinLeave' }, {
     group = augroup,
     pattern = '*',
-    callback = function() vim.api.nvim_win_set_option(0, 'relativenumber', false) end
+    callback = function() vim.api.nvim_set_option_value('relativenumber', false, {win = 0}) end
 })
 -- }}}
 

@@ -1,6 +1,6 @@
 local tabs = require 'tabs'
 
-local default_shell = vim.api.nvim_get_option('shell')
+local default_shell = vim.api.nvim_get_option_value('shell', {scope = 'global'})
 local default_height = 0.3
 
 local M = {}
@@ -13,8 +13,9 @@ local function get_height(size)
     if size > 1 then
         term_height = size
     else
-        if vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal' then
-            term_height = math.floor((vim.api.nvim_get_option('lines') - 2) * size)
+        if vim.api.nvim_get_option_value('buftype', {buf = 0}) == 'terminal' then
+            local total_win_lines = vim.api.nvim_get_option_value('lines', {scope = 'global'})
+            term_height = math.floor((total_win_lines - 2) * size)
         else
             term_height = vim.api.nvim_win_get_height(0) * size
         end
@@ -34,8 +35,8 @@ local function get_terminals(get_windows)
     end
     local function filter_func(item)
         local buffer = get_buffer(item)
-        local is_terminal = vim.api.nvim_buf_get_option(buffer, 'buftype') == 'terminal'
-        local is_listed = vim.api.nvim_buf_get_option(buffer, 'buflisted') == true
+        local is_terminal = vim.api.nvim_get_option_value('buftype', {buf = buffer}) == 'terminal'
+        local is_listed = vim.api.nvim_get_option_value('buflisted', {buf = buffer}) == true
         return is_terminal and is_listed
     end
     return vim.tbl_filter(filter_func, list)
@@ -57,8 +58,8 @@ end
 local function toggle(size)
     -- size - number | float - the desired size of the pane
     -- work only if buffer is a normal file or a terminal
-    local current_is_terminal = vim.api.nvim_buf_get_option(0, 'buftype') == 'terminal'
-    if not vim.api.nvim_buf_get_option(0, 'modifiable') and not current_is_terminal then
+    local current_is_terminal = vim.api.nvim_get_option_value('buftype', {buf = 0}) == 'terminal'
+    if not vim.api.nvim_get_option_value('modifiable', {buf = 0}) and not current_is_terminal then
         print("Not a file buffer, aborted")
         return true
     end
@@ -119,7 +120,7 @@ function M.open(cmd, dir)
         cmd = default_shell
     end
     -- NEW TERMINAL
-    if vim.api.nvim_buf_get_option(0, 'buftype') ~= 'terminal' and not go() then
+    if vim.api.nvim_get_option_value('buftype', {buf = 0}) ~= 'terminal' and not go() then
         -- not in a terminal buffer and no terminal window to go to.
         -- prepare split window
         vim.api.nvim_command('belowright ' .. get_height(term_height) .. ' split')
@@ -151,7 +152,7 @@ end
 
 function M.clear()
     for _, buf in pairs(vim.api.nvim_list_bufs()) do
-        if vim.api.nvim_buf_get_option(buf, 'buftype') == 'terminal' then
+        if vim.api.nvim_get_option_value('buftype', {buf = buf}) == 'terminal' then
             vim.api.nvim_buf_delete(buf, { force = true })
         end
     end

@@ -1,4 +1,5 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+---@diagnostic disable-next-line: undefined-field
 if not vim.loop.fs_stat(lazypath) then
     vim.fn.system({
         "git",
@@ -51,7 +52,7 @@ require "lazy".setup {
                 end,
             },
             formatting = {
-                format = function(entry, vim_item)
+                format = function(_, vim_item)
                     return vim_item
                 end,
             },
