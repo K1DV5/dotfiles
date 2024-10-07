@@ -144,48 +144,16 @@ local function exec_first_line_cmd()     -- {{{
 end
 
 -- }}}
-local function git(force)     -- {{{
+local function git()     -- {{{
     -- show git status
-    if vim.api.nvim_get_option_value('filetype', {buf = 0}) == 'LazyGit' then
+    local ng = require'neogit'
+    if vim.api.nvim_get_option_value('filetype', {buf = 0}) == 'NeogitStatus' then
         -- already showing git, close/hide
-        vim.cmd('buf #')
+        vim.api.nvim_buf_delete(0, {force = false})
     elseif vim.api.nvim_get_option_value('modifiable', {buf = 0}) == true then
-        local lg_buf = -1
-        for _, nr in pairs(vim.api.nvim_list_bufs()) do
-            if vim.api.nvim_get_option_value('filetype', {buf = nr}) == 'LazyGit' then
-                lg_buf = nr
-                break
-            end
-        end
-        if force == 1 and lg_buf ~= -1 then
-            vim.cmd('bdelete! ' .. lg_buf)
-            lg_buf = -1
-        end
-        if lg_buf < 0 then
-            local dir = vim.fn.expand('%:h')
-            vim.cmd('e :lazygit_placeholder:')
-            vim.fn.termopen('lazygit', { cwd = dir })
-            vim.api.nvim_set_option_value('filetype', 'LazyGit', {buf = 0})
-            vim.api.nvim_set_option_value('buflisted', false, {buf = 0})
-            local old_map = vim.fn.maparg('kj', 't')
-            local augroup = vim.api.nvim_create_augroup('lazygit', {})
-            vim.api.nvim_create_autocmd('BufEnter', {
-                group = augroup,
-                buffer = 0,
-                callback = function() vim.keymap.del('t', 'kj') end
-            })
-            vim.api.nvim_create_autocmd('BufLeave', {
-                group = augroup,
-                buffer = 0,
-                callback = function() vim.cmd('tnoremap kj ' .. old_map) end
-            })
-        else
-            vim.cmd('b ' .. lg_buf)
-        end
-        vim.cmd('startinsert')
-        if lg_buf >= 0 then
-            vim.api.nvim_input("2R")
-        end
+        -- new
+        local dir = vim.fn.expand('%:h')
+        ng.open({cwd = dir})
     else
         print('Must be on a file')
     end
@@ -240,9 +208,7 @@ end
 -- do what needs to be done
 vim.keymap.set("n", "<c-p>", exec_first_line_cmd)
 -- show git status
-vim.keymap.set('n', '<leader>g', function() git(0) end)
-vim.keymap.set('n', '<leader>G', function() git(1) end)
-vim.keymap.set('t', '<leader>g', function() git(0) end)
+vim.keymap.set('n', '<leader>g', function() git() end)
 -- toggle file and tag (definition) trees
 vim.keymap.set('n', '<leader>d', function() tree('AerialOpen', 'aerial') end)
 vim.keymap.set('n', '<leader>D', function() vim.cmd('AerialClose') end)
