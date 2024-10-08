@@ -1,6 +1,10 @@
 local tabs = require 'tabs'
 
-local default_shell = vim.api.nvim_get_option_value('shell', {scope = 'global'})
+local default_shell = 'bash'
+if not vim.fn.executable(default_shell) then
+    default_shell = vim.api.nvim_get_option_value('shell', {scope = 'global'})
+end
+
 local default_height = 0.3
 
 local M = {}
