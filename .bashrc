@@ -35,11 +35,11 @@ function workon {
     if [ -d $PROJECTSDIR/$1 ]; then
         cd $PROJECTSDIR/$1
         if [ -d .venv ]; then
-            local venvdir=./.venv
-            if [ -d ./.venv/Scripts ]; then
-                local venvdir=$LOCALVENVDIR/$1
+            if [ -d .venv/Scripts ]; then
+                source .venv/Scripts/activate
+            else
+                source .venv/bin/activate
             fi
-            source $venvdir/bin/activate
             nvim
             deactivate
         else
