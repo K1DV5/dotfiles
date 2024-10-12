@@ -28,25 +28,33 @@ unset rc
 
 PS1='\[\e[m\][\[\e[m\]\[\e[35m\]\u\[\e[m\]\[\e[33m\]@\[\e[m\]\[\e[32m\]\h\[\e[m\]:\[\e[36m\]\w\[\e[m\]\[\e[m\]]\[\e[m\]\$ '
 
-export PROJECTSDIR=~/projects
-export LOCALVENVDIR=~/.local/venvs
-
 function workon {
-    if [ -d $PROJECTSDIR/$1 ]; then
-        cd $PROJECTSDIR/$1
-        if [ -d .venv ]; then
-            if [ -d .venv/Scripts ]; then
-                source .venv/Scripts/activate
-            else
-                source .venv/bin/activate
-            fi
-            nvim
-            deactivate
+    if [ ! -d $1 ]; then
+        read -p "No project named $1. Create it? \(y\)/n: " yn
+        if [ "$yn" == "y" ]; then
+            echo "Creating dir $1"
+            mkdir -p $1
         else
-            nvim
+            return
         fi
-        cd -
-    else
-        echo No project named $1
     fi
+    cd $1
+    # Look for virtual envs up tree
+    local DIR=$(pwd)
+    while [ ! -z "$DIR" ] && [ ! -d "$DIR/.venv" ]; do
+        DIR="${DIR%\/*}"
+    done
+    local inVenv=0
+    if [ -d $DIR/.venv/Scripts ]; then
+        source $DIR/.venv/Scripts/activate
+        inVenv=1
+    elif [ -d $DIR/.venv/bin ]; then
+        source $DIR/.venv/bin/activate
+        inVenv=1
+    fi
+    nvim
+    if [ $inVenv == 1 ]; then
+        deactivate
+    fi
+    cd -
 }
