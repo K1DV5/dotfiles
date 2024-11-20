@@ -4,7 +4,6 @@
 
 vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
     vim.lsp.diagnostic.on_publish_diagnostics, {
-        virtual_text = false,
         update_in_insert = false,
     }
 )
@@ -49,16 +48,10 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = bufnr })
     vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = bufnr })
     vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
+
     illuminate.on_attach(client)
-    vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end)
-    vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end)
-    -- diagnostics
-    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-    vim.api.nvim_create_autocmd('CursorHold', {
-        group = augroup,
-        buffer = bufnr,
-        callback = function() vim.diagnostic.open_float({ focusable = false, scope = 'cursor' }) end,
-    })
+    vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, {buffer = bufnr })
+    vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, {buffer = bufnr })
 end
 
 -- change diagnostic signs shown in sign column
@@ -87,14 +80,13 @@ local servers = {
             }
         }
     },
-    -- texlab = {},
     html = {},
     cssls = {},
     jsonls = {},
     ts_ls = {},
     gopls = {},
     eslint = {},
-    ruff_lsp = {},
+    ruff = {},
     lua_ls = {
         on_init = function(client)
             local path = client.workspace_folders[1].name
