@@ -177,7 +177,17 @@ require "lazy".setup {
             "sindrets/diffview.nvim",        -- optional - Diff integration
             "nvim-telescope/telescope.nvim",
         },
-        config = true
+        graph_style = "unicode",
+        file_watcher = {
+            enabled = false,
+        },
+        config = {
+            kind = "auto",
+            commit_editor = {
+                show_staged_diff = false,
+                kind = "split"
+            }
+        }
     },
     {
         "rmagatti/auto-session",

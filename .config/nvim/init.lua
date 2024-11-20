@@ -208,7 +208,7 @@ end
 -- do what needs to be done
 vim.keymap.set("n", "<c-p>", exec_first_line_cmd)
 -- show git status
-vim.keymap.set('n', '<leader>g', function() git() end)
+vim.keymap.set('n', '<leader>g', git)
 -- toggle file and tag (definition) trees
 vim.keymap.set('n', '<leader>d', function() tree('AerialOpen', 'aerial') end)
 vim.keymap.set('n', '<leader>D', function() vim.cmd('AerialClose') end)
