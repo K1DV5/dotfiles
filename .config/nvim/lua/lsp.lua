@@ -80,13 +80,13 @@ local servers = {
             }
         }
     },
+    ruff = {},
     html = {},
     cssls = {},
     jsonls = {},
     ts_ls = {},
+    biome = {},
     gopls = {},
-    eslint = {},
-    ruff = {},
     lua_ls = {
         on_init = function(client)
             local path = client.workspace_folders[1].name
