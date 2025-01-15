@@ -59,7 +59,7 @@ require "lazy".setup {
             mapping = {
                 ['<CR>'] = cmp.mapping.confirm({
                     behavior = cmp.ConfirmBehavior.Insert,
-                    select = true,
+                    select = false,
                 }),
                 ['<Tab>'] = complete(1),
                 ['<S-Tab>'] = complete(-1),
