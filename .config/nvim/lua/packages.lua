@@ -79,8 +79,10 @@ require "lazy".setup {
     { "windwp/nvim-autopairs", config = { check_ts = true } },
 
     { "chrisgrieser/nvim-various-textobjs", opts = {
-        useDefaultKeymaps = true,
-        disabledKeymaps = { "gc" },
+        keymaps = {
+            useDefaults = true,
+            disabledKeymaps = { "gc" },
+        },
     } },
 
     { "nvim-treesitter/nvim-treesitter", config = function()
