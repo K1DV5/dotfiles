@@ -244,9 +244,9 @@ vim.keymap.set('n', '<leader>t', term.open)
 -- open big terminal window / maximize
 vim.keymap.set('n', '<leader>T', function() term.open(1) end)
 -- closing current buffer
-vim.keymap.set({ 'n', 't' }, '<leader>c', tabs.close)
+vim.keymap.set({ 'n', 't' }, '<leader>x', tabs.close)
 -- save file if changed
-vim.keymap.set('n', '<leader>s', function() vim.cmd('update!') end)
+vim.keymap.set('n', '<leader><leader>', function() vim.cmd('update!') end)
 -- toggle spell check
 vim.keymap.set('n', '<leader>z', function() vim.cmd('setlocal spell! spelllang=en_us') end)
 -- quit
@@ -254,7 +254,7 @@ vim.keymap.set('n', '<leader><esc>', function() vim.cmd('qa') end)
 -- enter window commands
 vim.keymap.set('n', '<leader>w', '<c-w>')
 -- use system clipboard
-vim.keymap.set({'n', 'v'}, '<leader>x', '"+')
+vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
 
 -- }}}
 
