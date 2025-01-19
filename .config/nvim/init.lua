@@ -148,7 +148,8 @@ end
 local function git()     -- {{{
     -- show git status
     local ng = require'neogit'
-    if vim.api.nvim_get_option_value('filetype', {buf = 0}) == 'NeogitStatus' then
+    local ft = vim.api.nvim_get_option_value('filetype', {buf = 0})
+    if ft == 'NeogitStatus' or ft == 'NeogitConsole' then
         -- already showing git, close/hide
         vim.api.nvim_buf_delete(0, {force = false})
     elseif vim.api.nvim_get_option_value('modifiable', {buf = 0}) == true then
