@@ -145,45 +145,6 @@ local function exec_first_line_cmd()     -- {{{
 end
 
 -- }}}
-local function git()     -- {{{
-    -- show git status
-    local ng = require'neogit'
-    local ft = vim.api.nvim_get_option_value('filetype', {buf = 0})
-    if ft == 'NeogitStatus' or ft == 'NeogitConsole' then
-        -- already showing git, close/hide
-        vim.api.nvim_buf_delete(0, {force = false})
-    elseif vim.api.nvim_get_option_value('modifiable', {buf = 0}) == true then
-        -- new
-        local dir = vim.fn.expand('%:h')
-        ng.open({cwd = dir})
-    else
-        print('Must be on a file')
-    end
-end
--- }}}
-local function tree(command, file_type)     -- {{{
-    -- tree jumping and/or opening
-    local first_tree_win
-    for _, win in pairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_get_option_value('filetype', {buf = vim.api.nvim_win_get_buf(win)}) == file_type then
-            first_tree_win = win
-        end
-    end
-    if first_tree_win ~= nil then
-        if vim.api.nvim_get_current_win() == first_tree_win then
-            vim.cmd('wincmd l')
-            if vim.api.nvim_get_current_win() == first_tree_win then     -- still here
-                vim.cmd('wincmd h')
-            end
-        else
-            vim.api.nvim_set_current_win(first_tree_win)
-        end
-    else
-        vim.cmd(command)
-    end
-end
-
--- }}}
 local function highlight()     -- {{{
     -- override some highlights
     vim.cmd [[
@@ -209,11 +170,8 @@ end
 -- mappings {{{
 -- do what needs to be done
 vim.keymap.set("n", "<c-p>", exec_first_line_cmd)
--- show git status
-vim.keymap.set('n', '<leader>g', git)
--- toggle file and tag (definition) trees
-vim.keymap.set('n', '<leader>d', function() tree('AerialOpen', 'aerial') end)
-vim.keymap.set('n', '<leader>D', function() vim.cmd('AerialClose') end)
+-- -- show git status
+-- vim.keymap.set('n', '<leader>g', git)
 -- scroll by page
 vim.keymap.set('n', '<space>', '<c-f>')
 vim.keymap.set('n', '<c-space>', '<c-b>')
