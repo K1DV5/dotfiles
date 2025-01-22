@@ -69,19 +69,17 @@ local function get_alt_win(current)
     end
 end
 
-
-function M.get_icon()
-    if vim.api.nvim_get_option_value('buftype', {buf = 0}) == 'terminal' then
+local function get_icon(buf, name)
+    if vim.api.nvim_get_option_value('buftype', {buf = buf}) == 'terminal' then
         local icon, hi = devicons.get_icon('', 'terminal')
-        return {icon, hi}
+        return icon, hi
     end
-    local fname = vim.fn.expand('%')
-    local ext = vim.fn.expand('%:e')
-    local icon, hi = devicons.get_icon(fname, ext)
+    local ext = vim.fn.fnamemodify(name, ':e')
+    local icon, hi = devicons.get_icon(name, ext)
     if icon == nil then
-        return {'', 'Normal'}
+        return '', 'Normal'
     end
-    return {icon, hi}
+    return icon, hi
 end
 
 function M.status_text()
@@ -96,19 +94,18 @@ function M.status_text()
         if name then
             name = vim.fn.fnamemodify(name, ':t')
         else
-            name = '[No name]'
+            name = '[unnamed]'
         end
+        local icon, highlight = get_icon(buf, name)
         if buf == bufnr then  -- current buf
-            local icon
             if is_current_win then
-                local iconhl = M.get_icon()
-                local hl_icon = '%#' .. iconhl[2] .. '#'
-                icon = hl_icon .. ' ' .. iconhl[1] .. ' '
+                icon = string.format('%%#%s# %s ', highlight, icon)
             else
-                icon = '%#Normal# %{v:lua.require("tabs").get_icon()[1]} '
+                icon = string.format('%%#Normal# %s ', icon)
             end
-            text = text .. icon .. '%#Normal#' .. name .. '%m %#StatuslineNC#'
+            text = text .. string.format('%s%%#Normal#%s%%m %%#StatuslineNC#', icon, name)
         else
+            name = vim.fn.fnamemodify(name, ':t:r')
             local num
             if not is_current_win then
                 num = ''
@@ -117,7 +114,7 @@ function M.status_text()
             else
                 num = i .. ':'
             end
-            text = text .. ' ' .. num .. name .. ' '
+            text = text .. string.format(' %s%s.%s ', num, icon, name)
         end
     end
     return text
