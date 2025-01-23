@@ -94,9 +94,10 @@ local servers = {
     ruff = {},
     html = {},
     cssls = {},
-    jsonls = {},
     ts_ls = {'typescript-language-server'},
     biome = {},
+    tinymist = {},
+    jsonls = {'json-lsp'},
     gopls = {},
     lua_ls = {
         'lua-language-server',
@@ -154,5 +155,12 @@ for name, opts in pairs(servers) do
                 debounce_text_changes = 150
             }
         }))
+        is_installed[mason_name] = false  -- to check which is not set up below
+    end
+end
+
+for name, inst in pairs(is_installed) do
+    if inst then
+        print('LSP server', name, 'can be removed')
     end
 end
