@@ -71,9 +71,6 @@ vim.fn.sign_define("DiagnosticSignWarn", { text = '', texthl = "DiagnosticSig
 vim.fn.sign_define("DiagnosticSignInfo", { text = '', texthl = "DiagnosticSignInfo" })
 vim.fn.sign_define("DiagnosticSignHint", { text = '', texthl = "DiagnosticSignHint" })
 
--- enable snippets support on client
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
 -- setup language servers
 local servers = {
     pyright = {
@@ -136,6 +133,8 @@ local servers = {
 
 local lspconfig = require 'lspconfig'
 local mason_reg = require'mason-registry'
+-- enable snippets support on client
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local is_installed = {}
 for _, name in ipairs(mason_reg.get_installed_package_names()) do
