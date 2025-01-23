@@ -95,10 +95,11 @@ local servers = {
     html = {},
     cssls = {},
     jsonls = {},
-    ts_ls = {},
+    ts_ls = {'typescript-language-server'},
     biome = {},
     gopls = {},
     lua_ls = {
+        'lua-language-server',
         on_init = function(client)
             local path = client.workspace_folders[1].name
             ---@diagnostic disable-next-line: undefined-field
@@ -133,12 +134,25 @@ local servers = {
 }
 
 local lspconfig = require 'lspconfig'
+local mason_reg = require'mason-registry'
+
+local is_installed = {}
+for _, name in ipairs(mason_reg.get_installed_package_names()) do
+    is_installed[name] = true
+end
+
 for name, opts in pairs(servers) do
-    lspconfig[name].setup(vim.tbl_extend('keep', opts, {
-        capabilities = capabilities,
-        on_attach = on_attach,
-        flags = {
-            debounce_text_changes = 150
-        }
-    }))
+    local mason_name = opts[1]
+    if mason_name == nil then
+        mason_name = name
+    end
+    if is_installed[mason_name] then
+        lspconfig[name].setup(vim.tbl_extend('keep', opts, {
+            capabilities = capabilities,
+            on_attach = on_attach,
+            flags = {
+                debounce_text_changes = 150
+            }
+        }))
+    end
 end
