@@ -33,12 +33,36 @@ require "lazy".setup {
     },
 
     {
+        "supermaven-inc/supermaven-nvim",
+        config = {
+             keymaps = {
+                 accept_suggestion = "<C-J>",
+                 accept_word = "<C-]>",
+                 clear_suggestion = "<C-X>",
+             }
+        },
+        lazy = true,
+    },
+
+    {
         "chrisgrieser/nvim-various-textobjs",
         config = {
             keymaps = {
                 useDefaults = true,
                 disabledKeymaps = { "gc" },
             },
+        }
+    },
+
+    {
+        "nvim-tree/nvim-tree.lua",
+        config = {
+            git = {
+                enable = false,
+            }
+        },
+        keys = {
+            { '<leader>f', '<cmd>NvimTreeToggle<cr>'},
         }
     },
 
