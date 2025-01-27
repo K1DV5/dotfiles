@@ -302,7 +302,7 @@ require "lazy".setup {
             },
             {
                 "<leader>s",
-                "<cmd>Trouble symbols toggle focus<cr>",
+                "<cmd>Trouble symbols toggle<cr>",
                 desc = "Symbols (Trouble)",
             },
             {
