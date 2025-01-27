@@ -2,14 +2,14 @@
 
 ------------------ DIAGNOSTICS ----------------------
 
--- used with autocmd below
-local function show_diagnostics()
-    vim.diagnostic.open_float({ focusable = false, scope = 'line' })
-end
+-- -- used with autocmd below
+-- local function show_diagnostics()
+--     vim.diagnostic.open_float({ focusable = false, scope = 'line' })
+-- end
 
 vim.diagnostic.config({
     update_in_insert = false,
-    virtual_text = false,
+    -- virtual_text = false,
 })
 
 -------------------- SETUP ------------------------
@@ -57,12 +57,12 @@ local function on_attach(client, bufnr)
     vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, {buffer = bufnr })
     vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, {buffer = bufnr })
 
-    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-    vim.api.nvim_create_autocmd('CursorHold', {
-        group = augroup,
-        buffer = bufnr,
-        callback = show_diagnostics,
-    })
+    -- local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
+    -- vim.api.nvim_create_autocmd('CursorHold', {
+    --     group = augroup,
+    --     buffer = bufnr,
+    --     callback = show_diagnostics,
+    -- })
 end
 
 -- change diagnostic signs shown in sign column
