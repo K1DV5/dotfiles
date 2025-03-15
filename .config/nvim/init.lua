@@ -63,8 +63,6 @@ o.diffopt:append('vertical')
 o.signcolumn = 'yes'
 -- some filetype specific features
 vim.cmd 'filetype plugin indent on'
--- default sql variant
-g.sql_type_default = 'mysql'
 -- disable the tabline
 o.showtabline = 0
 -- to show line numbers on <c-g>, disable on statusline
@@ -245,6 +243,11 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'WinLeave'
     group = augroup,
     pattern = '*',
     callback = function() vim.api.nvim_set_option_value('relativenumber', false, {win = 0}) end
+})
+vim.api.nvim_create_autocmd({ 'Filetype' }, {
+    group = augroup,
+    pattern = 'go',
+    callback = function() vim.api.nvim_set_option_value('expandtab', false, {buf = 0}) end
 })
 -- }}}
 
