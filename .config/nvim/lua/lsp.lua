@@ -89,8 +89,8 @@ local servers = {
         }
     },
     ruff = {},
-    html = {},
-    cssls = {},
+    html = {'html-lsp'},
+    cssls = {'css-lsp'},
     ts_ls = {'typescript-language-server'},
     biome = {},
     tinymist = {},
