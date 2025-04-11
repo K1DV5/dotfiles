@@ -205,7 +205,7 @@ function M.close()
     if alt then
         vim.api.nvim_set_current_buf(alt)
     end
-    vim.api.nvim_buf_delete(current, {force = buftype == 'terminal'})
+    vim.cmd.bdelete{count = current, bang = buftype == 'terminal'}
     M.reload()
 end
 

@@ -35,8 +35,6 @@ o.smartcase = true
 -- turn on line numbers where the cursor is (revert: set nonumber)
 o.number = true
 o.relativenumber = true
--- highlight current line
-o.cursorline = true
 -- enable true color on terminal
 o.termguicolors = true
 -- set the time to update misc things
@@ -47,6 +45,8 @@ o.swapfile = false
 o.equalalways = false
 -- hide the ~'s at the end of files and other chars
 o.fillchars = { eob = ' ', diff = ' ', fold = ' ', stl = ' ' }
+-- reenable jump back to file after closing
+o.jumpoptions:remove('clean')
 -- read options only from the first and last lines
 o.modelines = 1
 -- dont show the mode on command line
