@@ -14,7 +14,6 @@ vim.opt.rtp:prepend(lazypath)
 
 require "lazy".setup {
 
-    "neovim/nvim-lspconfig", -- config in lsp.lua
     "L3MON4D3/LuaSnip",
     "saadparwaiz1/cmp_luasnip",
     "hrsh7th/cmp-buffer",

@@ -2,14 +2,16 @@
 
 ------------------ DIAGNOSTICS ----------------------
 
--- -- used with autocmd below
--- local function show_diagnostics()
---     vim.diagnostic.open_float({ focusable = false, scope = 'line' })
--- end
-
 vim.diagnostic.config({
     update_in_insert = false,
-    -- virtual_text = false,
+    virtual_text = false,
+    jump = {
+        float = true,
+    }
+    -- float = {
+    --     scope = 'line',
+    --     source = 'if_many',
+    -- },
 })
 
 -------------------- SETUP ------------------------
@@ -42,27 +44,14 @@ local illuminate = require 'illuminate'
 -- setup func
 local function on_attach(client, bufnr)
     -- Mappings
-    vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = bufnr })
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr })
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = bufnr })
-    vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = bufnr })
     vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = bufnr })
-    vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = bufnr })
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr })
-    vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = bufnr })
-    vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = bufnr })
     vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
 
     illuminate.on_attach(client)
     vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, {buffer = bufnr })
     vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, {buffer = bufnr })
-
-    -- local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-    -- vim.api.nvim_create_autocmd('CursorHold', {
-    --     group = augroup,
-    --     buffer = bufnr,
-    --     callback = show_diagnostics,
-    -- })
 end
 
 -- change diagnostic signs shown in sign column
@@ -74,6 +63,18 @@ vim.fn.sign_define("DiagnosticSignHint", { text = '', texthl = "DiagnosticSig
 -- setup language servers
 local servers = {
     pyright = {
+        cmd = { "pyright-langserver", "--stdio" },
+        filetypes = { 'python' },
+        root_markers = {
+          'pyproject.toml',
+          'setup.py',
+          'setup.cfg',
+          'requirements.txt',
+          'Pipfile',
+          'pyrightconfig.json',
+          '.git',
+        },
+        single_file_support = true,
         settings = {
             pyright = {
                 autoImportCompletion = true,
@@ -83,26 +84,112 @@ local servers = {
                     autoSearchPaths = true,
                     diagnosticMode = 'openFilesOnly',
                     useLibraryCodeForTypes = true,
-                    typeCheckingMode = 'off'
+                    typeCheckingMode = 'off',
                 }
             }
         }
     },
-    ruff = {},
-    html = {'html-lsp'},
-    cssls = {'css-lsp'},
-    ts_ls = {'typescript-language-server'},
-    biome = {},
-    tinymist = {},
-    jsonls = {'json-lsp'},
-    gopls = {},
+    ruff = {
+        cmd = { "ruff", "server" },
+        filetypes = { "python" },
+        root_markers = {'pyproject.toml', 'ruff.toml', '.ruff.toml'},
+        single_file_support = true,
+    },
+    html = {
+        'html-lsp',
+        cmd = { 'vscode-html-language-server', '--stdio' },
+        filetypes = { 'html', 'templ' },
+        root_markers = {'package.json', '.git'},
+        single_file_support = true,
+        settings = {},
+        init_options = {
+          provideFormatter = true,
+          embeddedLanguages = { css = true, javascript = true },
+          configurationSection = { 'html', 'css', 'javascript' },
+        },
+    },
+    cssls = {
+        'css-lsp',
+        cmd = { 'vscode-css-language-server', '--stdio' },
+        filetypes = { 'css', 'scss', 'less' },
+        init_options = { provideFormatter = true }, -- needed to enable formatting capabilities
+        root_markers = {'package.json', '.git'},
+        single_file_support = true,
+        settings = {
+          css = { validate = true },
+          scss = { validate = true },
+          less = { validate = true },
+        },
+    },
+    ts_ls = {
+        'typescript-language-server',
+        init_options = { hostInfo = 'neovim' },
+        cmd = { 'typescript-language-server', '--stdio' },
+        filetypes = {
+          'javascript',
+          'javascriptreact',
+          'javascript.jsx',
+          'typescript',
+          'typescriptreact',
+          'typescript.tsx',
+        },
+        root_markers = {'tsconfig.json', 'jsconfig.json', 'package.json', '.git'},
+        single_file_support = true,
+    },
+    biome = {
+        cmd = { 'biome', 'lsp-proxy' },
+        filetypes = {
+          'astro',
+          'css',
+          'graphql',
+          'javascript',
+          'javascriptreact',
+          'json',
+          'jsonc',
+          'svelte',
+          'typescript',
+          'typescript.tsx',
+          'typescriptreact',
+          'vue',
+        },
+        root_markers = { 'biome.json', 'biome.jsonc' },
+        single_file_support = false,
+    },
+    tinymist = {
+        cmd = { 'tinymist' },
+        filetypes = { 'typst' },
+        single_file_support = true,
+    },
+    jsonls = {
+        'json-lsp',
+        cmd = { 'vscode-json-language-server', '--stdio' },
+        filetypes = { 'json', 'jsonc' },
+        init_options = {
+          provideFormatter = true,
+        },
+        root_markers = {'.git'},
+        single_file_support = true,
+    },
+    gopls = {
+        cmd = { 'gopls' },
+        filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+        root_markers = {'go.work', 'go.mod', '.git'},
+        single_file_support = true,
+    },
     lua_ls = {
         'lua-language-server',
+        cmd = { 'lua-language-server' },
+        single_file_support = true,
+        log_level = vim.lsp.protocol.MessageType.Warning,
+        filetypes = { "lua" },
+        root_markers = { '.luarc.json', '.luarc.jsonc', '.git' },
         on_init = function(client)
-            local path = client.workspace_folders[1].name
-            ---@diagnostic disable-next-line: undefined-field
-            if vim.loop.fs_stat(path .. '/.luarc.json') or vim.loop.fs_stat(path .. '/.luarc.jsonc') then
-                return
+            if client.workspace_folders then
+                local path = client.workspace_folders[1].name
+                ---@diagnostic disable-next-line: undefined-field
+                if path ~= vim.fn.stdpath('config') and (vim.loop.fs_stat(path..'/.luarc.json') or vim.loop.fs_stat(path..'/.luarc.jsonc')) then
+                    return
+                end
             end
 
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
@@ -120,7 +207,7 @@ local servers = {
                         -- "${3rd}/luv/library"
                         -- "${3rd}/busted/library",
                     }
-                    -- or pull in all of 'runtimepath'. NOTE: this is a lot slower
+                    -- or pull in all of 'runtimepath'. NOTE: this is a lot slower and will cause issues when working on your own configuration (see https://github.com/neovim/nvim-lspconfig/issues/3189)
                     -- library = vim.api.nvim_get_runtime_file("", true)
                 }
             })
@@ -131,7 +218,6 @@ local servers = {
     },
 }
 
-local lspconfig = require 'lspconfig'
 local mason_reg = require'mason-registry'
 -- enable snippets support on client
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
@@ -147,13 +233,14 @@ for name, opts in pairs(servers) do
         mason_name = name
     end
     if is_installed[mason_name] then
-        lspconfig[name].setup(vim.tbl_extend('keep', opts, {
+        vim.lsp.config[name] = vim.tbl_extend('keep', opts, {
             capabilities = capabilities,
             on_attach = on_attach,
             flags = {
                 debounce_text_changes = 150
             }
-        }))
+        })
+        vim.lsp.enable{name}
         is_installed[mason_name] = false  -- to check which is not set up below
     end
 end
@@ -163,3 +250,6 @@ for name, inst in pairs(is_installed) do
         print('LSP server', name, 'can be removed')
     end
 end
+
+-- inlay hints have to be enabled as well
+vim.lsp.inlay_hint.enable()
