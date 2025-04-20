@@ -17,7 +17,7 @@ if os.getenv('WSL_DISTRO_NAME') ~= nil then
 end
 
 
--- options
+-- === OPTIONS ===
 -- continue wrapped lines with the same indent
 o.breakindent = true
 -- use four spaces for tabs
@@ -83,19 +83,19 @@ for _, plugin in pairs(disabled_built_ins) do
     vim.g["loaded_" .. plugin] = 1
 end
 
--- packages
+-- === PACKAGES ===
 
 require 'packages'
 
-local tabs = require'tabs'
-tabs.setup()
+require'lsp'.setup()
+require'tabs'.setup()
 local term = require'term'
 term.setup()
-require'lsp'.setup()
 
+-- === MAPPINGS ===
 
--- functions
-local function exec_first_line_cmd()
+-- do what needs to be done
+vim.keymap.set("n", "<c-p>", function ()
     vim.cmd [[silent update!]]
     vim.cmd [[wincmd k]]
     local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
@@ -117,29 +117,8 @@ local function exec_first_line_cmd()
     local dir = vim.fn.expand('%:h')
     term.open(cmd, dir)
     vim.cmd [[norm i]]
-end
+end)
 
-local function highlight()     --
-    -- override some highlights
-    vim.cmd [[
-            hi! link Pmenu MoreMsg
-            hi! link Folded Boolean
-            hi! default link Title Boolean
-            hi! DiagnosticSignInfo guifg=Green
-            hi! DiagnosticSignHint guifg=Cyan
-            hi! DiagnosticSignError guifg=Red
-            hi! DiagnosticSignWarn guifg=Yellow
-            hi! DiagnosticUnderlineError gui=undercurl guisp=Red
-            hi! DiagnosticUnderlineWarn gui=undercurl guisp=Yellow
-            hi! DiagnosticUnderlineHint gui=undercurl guisp=Cyan
-            hi! DiagnosticUnderlineInfo gui=undercurl guisp=Green
-        ]]
-end
-
-
--- mappings
--- do what needs to be done
-vim.keymap.set("n", "<c-p>", exec_first_line_cmd)
 -- scroll by page
 vim.keymap.set('n', '<space>', '<c-f>')
 vim.keymap.set('n', '<c-space>', '<c-b>')
@@ -162,8 +141,6 @@ vim.keymap.set({ 'c', 'v', 'i', 'o' }, 'kj', '<esc>')
 vim.keymap.set('t', 'kj', '<C-\\><C-n>')
 -- delete a character
 vim.keymap.set('c', '<c-h>', '<c-bs>')
--- closing current buffer
-vim.keymap.set({ 'n', 't' }, '<leader>x', tabs.close)
 -- save file if changed
 vim.keymap.set('n', '<leader><leader>', function() vim.cmd('update!') end)
 -- toggle spell check
@@ -176,13 +153,25 @@ vim.keymap.set('n', '<leader>w', '<c-w>')
 vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
 
 
--- autocmds
+-- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
 -- override some colors
 vim.api.nvim_create_autocmd('VimEnter', {
     group = augroup,
     pattern = '*',
-    callback = highlight
+    command = [[
+        hi! link Pmenu MoreMsg
+        hi! link Folded Boolean
+        hi! default link Title Boolean
+        hi! DiagnosticSignInfo guifg=Green
+        hi! DiagnosticSignHint guifg=Cyan
+        hi! DiagnosticSignError guifg=Red
+        hi! DiagnosticSignWarn guifg=Yellow
+        hi! DiagnosticUnderlineError gui=undercurl guisp=Red
+        hi! DiagnosticUnderlineWarn gui=undercurl guisp=Yellow
+        hi! DiagnosticUnderlineHint gui=undercurl guisp=Cyan
+        hi! DiagnosticUnderlineInfo gui=undercurl guisp=Green
+    ]]
 })
 -- source configs on save
 vim.api.nvim_create_autocmd('BufWritePost', {

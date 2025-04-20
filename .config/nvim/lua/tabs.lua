@@ -2,19 +2,12 @@ local devicons = require'nvim-web-devicons'
 
 local M = {}
 
-local force_alone_ft = {
-    'gitcommit',
-}
-
 function M.get_sibling_buffers(bufnr)
-    local filetype = vim.api.nvim_get_option_value('filetype', {buf = bufnr})
-    if vim.tbl_contains(force_alone_ft, filetype) then
-        return {bufnr}
-    end
+    local listed = vim.fn.buflisted(bufnr)
     local buftype = vim.api.nvim_get_option_value('buftype', {buf = bufnr})
     local siblings = {}
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.fn.buflisted(buf) == 0 then
+        if vim.fn.buflisted(buf) ~= listed then
             goto continue
         end
         local buft = vim.api.nvim_get_option_value('buftype', {buf = buf})
@@ -82,7 +75,7 @@ local function get_icon(buf, name)
 end
 
 function M.status_text_bufs()
-    local bufnr = tonumber(vim.g.actual_curbuf)
+    local bufnr = vim.api.nvim_get_current_buf()
     local bufs = M.get_sibling_buffers(bufnr)
     local text = '%<%#StatuslineNC#'
     local alt = get_alt_buf(bufnr, bufs)  -- alternate buffer for the current win
@@ -112,21 +105,21 @@ function M.status_text_bufs()
 end
 
 function M.status_text()
-    local win = tonumber(vim.g.actual_curwin)
-    local stlwin = vim.api.nvim_get_current_win()
-    local text = '%%#FocusedSymbol# '
+    local win = vim.api.nvim_get_current_win()
+    local stlwin = vim.g.statusline_winid
     if win == stlwin then
-        text = (text .. '%s '):format(vim.api.nvim_get_mode().mode:upper())
-        text = text .. M.status_text_bufs()
-    else
-        local alt_win = get_alt_win()
-        if stlwin == alt_win then
-            text = (text .. '%s '):format('#')
-        else
-            text = (text .. '%d '):format(vim.fn.win_id2win(stlwin))
-        end
-        text = text .. '%#StatuslineNC# %<%f %h%w%m%r'
+        local text = '%%#FocusedSymbol# %s '
+        text = text:format(vim.api.nvim_get_mode().mode:upper())
+        return text .. M.status_text_bufs()
     end
+    local text = '%%#Statusline# '
+    local alt_win = get_alt_win()
+    if stlwin == alt_win then
+        text = (text .. '%s '):format('#')
+    else
+        text = (text .. '%d '):format(vim.fn.win_id2win(stlwin))
+    end
+    text = text .. '%#StatuslineNC# %<%f %h%w%m%r'
     return text
 end
 
@@ -167,9 +160,26 @@ function M.close()
     end
     local buftype = vim.api.nvim_get_option_value('buftype', {buf = 0})
     local current = vim.api.nvim_get_current_buf()
-    local alt = get_alt_buf(current, M.get_sibling_buffers(current))
-    if alt then
-        vim.api.nvim_set_current_buf(alt)
+    local bufs = M.get_sibling_buffers(current)
+    local alt = get_alt_buf(current, bufs)
+    local wins = vim.api.nvim_list_wins()
+    if not alt then
+        if #wins == 1 then
+            vim.cmd.bdelete{count = current, bang = buftype == 'terminal'}
+            return
+        end
+        vim.api.nvim_win_close(0, false)
+        local next = vim.api.nvim_get_current_buf()
+        if next ~= current and vim.api.nvim_buf_is_valid(current) then
+            vim.cmd.bdelete{count = current, bang = buftype == 'terminal'}
+        end
+        return
+    end
+    vim.api.nvim_set_current_buf(alt)
+    for _, win in ipairs(wins) do
+        if vim.api.nvim_win_get_buf(win) == current then
+            return
+        end
     end
     vim.cmd.bdelete{count = current, bang = buftype == 'terminal'}
 end
@@ -179,8 +189,10 @@ function M.setup()
     vim.keymap.set('n', '<tab>', function() M.go_buf(vim.v.count) end)
     -- switch windows using `
     vim.keymap.set('n', '`', function() M.go_win(vim.v.count) end)
+    -- closing current buffer
+    vim.keymap.set({ 'n', 't' }, '<leader>x', M.close)
     -- set statusline
-    vim.opt.statusline = '%{%v:lua.require("tabs").status_text()%}'
+    vim.opt.statusline = '%!v:lua.require("tabs").status_text()'
 end
 
 return M
