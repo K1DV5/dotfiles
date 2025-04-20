@@ -99,8 +99,9 @@ function M.status_text_bufs()
     end
     local icon, highlight = get_icon(buf, name)
     if buf == bufnr then     -- current buf
+      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%) %%#StatuslineNC#'
       icon = string.format('%%#%s# %s ', highlight, icon)
-      text = text .. string.format('%s%%#%s#%s%%h%%w%%m%%r %%#StatuslineNC#', icon, highlight, name)
+      text = text .. format:format(#name, icon, highlight, name)
     else
       name = vim.fn.fnamemodify(name, ':t:r')
       local num
@@ -109,7 +110,8 @@ function M.status_text_bufs()
       else
         num = i .. ':'
       end
-      text = text .. string.format(' %s%s.%%-01.(%s%%) ', num, icon, name)
+      local maxwid = math.floor(vim.api.nvim_win_get_width(0) / #bufs / 1.5)
+      text = text .. string.format(' %s%%-01.%d(%s.%s%%) ', num, maxwid, name, icon)
     end
   end
   return text
