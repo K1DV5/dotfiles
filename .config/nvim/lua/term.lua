@@ -1,5 +1,3 @@
-local tabs = require 'tabs'
-
 local default_shell = 'bash'
 if not vim.fn.executable(default_shell) then
     default_shell = vim.api.nvim_get_option_value('shell', {scope = 'global'})
@@ -73,7 +71,7 @@ local function toggle(size)
         if vim.api.nvim_win_get_height(0) < term_height then -- maximize
             vim.api.nvim_win_set_height(0, term_height)
         else
-            vim.api.nvim_set_var('term_current_buf', vim.api.nvim_get_current_buf())
+            vim.g.term_current_buf = vim.api.nvim_get_current_buf()
             vim.api.nvim_win_hide(0)
         end
         return true
@@ -83,7 +81,7 @@ local function toggle(size)
     -- terminal buffers
     local tbuflist = get_terminals()
     -- if last opened terminal is hidden but exists
-    local current_buf = tabs.get_var('term_current_buf')
+    local current_buf = vim.g.term_current_buf
     local cmd_start = 'belowright ' .. term_height .. ' split +buffer\\ '
     if current_buf and vim.api.nvim_buf_is_loaded(current_buf) then
         vim.api.nvim_command(cmd_start .. current_buf)
@@ -92,8 +90,6 @@ local function toggle(size)
     else                                    -- create a new one
         return
     end
-    -- bring other terminal buffers into this window
-    vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
     return true
 end
 
@@ -144,14 +140,11 @@ function M.open(cmd, dir)
     -- avoid buffer modified error
     local buf = vim.api.nvim_create_buf(true, false)
     vim.api.nvim_win_set_buf(0, buf)
-    vim.fn.termopen(cmd, { cwd = dir })
-    -- bring other terminal buffers into this window
-    vim.api.nvim_win_set_var(0, 'tabs_buflist', tbuflist)
+    vim.fn.jobstart(cmd, { cwd = dir, term = true })
     clear_existing(tbuflist, cmd, dir)
     -- for future clears
     vim.api.nvim_buf_set_var(buf, 'term_cmd', cmd)
     vim.api.nvim_buf_set_var(buf, 'term_dir', dir)
-    tabs.reload()
 end
 
 function M.clear()
@@ -175,6 +168,10 @@ function M.setup()
         group = augroup,
         command = "setlocal nonumber norelativenumber nowrap",
     })
+    -- open/close terminal pane
+    vim.keymap.set('n', '<leader>t', M.open)
+    -- open big terminal window / maximize
+    vim.keymap.set('n', '<leader>T', function() M.open(1) end)
 end
 
 return M

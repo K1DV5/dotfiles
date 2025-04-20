@@ -108,7 +108,6 @@ require "lazy".setup {
             enabled = true,
             log_level = 'info',
             suppressed_dirs = { "~/", "~/projects" },
-            post_restore_cmds = { 'lua require"tabs".all_buffers()' },
             pre_save_cmds = { 'lua require"term".clear()' },
         }
     },
@@ -218,29 +217,6 @@ require "lazy".setup {
         end,
         keys = {
             { '-', '<cmd>Telescope find_files<cr>' }
-        }
-    },
-
-    {
-        "hoob3rt/lualine.nvim",
-        config = {
-            options = {
-                theme = 'codedark',
-                section_separators = { '', '' },
-                component_separators = { '', '' },
-                disabled_filetypes = { 'aerial' },
-            },
-            sections = {
-                lualine_a = { { function() return vim.api.nvim_get_mode().mode:upper() end, color = 'FocusedSymbol' } },
-                lualine_b = {},
-                lualine_c = { "require'tabs'.status_text()" },
-                lualine_x = { 'diagnostics' },
-                lualine_y = {
-                    { 'fileformat', color = 'FocusedSymbol' },
-                    { 'filetype',   color = 'FocusedSymbol' }
-                },
-                lualine_z = { { 'progress', color = 'FocusedSymbol' } },
-            },
         }
     },
 

@@ -6,7 +6,7 @@ local g = vim.g
 -- set mapleader, should be before lazy
 g.mapleader = ','
 
--- system clipboard {{{
+-- system clipboard
 if os.getenv('WSL_DISTRO_NAME') ~= nil then
     vim.g.clipboard = {
         name = 'wsl clipboard',
@@ -16,10 +16,8 @@ if os.getenv('WSL_DISTRO_NAME') ~= nil then
     }
 end
 
--- }}}
 
--- options {{{
--- miscellaneous {{{
+-- options
 -- continue wrapped lines with the same indent
 o.breakindent = true
 -- use four spaces for tabs
@@ -35,16 +33,10 @@ o.smartcase = true
 -- turn on line numbers where the cursor is (revert: set nonumber)
 o.number = true
 o.relativenumber = true
--- enable true color on terminal
-o.termguicolors = true
--- set the time to update misc things
-o.updatetime = 100
 -- disable swapfiles, allow editing outside nvim
 o.swapfile = false
 -- keep windows the same size when adding/removing
 o.equalalways = false
--- hide the ~'s at the end of files and other chars
-o.fillchars = { eob = ' ', diff = ' ', fold = ' ', stl = ' ' }
 -- reenable jump back to file after closing
 o.jumpoptions:remove('clean')
 -- read options only from the first and last lines
@@ -53,29 +45,18 @@ o.modelines = 1
 o.showmode = false
 -- split to the right
 o.splitright = true
--- only scan current and other windows for keyword completions
-o.complete = '.,w,b,t'
 -- dont be chatty on completions
 o.shortmess:append('c')
 -- show diff with vertical split
 o.diffopt:append('vertical')
 -- always have a space for signs
 o.signcolumn = 'yes'
--- some filetype specific features
-vim.cmd 'filetype plugin indent on'
 -- disable the tabline
 o.showtabline = 0
--- to show line numbers on <c-g>, disable on statusline
-o.ruler = false
 -- store buffers and cd accross sessions
 o.ssop = 'buffers,curdir,localoptions'
--- use ripgrep
-o.grepprg = 'rg'
--- allow mouse interaction
-o.mouse = 'a'
 
--- }}}
--- performance {{{
+-- performance
 -- disable builtins plugins
 local disabled_built_ins = {
     "netrw",
@@ -101,24 +82,20 @@ local disabled_built_ins = {
 for _, plugin in pairs(disabled_built_ins) do
     vim.g["loaded_" .. plugin] = 1
 end
--- }}}
--- }}}
 
--- packages {{{
+-- packages
 
 require 'packages'
 
-local tabs = require 'tabs'
+local tabs = require'tabs'
 tabs.setup()
-local term = require 'term'
+local term = require'term'
 term.setup()
+require'lsp'.setup()
 
-require 'lsp'
 
--- }}}
-
--- functions {{{
-local function exec_first_line_cmd()     -- {{{
+-- functions
+local function exec_first_line_cmd()
     vim.cmd [[silent update!]]
     vim.cmd [[wincmd k]]
     local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
@@ -142,13 +119,11 @@ local function exec_first_line_cmd()     -- {{{
     vim.cmd [[norm i]]
 end
 
--- }}}
-local function highlight()     -- {{{
+local function highlight()     --
     -- override some highlights
     vim.cmd [[
+            hi! link Pmenu MoreMsg
             hi! link Folded Boolean
-            hi! DiffChange guibg=#18384B
-            hi! DiffDelete guifg=Grey
             hi! default link Title Boolean
             hi! DiagnosticSignInfo guifg=Green
             hi! DiagnosticSignHint guifg=Cyan
@@ -161,15 +136,10 @@ local function highlight()     -- {{{
         ]]
 end
 
--- }}}
 
--- }}}
-
--- mappings {{{
+-- mappings
 -- do what needs to be done
 vim.keymap.set("n", "<c-p>", exec_first_line_cmd)
--- -- show git status
--- vim.keymap.set('n', '<leader>g', git)
 -- scroll by page
 vim.keymap.set('n', '<space>', '<c-f>')
 vim.keymap.set('n', '<c-space>', '<c-b>')
@@ -184,10 +154,6 @@ vim.keymap.set('n', '0', 'g0')
 vim.keymap.set('n', '$', 'g$')
 vim.keymap.set('n', '<Up>', 'g<Up>')
 vim.keymap.set('n', '<Down>', 'g<Down>')
--- using tab for switching buffers
-vim.keymap.set('n', '<tab>', function() tabs.go(vim.api.nvim_get_vvar('count')) end)
--- switch windows using `
-vim.keymap.set('n', '`', function() tabs.go(vim.api.nvim_get_vvar('count'), true) end)
 -- go forward (back) with backspace
 vim.keymap.set('n', '<bs>', '<c-o>')
 vim.keymap.set('n', '<s-bs>', '<c-i>')
@@ -196,10 +162,6 @@ vim.keymap.set({ 'c', 'v', 'i', 'o' }, 'kj', '<esc>')
 vim.keymap.set('t', 'kj', '<C-\\><C-n>')
 -- delete a character
 vim.keymap.set('c', '<c-h>', '<c-bs>')
--- open/close terminal pane
-vim.keymap.set('n', '<leader>t', term.open)
--- open big terminal window / maximize
-vim.keymap.set('n', '<leader>T', function() term.open(1) end)
 -- closing current buffer
 vim.keymap.set({ 'n', 't' }, '<leader>x', tabs.close)
 -- save file if changed
@@ -213,9 +175,8 @@ vim.keymap.set('n', '<leader>w', '<c-w>')
 -- use system clipboard
 vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
 
--- }}}
 
--- autocmds {{{
+-- autocmds
 local augroup = vim.api.nvim_create_augroup('init', {})
 -- override some colors
 vim.api.nvim_create_autocmd('VimEnter', {
@@ -249,6 +210,5 @@ vim.api.nvim_create_autocmd({ 'Filetype' }, {
     pattern = 'go',
     callback = function() vim.api.nvim_set_option_value('expandtab', false, {buf = 0}) end
 })
--- }}}
 
 -- vim:foldmethod=marker:foldlevel=0

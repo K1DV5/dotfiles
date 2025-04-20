@@ -1,20 +1,43 @@
 -- custom lsp config
 
+local illuminate = require 'illuminate'
+local cmp_nvim_lsp = require('cmp_nvim_lsp')
+
 ------------------ DIAGNOSTICS ----------------------
 
-vim.diagnostic.config({
+local diagnostic_config = {
+    signs = {
+        text = {
+            [vim.diagnostic.severity.ERROR] = '',
+            [vim.diagnostic.severity.WARN] = '',
+            [vim.diagnostic.severity.INFO] = '',
+            [vim.diagnostic.severity.HINT] = '',
+        },
+    },
     update_in_insert = false,
-    virtual_text = false,
-    jump = {
-        float = true,
-    }
-    -- float = {
-    --     scope = 'line',
-    --     source = 'if_many',
-    -- },
-})
+    -- virtual_lines = true,
+}
+
+local function show_diagnostics()
+    vim.diagnostic.open_float({
+        focusable = false,
+        scope = 'line',
+        source = 'if_many',
+        header = '',
+    })
+end
 
 -------------------- SETUP ------------------------
+
+local function restart_buffer_clients()
+    local clients = vim.lsp.get_clients({bufnr = 0})
+    vim.lsp.stop_client(clients)
+    for _, client in ipairs(clients) do
+        vim.lsp.start(client.config, {reuse_client = function ()
+            return false
+        end})
+    end
+end
 
 -- range formatting
 local function format_range_operator()
@@ -40,25 +63,31 @@ local function format_range_operator()
     vim.api.nvim_feedkeys('g@', 'n', false)
 end
 
-local illuminate = require 'illuminate'
 -- setup func
 local function on_attach(client, bufnr)
     -- Mappings
     vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr })
+    vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = bufnr })
+    vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = bufnr })
+    vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = bufnr })
     vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = bufnr })
     vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = bufnr })
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr })
+    vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = bufnr })
+    vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = bufnr })
     vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
+    vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = bufnr })
 
     illuminate.on_attach(client)
     vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, {buffer = bufnr })
     vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, {buffer = bufnr })
+    local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
+    vim.api.nvim_create_autocmd('CursorMoved', {
+        group = augroup,
+        buffer = bufnr,
+        callback = show_diagnostics,
+    })
 end
-
--- change diagnostic signs shown in sign column
-vim.fn.sign_define("DiagnosticSignError", { text = '', texthl = "DiagnosticSignError" })
-vim.fn.sign_define("DiagnosticSignWarn", { text = '', texthl = "DiagnosticSignWarn" })
-vim.fn.sign_define("DiagnosticSignInfo", { text = '', texthl = "DiagnosticSignInfo" })
-vim.fn.sign_define("DiagnosticSignHint", { text = '', texthl = "DiagnosticSignHint" })
 
 -- setup language servers
 local servers = {
@@ -96,7 +125,6 @@ local servers = {
         single_file_support = true,
     },
     html = {
-        'html-lsp',
         cmd = { 'vscode-html-language-server', '--stdio' },
         filetypes = { 'html', 'templ' },
         root_markers = {'package.json', '.git'},
@@ -109,7 +137,6 @@ local servers = {
         },
     },
     cssls = {
-        'css-lsp',
         cmd = { 'vscode-css-language-server', '--stdio' },
         filetypes = { 'css', 'scss', 'less' },
         init_options = { provideFormatter = true }, -- needed to enable formatting capabilities
@@ -122,7 +149,6 @@ local servers = {
         },
     },
     ts_ls = {
-        'typescript-language-server',
         init_options = { hostInfo = 'neovim' },
         cmd = { 'typescript-language-server', '--stdio' },
         filetypes = {
@@ -177,7 +203,6 @@ local servers = {
         single_file_support = true,
     },
     lua_ls = {
-        'lua-language-server',
         cmd = { 'lua-language-server' },
         single_file_support = true,
         log_level = vim.lsp.protocol.MessageType.Warning,
@@ -218,38 +243,29 @@ local servers = {
     },
 }
 
-local mason_reg = require'mason-registry'
--- enable snippets support on client
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local M = {}
 
-local is_installed = {}
-for _, name in ipairs(mason_reg.get_installed_package_names()) do
-    is_installed[name] = true
-end
-
-for name, opts in pairs(servers) do
-    local mason_name = opts[1]
-    if mason_name == nil then
-        mason_name = name
-    end
-    if is_installed[mason_name] then
-        vim.lsp.config[name] = vim.tbl_extend('keep', opts, {
-            capabilities = capabilities,
-            on_attach = on_attach,
-            flags = {
-                debounce_text_changes = 150
-            }
-        })
-        vim.lsp.enable{name}
-        is_installed[mason_name] = false  -- to check which is not set up below
+function M.setup()
+    -- enable inlay hints
+    vim.lsp.inlay_hint.enable()
+    -- config diagnostics
+    vim.diagnostic.config(diagnostic_config)
+    -- common config
+    local capabilities = cmp_nvim_lsp.default_capabilities()
+    local default_opts = {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        flags = {
+            debounce_text_changes = 150
+        }
+    }
+    -- setup servers
+    for name, opts in pairs(servers) do
+        if vim.fn.executable(opts.cmd[1]) then
+            vim.lsp.config[name] = vim.tbl_extend('keep', opts, default_opts)
+            vim.lsp.enable { name }
+        end
     end
 end
 
-for name, inst in pairs(is_installed) do
-    if inst then
-        print('LSP server', name, 'can be removed')
-    end
-end
-
--- inlay hints have to be enabled as well
-vim.lsp.inlay_hint.enable()
+return M
