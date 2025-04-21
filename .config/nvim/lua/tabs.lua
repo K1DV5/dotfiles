@@ -88,8 +88,11 @@ end
 function M.status_text_bufs()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufs = M.get_sibling_buffers(bufnr)
-  local text = '%<%#StatuslineNC#'
+  local inactive_hl = '%#BufferInactive#'
+  local text = '%<' .. inactive_hl
   local alt = get_alt_buf(bufnr, bufs)   -- alternate buffer for the current win
+  local winwid = vim.api.nvim_win_get_width(0) - 15
+  local maxwid = math.floor(winwid / #bufs)
   for i, buf in pairs(bufs) do
     local name = vim.api.nvim_buf_get_name(buf)
     if name then
@@ -99,19 +102,22 @@ function M.status_text_bufs()
     end
     local icon, highlight = get_icon(buf, name)
     if buf == bufnr then     -- current buf
-      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%) %%#StatuslineNC#'
+      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%) %s'
       icon = string.format('%%#%s# %s ', highlight, icon)
-      text = text .. format:format(#name, icon, highlight, name)
+      text = text .. format:format(#name, icon, highlight, name, inactive_hl)
     else
-      name = vim.fn.fnamemodify(name, ':t:r')
       local num
       if buf == alt then
         num = '# '
       else
         num = i .. ':'
       end
-      local maxwid = math.floor(vim.api.nvim_win_get_width(0) / #bufs / 1.5)
-      text = text .. string.format(' %s%%-01.%d(%s.%s%%) ', num, maxwid, name, icon)
+      local exticon = ''
+      if maxwid < 15 then
+        name = vim.fn.fnamemodify(name, ':t:r')
+        exticon = '.' .. icon
+      end
+      text = text .. string.format(' %s%%-01.%d(%s%s%%) ', num, maxwid, name, exticon)
     end
   end
   return text
@@ -125,14 +131,14 @@ function M.status_text()
     text = text:format(vim.api.nvim_get_mode().mode:upper())
     return text .. M.status_text_bufs() .. '%#FocusedSymbol#'
   end
-  local text = '%%#Statusline# '
+  local text = '%%#StatuslineNC# '
   local alt_win = get_alt_win()
   if stlwin == alt_win then
     text = (text .. '%s '):format('#')
   else
     text = (text .. '%d '):format(vim.fn.win_id2win(stlwin))
   end
-  text = text .. '%#StatuslineNC# %<%f %h%w%m%r'
+  text = text .. ' %<%f %h%w%m%r'
   return text
 end
 
@@ -205,6 +211,7 @@ function M.setup()
   -- closing current buffer
   vim.keymap.set({ 'n', 't' }, '<leader>x', M.close)
   -- set statusline
+  vim.cmd'hi! link Statusline Normal'
   vim.opt.statusline = '%!v:lua.require("tabs").status_text()'
 end
 
