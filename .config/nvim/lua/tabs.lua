@@ -85,6 +85,25 @@ local function get_icon(buf, name)
   return icon, hi
 end
 
+local diag_hls = {
+    'Error',
+    'Warn',
+    'Info',
+    'Hint',
+}
+
+local function diagnostic_counts()
+  local diag_status = ''
+  local counts = vim.diagnostic.count(0)
+  for _, sev in ipairs(diag_hls) do
+    local count = counts[vim.diagnostic.severity[sev:upper()]]
+    if count ~= nil then
+      diag_status = diag_status .. ('%%#DiagnosticSign%s# %d'):format(sev, count)
+    end
+  end
+  return diag_status
+end
+
 function M.status_text_bufs()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufs = M.get_sibling_buffers(bufnr)
@@ -102,9 +121,9 @@ function M.status_text_bufs()
     end
     local icon, highlight = get_icon(buf, name)
     if buf == bufnr then     -- current buf
-      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%) %s'
+      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%)%s %s'
       icon = string.format('%%#%s# %s ', highlight, icon)
-      text = text .. format:format(#name, icon, highlight, name, inactive_hl)
+      text = text .. format:format(#name, icon, highlight, name, diagnostic_counts(), inactive_hl)
     else
       local num
       if buf == alt then
