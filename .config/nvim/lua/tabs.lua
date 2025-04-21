@@ -110,20 +110,28 @@ function M.status_text_bufs()
   local inactive_hl = '%#BufferInactive#'
   local text = inactive_hl
   local alt = get_alt_buf(bufnr, bufs)   -- alternate buffer for the current win
-  local winwid = vim.api.nvim_win_get_width(0) - 15
-  local maxwid = math.floor(winwid / #bufs)
+  local fname_len_limit = 24
+  local winwid_inactive = vim.api.nvim_win_get_width(0) - fname_len_limit - 20
+  local maxwid_inactive = math.floor(winwid_inactive / #bufs)
   for i, buf in pairs(bufs) do
     local name = vim.api.nvim_buf_get_name(buf)
-    if name then
-      name = vim.fn.fnamemodify(name, ':t')
-    else
+    if not name then
       name = '[unnamed]'
     end
     local icon, highlight = get_icon(buf, name)
     if buf == bufnr then     -- current buf
-      local format = '%%-0%d.40(%s%%#%s#%s%%h%%w%%m%%r%%)%s %s'
+      local dir = vim.fn.fnamemodify(name, ':.:h:t')
+      if dir == '.' then
+        name = vim.fn.fnamemodify(name, ':t')
+      else
+        name = dir .. '/' .. vim.fn.fnamemodify(name, ':t')
+      end
+      if #name < fname_len_limit then
+        fname_len_limit = #name + 1
+      end
       icon = string.format('%%#%s# %s ', highlight, icon)
-      text = text .. format:format(#name, icon, highlight, name, diagnostic_counts(), inactive_hl)
+      local format = '%s%%-.%d(%%#%s#%%f%%)%%h%%w%%m%%r%s %s'
+      text = text .. format:format(icon, fname_len_limit, highlight, diagnostic_counts(), inactive_hl)
     else
       local num
       if buf == alt then
@@ -132,11 +140,13 @@ function M.status_text_bufs()
         num = i .. ':'
       end
       local exticon = ''
-      if maxwid < 15 then
+      if maxwid_inactive < 15 then
         name = vim.fn.fnamemodify(name, ':t:r')
         exticon = '.' .. icon
+      else
+        name = vim.fn.fnamemodify(name, ':t')
       end
-      text = text .. string.format(' %s%%-01.%d(%s%s%%) ', num, maxwid, name, exticon)
+      text = text .. string.format(' %s%%-.%d(%s%s%%) ', num, maxwid_inactive, name, exticon)
     end
   end
   return text
