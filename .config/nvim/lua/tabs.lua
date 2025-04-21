@@ -108,7 +108,7 @@ function M.status_text_bufs()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufs = M.get_sibling_buffers(bufnr)
   local inactive_hl = '%#BufferInactive#'
-  local text = '%<' .. inactive_hl
+  local text = inactive_hl
   local alt = get_alt_buf(bufnr, bufs)   -- alternate buffer for the current win
   local winwid = vim.api.nvim_win_get_width(0) - 15
   local maxwid = math.floor(winwid / #bufs)
@@ -146,9 +146,9 @@ function M.status_text()
   local win = vim.api.nvim_get_current_win()
   local stlwin = vim.g.statusline_winid
   if win == stlwin then
-    local text = '%%#FocusedSymbol# %s '
+    local text = '%%#FocusedSymbol# %s %%<'
     text = text:format(vim.api.nvim_get_mode().mode:upper())
-    return text .. M.status_text_bufs() .. '%#FocusedSymbol#'
+    return text .. M.status_text_bufs() .. '%#FocusedSymbol#%=%S '
   end
   local text = '%%#StatuslineNC# '
   local alt_win = get_alt_win()
@@ -231,7 +231,8 @@ function M.setup()
   vim.keymap.set({ 'n', 't' }, '<leader>x', M.close)
   -- set statusline
   vim.cmd'hi! link Statusline Normal'
-  vim.opt.statusline = '%!v:lua.require("tabs").status_text()'
+  vim.o.showcmdloc = 'statusline'
+  vim.o.statusline = '%!v:lua.require("tabs").status_text()'
 end
 
 return M
