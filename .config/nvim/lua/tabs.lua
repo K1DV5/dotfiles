@@ -85,12 +85,10 @@ local function get_icon(buf, name)
   return icon, hi
 end
 
-local diag_hls = {
-    'Error',
-    'Warn',
-    'Info',
-    'Hint',
-}
+local diag_hls = { 'Error', 'Warn', 'Info', 'Hint' }
+local inactive_hl = '%#BufferInactive#'
+local fname_len_limit = 24
+local low_wid_inactive = 15
 
 local function diagnostic_counts()
   local diag_status = ''
@@ -107,31 +105,46 @@ end
 function M.status_text_bufs()
   local bufnr = vim.api.nvim_get_current_buf()
   local bufs = M.get_sibling_buffers(bufnr)
-  local inactive_hl = '%#BufferInactive#'
   local text = inactive_hl
-  local alt = get_alt_buf(bufnr, bufs)   -- alternate buffer for the current win
-  local fname_len_limit = 24
-  local winwid_inactive = vim.api.nvim_win_get_width(0) - fname_len_limit - 20
+  local alt = get_alt_buf(bufnr, bufs) -- alternate buffer for the current win
+  local winwid_inactive = vim.api.nvim_win_get_width(0) - fname_len_limit
   local maxwid_inactive = math.floor(winwid_inactive / #bufs)
+  local names = {}
+  local name_occurences = {}
   for i, buf in pairs(bufs) do
     local name = vim.api.nvim_buf_get_name(buf)
+    local tail
     if not name then
       name = '[unnamed]'
+      tail = name
+    else
+      tail = vim.fn.fnamemodify(name, ':t')
     end
+    name_occurences[tail] = (name_occurences[tail] or 0) + 1
+    names[i] = { tail = tail, full = name }
+  end
+  for i, buf in pairs(bufs) do
+    local name = names[i].full
+    local sname = names[i].tail
     local icon, highlight = get_icon(buf, name)
-    if buf == bufnr then     -- current buf
-      local dir = vim.fn.fnamemodify(name, ':.:h:t')
-      if dir == '.' then
-        name = vim.fn.fnamemodify(name, ':t')
+    if buf == bufnr then -- current buf
+      local maxwid_active = fname_len_limit
+      if name_occurences[sname] == 1 or maxwid_inactive < low_wid_inactive then
+        name = sname
       else
-        name = dir .. '/' .. vim.fn.fnamemodify(name, ':t')
-      end
-      if #name < fname_len_limit then
-        fname_len_limit = #name + 1
+        local dir = vim.fn.fnamemodify(name, ':.:h:t')
+        if dir == '.' then
+          name = sname
+        else
+          name = dir .. '/' .. sname
+          if #name < fname_len_limit then
+            maxwid_active = #name + 1
+          end
+        end
       end
       icon = string.format('%%#%s# %s ', highlight, icon)
-      local format = '%s%%-.%d(%%#%s#%%f%%)%%h%%w%%m%%r%s %s'
-      text = text .. format:format(icon, fname_len_limit, highlight, diagnostic_counts(), inactive_hl)
+      local format = '%s%%-01.%d(%%#%s#%s%%)%%h%%w%%m%%r%s %s'
+      text = text .. format:format(icon, maxwid_active, highlight, name, diagnostic_counts(), inactive_hl)
     else
       local num
       if buf == alt then
@@ -140,11 +153,11 @@ function M.status_text_bufs()
         num = i .. ':'
       end
       local exticon = ''
-      if maxwid_inactive < 15 then
-        name = vim.fn.fnamemodify(name, ':t:r')
+      if maxwid_inactive < low_wid_inactive then
+        name = vim.fn.fnamemodify(sname, ':r')
         exticon = '.' .. icon
       else
-        name = vim.fn.fnamemodify(name, ':t')
+        name = sname
       end
       text = text .. string.format(' %s%%-.%d(%s%s%%) ', num, maxwid_inactive, name, exticon)
     end
