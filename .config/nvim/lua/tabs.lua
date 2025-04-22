@@ -114,8 +114,8 @@ function M.status_text_bufs()
   for i, buf in pairs(bufs) do
     local name = vim.api.nvim_buf_get_name(buf)
     local tail
-    if not name then
-      name = '[unnamed]'
+    if not name or name == '' then
+      name = '[No name]'
       tail = name
     else
       tail = vim.fn.fnamemodify(name, ':t')
