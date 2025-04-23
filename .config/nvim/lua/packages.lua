@@ -14,17 +14,17 @@ vim.opt.rtp:prepend(lazypath)
 
 require "lazy".setup {
 
-  "L3MON4D3/LuaSnip",
-  "saadparwaiz1/cmp_luasnip",
   "hrsh7th/cmp-buffer",
-  "kyazdani42/nvim-web-devicons",   -- pretty icons, for nvim-tree
-  "RRethy/nvim-treesitter-textsubjects",
+  "hrsh7th/cmp-nvim-lsp",
+  "hrsh7th/cmp-path",
+  "hrsh7th/cmp-cmdline",
+
+  "kyazdani42/nvim-web-devicons",   -- pretty icons
 
   { "williamboman/mason.nvim", config = true },
 
   { "RRethy/vim-illuminate",   lazy = false },
 
-  { "hrsh7th/cmp-nvim-lsp",    lazy = false },
 
   {
     "windwp/nvim-autopairs",
@@ -109,6 +109,9 @@ require "lazy".setup {
       log_level = 'info',
       suppressed_dirs = { "~/", "~/projects" },
       pre_save_cmds = { 'lua require"term".clear()' },
+      session_lens = {
+        load_on_setup = false,
+      },
     }
   },
 
@@ -137,14 +140,7 @@ require "lazy".setup {
           cmp.mapping.complete()
         end
       end
-
       cmp.setup {
-        snippet = {
-          -- REQUIRED - you must specify a snippet engine
-          expand = function(args)
-            require('luasnip').lsp_expand(args.body)             -- For `luasnip` users.
-          end,
-        },
         formatting = {
           format = function(_, vim_item)
             return vim_item
@@ -158,15 +154,36 @@ require "lazy".setup {
           ['<Tab>'] = complete(1),
           ['<S-Tab>'] = complete(-1),
         },
+        window = {
+          completion = {
+            winhighlight = 'Normal:MoreMsg',
+          },
+          documentation = {
+            winhighlight = 'Normal:MoreMsg',
+          },
+        },
         preselect = cmp.PreselectMode.None,
-        sources = {         -- You should specify your *installed* sources.
+        sources = { -- You should specify your *installed* sources.
           { name = 'nvim_lsp' },
-          { name = 'luasnip' },
           { name = 'buffer' },
         },
       }
+      cmp.setup.cmdline({ '/', '?' }, {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = {
+          { name = 'buffer' }
+        }
+      })
+      cmp.setup.cmdline(':', {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = cmp.config.sources({
+          { name = 'path' }
+        }, {
+          { name = 'cmdline' }
+        }),
+        matching = { disallow_symbol_nonprefix_matching = false }
+      })
     end
-
   },
 
   {
@@ -196,7 +213,6 @@ require "lazy".setup {
       vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
   },
-
   {
     "nvim-telescope/telescope.nvim",
     config = function()
@@ -296,5 +312,5 @@ require "lazy".setup {
       },
     },
   }
+
 }
--- vim:foldmethod=marker:foldlevel=0

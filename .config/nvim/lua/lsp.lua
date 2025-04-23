@@ -249,10 +249,10 @@ local servers = {
 local M = {}
 
 function M.setup()
-  -- enable inlay hints
-  vim.lsp.inlay_hint.enable()
   -- config diagnostics
   vim.diagnostic.config(diagnostic_config)
+  -- enable inlay hints
+  vim.lsp.inlay_hint.enable()
   -- common config
   local capabilities = cmp_nvim_lsp.default_capabilities()
   local default_opts = {
@@ -263,12 +263,14 @@ function M.setup()
     }
   }
   -- setup servers
+  local names = {}
   for name, opts in pairs(servers) do
     if vim.fn.executable(opts.cmd[1]) then
       vim.lsp.config[name] = vim.tbl_extend('keep', opts, default_opts)
-      vim.lsp.enable { name }
+      table.insert(names, name)
     end
   end
+  vim.lsp.enable(names)
 end
 
 return M

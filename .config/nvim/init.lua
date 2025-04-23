@@ -50,7 +50,7 @@ o.shortmess:append('c')
 -- show diff with vertical split
 o.diffopt:append('vertical')
 -- always have a space for signs
-o.signcolumn = 'yes'
+o.signcolumn = 'number'
 -- disable the tabline
 o.showtabline = 0
 -- store buffers and cd accross sessions
@@ -98,8 +98,10 @@ term.setup()
 
 -- do what needs to be done
 vim.keymap.set("n", "<c-p>", function ()
-    vim.cmd [[silent update!]]
-    vim.cmd [[wincmd k]]
+    vim.cmd [[
+      silent update!
+      wincmd k
+    ]]
     local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
     if first_line == '' then
         return
@@ -152,26 +154,24 @@ vim.keymap.set('n', '<leader><esc>', function() vim.cmd('qa') end)
 vim.keymap.set('n', '<leader>w', '<c-w>')
 -- use system clipboard
 vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
+
+-- === HIGHLIGHT ===
+-- override some colors
+vim.cmd [[
+  hi! link Folded Boolean
+  hi! default link Title Boolean
+  hi! DiagnosticSignInfo guifg=Green
+  hi! DiagnosticSignHint guifg=Cyan
+  hi! DiagnosticSignError guifg=Red
+  hi! DiagnosticSignWarn guifg=Yellow
+  hi! DiagnosticUnderlineError gui=undercurl guisp=Red
+  hi! DiagnosticUnderlineWarn gui=undercurl guisp=Yellow
+  hi! DiagnosticUnderlineHint gui=undercurl guisp=Cyan
+  hi! DiagnosticUnderlineInfo gui=undercurl guisp=Green
+]]
+
 -- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
--- override some colors
-vim.api.nvim_create_autocmd('VimEnter', {
-  group = augroup,
-  pattern = '*',
-  command = [[
-        hi! link Pmenu MoreMsg
-        hi! link Folded Boolean
-        hi! default link Title Boolean
-        hi! DiagnosticSignInfo guifg=Green
-        hi! DiagnosticSignHint guifg=Cyan
-        hi! DiagnosticSignError guifg=Red
-        hi! DiagnosticSignWarn guifg=Yellow
-        hi! DiagnosticUnderlineError gui=undercurl guisp=Red
-        hi! DiagnosticUnderlineWarn gui=undercurl guisp=Yellow
-        hi! DiagnosticUnderlineHint gui=undercurl guisp=Cyan
-        hi! DiagnosticUnderlineInfo gui=undercurl guisp=Green
-    ]]
-})
 -- source configs on save
 vim.api.nvim_create_autocmd('BufWritePost', {
   group = augroup,
@@ -193,6 +193,7 @@ vim.api.nvim_create_autocmd({ 'BufLeave', 'FocusLost', 'InsertEnter', 'WinLeave'
   pattern = '*',
   callback = function() vim.o.relativenumber = false end
 })
+-- filetype specific indents
 vim.api.nvim_create_autocmd({ 'Filetype' }, {
   group = augroup,
   pattern = 'go',
