@@ -54,18 +54,6 @@ require "lazy".setup {
   },
 
   {
-    "nvim-tree/nvim-tree.lua",
-    config = {
-      git = {
-        enable = false,
-      }
-    },
-    keys = {
-      { '<leader>f', '<cmd>NvimTreeToggle<cr>' },
-    }
-  },
-
-  {
     "ur4ltz/surround.nvim",
     config = {
       mappings_style = "surround"
@@ -213,25 +201,36 @@ require "lazy".setup {
       vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
   },
+
+  "nvim-telescope/telescope-file-browser.nvim",
+
   {
     "nvim-telescope/telescope.nvim",
     config = function()
-      require 'telescope'.setup {
+      local telescope = require 'telescope'
+      telescope.setup {
         defaults = {
-          preview = false,
           mappings = {
             i = { ["<esc>"] = require("telescope.actions").close },
           },
+          preview = false,
         },
         pickers = {
           find_files = {
             find_command = { 'rg', '--files', '--hidden', '-g', '!.git' },
           },
         },
+        extensions = {
+          file_browser = {
+            hijack_netrw = true,
+          },
+        },
       }
+      telescope.load_extension"file_browser"
     end,
     keys = {
-      { '-', '<cmd>Telescope find_files<cr>' }
+      { '-', '<cmd>Telescope find_files<cr>' },
+      { '<leader>f', '<cmd>Telescope file_browser<cr>' },
     }
   },
 
