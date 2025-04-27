@@ -264,7 +264,7 @@ function M.setup()
   -- setup servers
   local names = {}
   for name, opts in pairs(servers) do
-    if vim.fn.executable(opts.cmd[1]) then
+    if vim.fn.executable(opts.cmd[1]) == 1 then
       vim.lsp.config[name] = vim.tbl_extend('keep', opts, default_opts)
       table.insert(names, name)
     end
