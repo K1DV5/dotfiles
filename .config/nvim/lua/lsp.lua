@@ -15,17 +15,15 @@ local diagnostic_config = {
     },
   },
   update_in_insert = false,
-  -- virtual_lines = true,
-}
-
-local function show_diagnostics()
-  vim.diagnostic.open_float({
-    focusable = false,
+  float = {
     scope = 'line',
     source = 'if_many',
     header = '',
-  })
-end
+  },
+  jump = {
+    float = true,
+  }
+}
 
 -------------------- SETUP ------------------------
 
@@ -79,17 +77,18 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = bufnr })
   vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
   vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = bufnr })
+  vim.keymap.set('n', '<leader>d', function ()
+    local count = vim.diagnostic.count(0, {lnum = vim.fn.line('.')})
+    if #count > 0 then
+      vim.diagnostic.open_float()
+    else
+      vim.diagnostic.jump{count = 1, float = true}
+    end
+  end, { buffer = bufnr })
 
   illuminate.on_attach(client)
   vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, { buffer = bufnr })
-  vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end,
-    { buffer = bufnr })
-  local augroup = vim.api.nvim_create_augroup('lsp_custom', {})
-  vim.api.nvim_create_autocmd('CursorMoved', {
-    group = augroup,
-    buffer = bufnr,
-    callback = show_diagnostics,
-  })
+  vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, { buffer = bufnr })
 end
 
 -- setup language servers
@@ -222,8 +221,6 @@ local servers = {
 
       client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
         runtime = {
-          -- Tell the language server which version of Lua you're using
-          -- (most likely LuaJIT in the case of Neovim)
           version = 'LuaJIT'
         },
         -- Make the server aware of Neovim runtime files
@@ -231,12 +228,7 @@ local servers = {
           checkThirdParty = false,
           library = {
             vim.env.VIMRUNTIME
-            -- Depending on the usage, you might want to add additional paths here.
-            -- "${3rd}/luv/library"
-            -- "${3rd}/busted/library",
           }
-          -- or pull in all of 'runtimepath'. NOTE: this is a lot slower and will cause issues when working on your own configuration (see https://github.com/neovim/nvim-lspconfig/issues/3189)
-          -- library = vim.api.nvim_get_runtime_file("", true)
         }
       })
     end,
