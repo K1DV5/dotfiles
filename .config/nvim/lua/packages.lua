@@ -14,17 +14,11 @@ vim.opt.rtp:prepend(lazypath)
 
 require "lazy".setup {
 
-  "hrsh7th/cmp-buffer",
-  "hrsh7th/cmp-nvim-lsp",
-  "hrsh7th/cmp-path",
-  "hrsh7th/cmp-cmdline",
-
   "kyazdani42/nvim-web-devicons",   -- pretty icons
 
   { "williamboman/mason.nvim", config = true },
 
   { "RRethy/vim-illuminate",   lazy = false },
-
 
   {
     "windwp/nvim-autopairs",
@@ -128,9 +122,37 @@ require "lazy".setup {
           cmp.mapping.complete()
         end
       end
+      local kinds = {
+        Text = '',
+        Method = '',
+        Function = '',
+        Constructor = '',
+        Field = '',
+        Variable = '',
+        Class = '',
+        Interface = '',
+        Module = '',
+        Property = '',
+        Unit = '',
+        Value = '',
+        Enum = '',
+        Keyword = '',
+        Snippet = '',
+        Color = '',
+        File = '',
+        Reference = '',
+        Folder = '',
+        EnumMember = '',
+        Constant = '',
+        Struct = '',
+        Event = '',
+        Operator = '',
+        TypeParameter = '',
+      }
       cmp.setup {
         formatting = {
           format = function(_, vim_item)
+            vim_item.kind = kinds[vim_item.kind] or vim_item.kind
             return vim_item
           end,
         },
@@ -171,7 +193,13 @@ require "lazy".setup {
         }),
         matching = { disallow_symbol_nonprefix_matching = false }
       })
-    end
+    end,
+    dependencies = {
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-path",
+      "hrsh7th/cmp-cmdline",
+    },
   },
 
   {
@@ -183,16 +211,8 @@ require "lazy".setup {
           additional_vim_regex_highlighting = false,
         },
         incremental_selection = { enable = true },
-        textobjects = { enable = true },
         rainbow = {
           enable = true,
-        },
-        textsubjects = {
-          enable = true,
-          keymaps = {
-            ['.'] = 'textsubjects-smart',
-            [','] = 'textsubjects-container-outer',
-          }
         },
         indent = {
           enable = true
@@ -201,8 +221,6 @@ require "lazy".setup {
       vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
   },
-
-  "nvim-telescope/telescope-file-browser.nvim",
 
   {
     "nvim-telescope/telescope.nvim",
@@ -231,6 +249,9 @@ require "lazy".setup {
     keys = {
       { '-', '<cmd>Telescope find_files<cr>' },
       { '<leader>f', '<cmd>Telescope file_browser<cr>' },
+    },
+    dependencies = {
+      "nvim-telescope/telescope-file-browser.nvim",
     }
   },
 
@@ -273,43 +294,5 @@ require "lazy".setup {
       }
     }
   },
-
-  {
-    "folke/trouble.nvim",
-    opts = {},     -- for default options, refer to the configuration section for custom setup.
-    cmd = "Trouble",
-    keys = {
-      {
-        "<leader>D",
-        "<cmd>Trouble diagnostics toggle<cr>",
-        desc = "Diagnostics (Trouble)",
-      },
-      {
-        "<leader>d",
-        "<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-        desc = "Buffer Diagnostics (Trouble)",
-      },
-      {
-        "<leader>s",
-        "<cmd>Trouble symbols toggle<cr>",
-        desc = "Symbols (Trouble)",
-      },
-      {
-        "<leader>l",
-        "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-        desc = "LSP Definitions / references / ... (Trouble)",
-      },
-      {
-        "<leader>L",
-        "<cmd>Trouble loclist toggle<cr>",
-        desc = "Location List (Trouble)",
-      },
-      {
-        "<leader>Q",
-        "<cmd>Trouble qflist toggle<cr>",
-        desc = "Quickfix List (Trouble)",
-      },
-    },
-  }
 
 }

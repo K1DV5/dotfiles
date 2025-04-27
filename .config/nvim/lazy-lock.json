@@ -19,7 +19,6 @@
   "surround.nvim": { "branch": "master", "commit": "36c253d6470910692491b13382f54c9bab2811e1" },
   "telescope-file-browser.nvim": { "branch": "master", "commit": "626998e5c1b71c130d8bc6cf7abb6709b98287bb" },
   "telescope.nvim": { "branch": "master", "commit": "a4ed82509cecc56df1c7138920a1aeaf246c0ac5" },
-  "trouble.nvim": { "branch": "main", "commit": "85bedb7eb7fa331a2ccbecb9202d8abba64d37b3" },
   "undotree": { "branch": "main", "commit": "eab459ab87dd249617b5f7187bb69e614a083047" },
   "vim-illuminate": { "branch": "master", "commit": "1fa4b23409e22a03823648e344c77f260e2572cb" },
   "vscode.nvim": { "branch": "main", "commit": "5769f298af4abf371528b25623fecb1e069c858c" }
