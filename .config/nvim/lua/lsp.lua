@@ -27,6 +27,8 @@ local diagnostic_config = {
 
 -------------------- SETUP ------------------------
 
+vim.lsp.inlay_hint.enable(true)
+
 local function restart_buffer_clients()
   local clients = vim.lsp.get_clients({ bufnr = 0 })
   vim.lsp.stop_client(clients)
@@ -235,6 +237,11 @@ local servers = {
     settings = {
       Lua = {}
     }
+  },
+  docal = {
+    cmd = { 'docal', '--lsp' },
+    filetypes = { 'python' },
+    single_file_support = true,
   },
 }
 
