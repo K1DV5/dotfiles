@@ -58,7 +58,7 @@ require "lazy".setup {
     "jiaoshijie/undotree",
     dependencies = "nvim-lua/plenary.nvim",
     config = true,
-    keys = {     -- load the plugin only when using it's keybinding:
+    keys = {
       { "<leader>u", "<cmd>lua require('undotree').toggle()<cr>" },
     },
   },
@@ -74,7 +74,7 @@ require "lazy".setup {
     config = function()
       if vim.g.vscode_style == nil then
         vim.g.vscode_style = "dark"
-        vim.cmd [[colorscheme vscode]]
+        vim.cmd.colorscheme('vscode')
       end
     end
   },
@@ -98,107 +98,77 @@ require "lazy".setup {
   },
 
   {
-    "hrsh7th/nvim-cmp",
-    config = function()
-      local cmp = require 'cmp'
-      local function complete(direction)
-        local key
-        if direction == 1 then
-          key = 'select_next_item'
-        else
-          key = 'select_prev_item'
-        end
-        return function(fallback)
-          if cmp.visible() then
-            cmp.mapping[key]()()
-            return
-          end
-          local col = vim.fn.col '.' - 1
-          local not_needed = col == 0 or vim.fn.getline('.'):sub(col, col):match '%s' ~= nil
-          if not_needed then
-            fallback()
-            return
-          end
-          cmp.mapping.complete()
-        end
-      end
-      local kinds = {
-        Text = '',
-        Method = '',
-        Function = '',
-        Constructor = '',
-        Field = '',
-        Variable = '',
-        Class = '',
-        Interface = '',
-        Module = '',
-        Property = '',
-        Unit = '',
-        Value = '',
-        Enum = '',
-        Keyword = '',
-        Snippet = '',
-        Color = '',
-        File = '',
-        Reference = '',
-        Folder = '',
-        EnumMember = '',
-        Constant = '',
-        Struct = '',
-        Event = '',
-        Operator = '',
-        TypeParameter = '',
-      }
-      cmp.setup {
-        formatting = {
-          format = function(_, vim_item)
-            vim_item.kind = kinds[vim_item.kind] or vim_item.kind
-            return vim_item
-          end,
+    "saghen/blink.cmp",
+    version = '1.*',
+    opts = {
+      keymap = {
+        preset = 'default',
+        ['<tab>'] = { 'select_next', 'fallback' },
+        ['<s-tab>'] = { 'snippet_forward', 'select_prev', 'fallback' },
+        ['<c-s-tab>'] = { 'snippet_backward', 'fallback' },
+        ['<cr>'] = { 'accept', 'fallback' },
+      },
+      completion = {
+        list = {
+          selection = { preselect = false },
         },
-        mapping = {
-          ['<CR>'] = cmp.mapping.confirm({
-            behavior = cmp.ConfirmBehavior.Insert,
-            select = false,
-          }),
-          ['<Tab>'] = complete(1),
-          ['<S-Tab>'] = complete(-1),
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 500,
         },
-        window = {
-          completion = {
-            winhighlight = 'Normal:MoreMsg',
+      },
+      cmdline = {
+        completion = {
+          list = {
+            selection = { preselect = false }
           },
-          documentation = {
-            winhighlight = 'Normal:MoreMsg',
+          menu = {
+            auto_show = true,
           },
         },
-        preselect = cmp.PreselectMode.None,
-        sources = { -- You should specify your *installed* sources.
-          { name = 'nvim_lsp' },
-          { name = 'buffer' },
+      },
+      sources = {
+        providers = {
+          buffer = {
+            opts = {
+              get_bufnrs = function()
+                return vim.tbl_filter(function(bufnr)
+                  return vim.bo[bufnr].buftype == ''
+                end, vim.api.nvim_list_bufs())
+              end,
+            },
+          },
         },
-      }
-      cmp.setup.cmdline({ '/', '?' }, {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = {
-          { name = 'buffer' }
-        }
-      })
-      cmp.setup.cmdline(':', {
-        mapping = cmp.mapping.preset.cmdline(),
-        sources = cmp.config.sources({
-          { name = 'path' }
-        }, {
-          { name = 'cmdline' }
-        }),
-        matching = { disallow_symbol_nonprefix_matching = false }
-      })
-    end,
-    dependencies = {
-      "hrsh7th/cmp-buffer",
-      "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-path",
-      "hrsh7th/cmp-cmdline",
+      },
+      appearance = {
+        kind_icons = {
+          Text = '',
+          Method = '',
+          Function = '',
+          Constructor = '',
+          Field = '',
+          Variable = '',
+          Class = '',
+          Interface = '',
+          Module = '',
+          Property = '',
+          Unit = '',
+          Value = '',
+          Enum = '',
+          Keyword = '',
+          Snippet = '',
+          Color = '',
+          File = '',
+          Reference = '',
+          Folder = '',
+          EnumMember = '',
+          Constant = '',
+          Struct = '',
+          Event = '',
+          Operator = '',
+          TypeParameter = '',
+        },
+      },
     },
   },
 

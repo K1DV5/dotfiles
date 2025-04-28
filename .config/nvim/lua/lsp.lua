@@ -1,8 +1,5 @@
 -- custom lsp config
 
-local illuminate = require 'illuminate'
-local cmp_nvim_lsp = require('cmp_nvim_lsp')
-
 ------------------ DIAGNOSTICS ----------------------
 
 local diagnostic_config = {
@@ -88,6 +85,7 @@ local function on_attach(client, bufnr)
     end
   end, { buffer = bufnr })
 
+  local illuminate = require 'illuminate'
   illuminate.on_attach(client)
   vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, { buffer = bufnr })
   vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, { buffer = bufnr })
@@ -253,7 +251,7 @@ function M.setup()
   -- enable inlay hints
   vim.lsp.inlay_hint.enable()
   -- common config
-  local capabilities = cmp_nvim_lsp.default_capabilities()
+  local capabilities = require('blink.cmp').get_lsp_capabilities()
   local default_opts = {
     capabilities = capabilities,
     on_attach = on_attach,

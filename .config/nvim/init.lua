@@ -159,6 +159,8 @@ vim.keymap.set({'n', 'v'}, '<leader>c', '"+')
 -- override some colors
 vim.cmd [[
   hi! link Folded Boolean
+  hi! link Pmenu MoreMsg
+  hi! link NormalFloat MoreMsg
   hi! default link Title Boolean
   hi! DiagnosticSignInfo guifg=Green
   hi! DiagnosticSignHint guifg=Cyan
