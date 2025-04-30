@@ -91,6 +91,9 @@ local fname_len_limit = 24
 local low_wid_inactive = 15
 
 local function diagnostic_counts()
+  if vim.api.nvim_get_mode().mode ~= 'n' then
+    return ''
+  end
   local diag_status = ''
   local counts = vim.diagnostic.count(0)
   for _, sev in ipairs(diag_hls) do

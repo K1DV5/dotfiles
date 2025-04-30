@@ -28,13 +28,24 @@ require "lazy".setup {
   {
     "supermaven-inc/supermaven-nvim",
     config = {
-      keymaps = {
-        accept_suggestion = "<C-J>",
-        accept_word = "<C-]>",
-        clear_suggestion = "<C-X>",
-      }
+      disable_keymaps = true,
     },
-    lazy = true,
+    keys = {
+      { "<c-j>", function ()
+        local suggestion = require('supermaven-nvim.completion_preview')
+        if suggestion.has_suggestion() then
+          suggestion.on_accept_suggestion()
+        else
+          require("supermaven-nvim.api").toggle()
+        end
+      end, mode = 'i'},
+      { "<c-s-j", function ()
+        local suggestion = require('supermaven-nvim.completion_preview')
+        if suggestion.has_suggestion() then
+          suggestion.on_accept_word()
+        end
+      end, mode = 'i'}
+    },
   },
 
   {

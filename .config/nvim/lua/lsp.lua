@@ -11,7 +11,6 @@ local diagnostic_config = {
       [vim.diagnostic.severity.HINT] = '',
     },
   },
-  update_in_insert = false,
   float = {
     scope = 'line',
     source = 'if_many',
@@ -77,7 +76,8 @@ local function on_attach(client, bufnr)
   vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
   vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = bufnr })
   vim.keymap.set('n', '<leader>d', function ()
-    local count = vim.diagnostic.count(0, {lnum = vim.fn.line('.')})
+    local line = vim.api.nvim_win_get_cursor(0)[1]
+    local count = vim.diagnostic.count(0, {lnum = line - 1})
     if #count > 0 then
       vim.diagnostic.open_float()
     else
