@@ -89,6 +89,7 @@ end
 
 require 'packages'
 
+require'filepick'.setup()
 require'lsp'.setup()
 require'tabs'.setup()
 local term = require'term'

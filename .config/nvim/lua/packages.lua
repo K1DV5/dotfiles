@@ -39,7 +39,7 @@ require "lazy".setup {
           require("supermaven-nvim.api").toggle()
         end
       end, mode = 'i'},
-      { "<c-s-j", function ()
+      { "<c-J", function ()
         local suggestion = require('supermaven-nvim.completion_preview')
         if suggestion.has_suggestion() then
           suggestion.on_accept_word()
@@ -125,31 +125,21 @@ require "lazy".setup {
         },
         documentation = {
           auto_show = true,
-          auto_show_delay_ms = 500,
+          auto_show_delay_ms = 0,
         },
       },
       cmdline = {
         completion = {
-          list = {
-            selection = { preselect = false }
-          },
           menu = {
-            auto_show = true,
+            auto_show = require'filepick'.blink_check_assist,
+          },
+          list = {
+            selection = { preselect = require'filepick'.blink_check_assist }
           },
         },
-      },
-      sources = {
-        providers = {
-          buffer = {
-            opts = {
-              get_bufnrs = function()
-                return vim.tbl_filter(function(bufnr)
-                  return vim.bo[bufnr].buftype == ''
-                end, vim.api.nvim_list_bufs())
-              end,
-            },
-          },
-        },
+        keymap = {
+          ['<cr>'] = { 'accept_and_enter', 'fallback' },
+        }
       },
       appearance = {
         kind_icons = {
@@ -201,39 +191,6 @@ require "lazy".setup {
       })
       vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
-  },
-
-  {
-    "nvim-telescope/telescope.nvim",
-    config = function()
-      local telescope = require 'telescope'
-      telescope.setup {
-        defaults = {
-          mappings = {
-            i = { ["<esc>"] = require("telescope.actions").close },
-          },
-          preview = false,
-        },
-        pickers = {
-          find_files = {
-            find_command = { 'rg', '--files', '--hidden', '-g', '!.git' },
-          },
-        },
-        extensions = {
-          file_browser = {
-            hijack_netrw = true,
-          },
-        },
-      }
-      telescope.load_extension"file_browser"
-    end,
-    keys = {
-      { '-', '<cmd>Telescope find_files<cr>' },
-      { '<leader>f', '<cmd>Telescope file_browser<cr>' },
-    },
-    dependencies = {
-      "nvim-telescope/telescope-file-browser.nvim",
-    }
   },
 
   {
