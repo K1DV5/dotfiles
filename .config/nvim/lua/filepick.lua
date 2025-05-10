@@ -18,8 +18,10 @@ local function cmd_handler(opts)
   end
 end
 
+local assist_cmds = {FilePick = true}
+
 function M.blink_check_assist(ctx)
-  return ctx.line:sub(1, 9) == 'FilePick '
+  return assist_cmds[ctx.line:split(" ")[1]] or false
 end
 
 function M.setup()
