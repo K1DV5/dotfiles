@@ -62,34 +62,32 @@ local function format_range_operator()
 end
 
 -- setup func
-local function on_attach(client, bufnr)
-  -- Mappings
-  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = bufnr })
-  vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = bufnr })
-  vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = bufnr })
-  vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = bufnr })
-  vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = bufnr })
-  vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = bufnr })
-  vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = bufnr })
-  vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = bufnr })
-  vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = bufnr })
-  vim.keymap.set('n', 'gq', format_range_operator, { buffer = bufnr })
-  vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = bufnr })
-  vim.keymap.set('n', '<leader>d', function ()
-    local line = vim.api.nvim_win_get_cursor(0)[1]
-    local count = vim.diagnostic.count(0, {lnum = line - 1})
-    if #count > 0 then
-      vim.diagnostic.open_float()
-    else
-      vim.diagnostic.jump{count = 1, float = true}
-    end
-  end, { buffer = bufnr })
-
-  local illuminate = require 'illuminate'
-  illuminate.on_attach(client)
-  vim.keymap.set('n', '<a-n>', function() illuminate.next_reference { wrap = true } end, { buffer = bufnr })
-  vim.keymap.set('n', '<a-p>', function() illuminate.next_reference { reverse = true, wrap = true } end, { buffer = bufnr })
-end
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('my-lsp', {}),
+  callback = function (args)
+    -- Mappings
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = args.buf })
+    vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = args.buf })
+    vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = args.buf })
+    vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = args.buf })
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = args.buf })
+    vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = args.buf })
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = args.buf })
+    vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = args.buf })
+    vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = args.buf })
+    vim.keymap.set('n', 'gq', format_range_operator, { buffer = args.buf })
+    vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = args.buf })
+    vim.keymap.set('n', '<leader>d', function ()
+      local line = vim.api.nvim_win_get_cursor(0)[1]
+      local count = vim.diagnostic.count(args.buf, {lnum = line - 1})
+      if #count > 0 then
+        vim.diagnostic.open_float()
+      else
+        vim.diagnostic.jump{count = 1, float = true}
+      end
+    end, { buffer = args.buf })
+  end
+})
 
 -- setup language servers
 local servers = {
@@ -251,19 +249,17 @@ function M.setup()
   -- enable inlay hints
   vim.lsp.inlay_hint.enable()
   -- common config
-  local capabilities = require('blink.cmp').get_lsp_capabilities()
-  local default_opts = {
-    capabilities = capabilities,
-    on_attach = on_attach,
+  vim.lsp.config['*'] = {
     flags = {
-      debounce_text_changes = 150
+      debounce_text_changes = 150,
+      exit_timeout = 500,
     }
   }
   -- setup servers
   local names = {}
   for name, opts in pairs(servers) do
     if vim.fn.executable(opts.cmd[1]) == 1 then
-      vim.lsp.config[name] = vim.tbl_extend('keep', opts, default_opts)
+      vim.lsp.config[name] = opts
       table.insert(names, name)
     end
   end

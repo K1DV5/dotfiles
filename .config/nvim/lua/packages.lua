@@ -18,7 +18,21 @@ require "lazy".setup {
 
   { "williamboman/mason.nvim", config = true },
 
-  { "RRethy/vim-illuminate",   lazy = false },
+  {
+    "RRethy/vim-illuminate",
+    config = function ()
+      local illuminate = require 'illuminate'
+      illuminate.configure({
+        disable_keymaps = true,
+      })
+      vim.api.nvim_create_autocmd('LspAttach', {
+        group = vim.api.nvim_create_augroup('illuminate-lsp', {}),
+        callback = function (args)
+          illuminate.on_attach(vim.lsp.get_client_by_id(args.id))
+        end
+      })
+    end
+  },
 
   {
     "windwp/nvim-autopairs",
@@ -40,11 +54,8 @@ require "lazy".setup {
         end
       end, mode = 'i'},
       { "<c-J", function ()
-        local suggestion = require('supermaven-nvim.completion_preview')
-        if suggestion.has_suggestion() then
-          suggestion.on_accept_word()
-        end
-      end, mode = 'i'}
+         require('supermaven-nvim.completion_preview').on_accept_word()
+      end, mode = 'i'},
     },
   },
 
@@ -111,66 +122,73 @@ require "lazy".setup {
   {
     "saghen/blink.cmp",
     version = '1.*',
-    opts = {
-      keymap = {
-        preset = 'default',
-        ['<tab>'] = { 'select_next', 'fallback' },
-        ['<s-tab>'] = { 'snippet_forward', 'select_prev', 'fallback' },
-        ['<c-s-tab>'] = { 'snippet_backward', 'fallback' },
-        ['<cr>'] = { 'accept', 'fallback' },
-      },
-      completion = {
-        list = {
-          selection = { preselect = false },
-        },
-        documentation = {
-          auto_show = true,
-          auto_show_delay_ms = 0,
-        },
-      },
-      cmdline = {
-        completion = {
-          menu = {
-            auto_show = require'filepick'.blink_check_assist,
-          },
-          list = {
-            selection = { preselect = require'filepick'.blink_check_assist }
-          },
-        },
+    config = function()
+      local blink = require('blink.cmp')
+      blink.setup({
         keymap = {
-          ['<cr>'] = { 'accept_and_enter', 'fallback' },
-        }
-      },
-      appearance = {
-        kind_icons = {
-          Text = '',
-          Method = '',
-          Function = '',
-          Constructor = '',
-          Field = '',
-          Variable = '',
-          Class = '',
-          Interface = '',
-          Module = '',
-          Property = '',
-          Unit = '',
-          Value = '',
-          Enum = '',
-          Keyword = '',
-          Snippet = '',
-          Color = '',
-          File = '',
-          Reference = '',
-          Folder = '',
-          EnumMember = '',
-          Constant = '',
-          Struct = '',
-          Event = '',
-          Operator = '',
-          TypeParameter = '',
+          preset = 'default',
+          ['<tab>'] = { 'select_next', 'fallback' },
+          ['<s-tab>'] = { 'snippet_forward', 'select_prev', 'fallback' },
+          ['<c-s-tab>'] = { 'snippet_backward', 'fallback' },
+          ['<cr>'] = { 'accept', 'fallback' },
         },
-      },
-    },
+        completion = {
+          list = {
+            selection = { preselect = false },
+          },
+          documentation = {
+            auto_show = true,
+            auto_show_delay_ms = 0,
+          },
+        },
+        cmdline = {
+          completion = {
+            menu = {
+              auto_show = require 'filepick'.blink_check_assist,
+            },
+            list = {
+              selection = { preselect = require 'filepick'.blink_check_assist }
+            },
+          },
+          keymap = {
+            ['<cr>'] = { 'accept_and_enter', 'fallback' },
+          }
+        },
+        appearance = {
+          kind_icons = {
+            Text = '',
+            Method = '',
+            Function = '',
+            Constructor = '',
+            Field = '',
+            Variable = '',
+            Class = '',
+            Interface = '',
+            Module = '',
+            Property = '',
+            Unit = '',
+            Value = '',
+            Enum = '',
+            Keyword = '',
+            Snippet = '',
+            Color = '',
+            File = '',
+            Reference = '',
+            Folder = '',
+            EnumMember = '',
+            Constant = '',
+            Struct = '',
+            Event = '',
+            Operator = '',
+            TypeParameter = '',
+          },
+        },
+      })
+      -- setup lsp capabilities
+      vim.lsp.config['*'] = {
+        capabilities = blink.get_lsp_capabilities(),
+      }
+    end,
   },
 
   {
