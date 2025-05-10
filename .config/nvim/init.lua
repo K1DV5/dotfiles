@@ -142,6 +142,9 @@ vim.keymap.set('n', '<Down>', 'g<Down>')
 vim.keymap.set('n', '<bs>', '<c-o>')
 vim.keymap.set('n', '<s-bs>', '<c-i>')
 vim.keymap.set('n', '<c-bs>', '<c-i>')
+-- scroll through quickfix
+vim.keymap.set('n', '<a-n>', '<cmd>cn<cr>')
+vim.keymap.set('n', '<a-p>', '<cmd>cp<cr>')
 -- go normal
 vim.keymap.set({ 'c', 'v', 'i', 'o' }, 'kj', '<esc>')
 vim.keymap.set('t', 'kj', '<C-\\><C-n>')
