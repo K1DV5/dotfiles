@@ -125,9 +125,9 @@ vim.keymap.set("n", "<c-p>", function ()
 end)
 
 -- scroll by page
-vim.keymap.set('n', '<space>', '<c-f>')
-vim.keymap.set('n', '<c-space>', '<c-b>')
-vim.keymap.set('n', '<s-space>', '<c-b>')
+vim.keymap.set({'n', 'v'}, '<space>', '<c-f>M')
+vim.keymap.set({'n', 'v'}, '<c-space>', '<c-b>M')
+vim.keymap.set({'n', 'v'}, '<s-space>', '<c-b>M')
 -- copy till the end of line
 vim.keymap.set('n', 'Y', 'y$')
 -- also for wrapped lines
@@ -143,8 +143,8 @@ vim.keymap.set('n', '<bs>', '<c-o>')
 vim.keymap.set('n', '<s-bs>', '<c-i>')
 vim.keymap.set('n', '<c-bs>', '<c-i>')
 -- scroll through quickfix
-vim.keymap.set('n', '<a-n>', '<cmd>cn<cr>')
-vim.keymap.set('n', '<a-p>', '<cmd>cp<cr>')
+vim.keymap.set('n', '<a-j>', '<cmd>cn<cr>')
+vim.keymap.set('n', '<a-k>', '<cmd>cp<cr>')
 -- go normal
 vim.keymap.set({ 'c', 'v', 'i', 'o' }, 'kj', '<esc>')
 vim.keymap.set('t', 'kj', '<C-\\><C-n>')
@@ -165,6 +165,7 @@ vim.cmd [[
   hi! link Folded Boolean
   hi! link Pmenu MoreMsg
   hi! link NormalFloat MoreMsg
+  hi! link QuickFixLine IncSearch
   hi! default link Title Boolean
   hi! DiagnosticSignInfo guifg=Green
   hi! DiagnosticSignHint guifg=Cyan

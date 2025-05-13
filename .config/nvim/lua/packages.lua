@@ -16,19 +16,19 @@ require "lazy".setup {
 
   "kyazdani42/nvim-web-devicons",   -- pretty icons
 
-  { "williamboman/mason.nvim", config = true },
+  { "mason-org/mason.nvim", config = true },
 
   {
     "RRethy/vim-illuminate",
     config = function ()
       local illuminate = require 'illuminate'
-      illuminate.configure({
-        disable_keymaps = true,
-      })
+      -- illuminate.configure({
+      --   disable_keymaps = true,
+      -- })
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('illuminate-lsp', {}),
         callback = function (args)
-          illuminate.on_attach(vim.lsp.get_client_by_id(args.id))
+          illuminate.on_attach(vim.lsp.get_client_by_id(args.data.client_id))
         end
       })
     end

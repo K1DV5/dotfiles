@@ -86,6 +86,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.diagnostic.jump{count = 1, float = true}
       end
     end, { buffer = args.buf })
+    vim.keymap.set('n', '<leader>D', vim.diagnostic.setqflist, { buffer = args.buf })
   end
 })
 
@@ -126,7 +127,7 @@ local servers = {
   },
   html = {
     cmd = { 'vscode-html-language-server', '--stdio' },
-    filetypes = { 'html', 'templ' },
+    filetypes = { 'html', 'templ', 'gotmpl' },
     root_markers = { 'package.json', '.git' },
     single_file_support = true,
     settings = {},
