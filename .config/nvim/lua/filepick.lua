@@ -2,17 +2,13 @@ local M = {}
 
 local cmd = "git ls-files -c -o --exclude-standard"
 
-local function trim(str)
-  return string.gsub(str, "^%s*(.-)%s*$", "%1")
-end
-
 local function get_file_completion(arg_lead, cmdline, cur_pos)
-  local cmdout = trim(io.popen(cmd):read("*a"))
-  return cmdout:split("\n")
+  local cmdout = vim.trim(io.popen(cmd):read("*a"))
+  return vim.split(cmdout, "\n")
 end
 
 local function cmd_handler(opts)
-  local arg = trim(opts.args)
+  local arg = vim.trim(opts.args)
   if arg ~= "" then
     vim.cmd.edit({args = {arg}})
   end
@@ -21,7 +17,7 @@ end
 local assist_cmds = {FilePick = true}
 
 function M.blink_check_assist(ctx)
-  return assist_cmds[ctx.line:split(" ")[1]] or false
+  return assist_cmds[vim.split(ctx.line, " ")[1]] or false
 end
 
 function M.setup()
