@@ -36,6 +36,7 @@ require "lazy".setup {
 
   {
     "windwp/nvim-autopairs",
+    event = 'InsertEnter',
     config = { check_ts = true }
   },
 
@@ -70,10 +71,9 @@ require "lazy".setup {
   },
 
   {
-    "ur4ltz/surround.nvim",
-    config = {
-      mappings_style = "surround"
-    }
+    "kylechui/nvim-surround",
+    event = 'VeryLazy',
+    config = true,
   },
 
   {
@@ -86,15 +86,10 @@ require "lazy".setup {
   },
 
   {
-    "numToStr/Comment.nvim",
-    config = { ignore = '^$' },
-    lazy = false
-  },
-
-  {
     "Mofiqul/vscode.nvim",
     config = function()
       if vim.g.vscode_style == nil then
+
         vim.g.vscode_style = "dark"
         vim.cmd.colorscheme('vscode')
       end
@@ -214,14 +209,12 @@ require "lazy".setup {
   {
     "NeogitOrg/neogit",
     dependencies = {
-      "nvim-lua/plenary.nvim",        -- required
-      "sindrets/diffview.nvim",       -- optional - Diff integration
+      "nvim-lua/plenary.nvim", -- required
     },
     config = {
       graph_style = "unicode",
-      file_watcher = {
-        enabled = false,
-      },
+      process_spinner = true,
+      disable_hint = true,
       kind = "auto",
       commit_editor = {
         show_staged_diff = false,
