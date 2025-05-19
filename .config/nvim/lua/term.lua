@@ -161,7 +161,7 @@ function M.setup()
       opts.fargs = { '' }
     end
     M.open(unpack(opts.fargs))
-  end, { complete = 'shellcmd', nargs = '*' })
+  end, { complete = 'dir', nargs = '*' })
 
   local augroup = vim.api.nvim_create_augroup("term", {})
   vim.api.nvim_create_autocmd("TermOpen", {
