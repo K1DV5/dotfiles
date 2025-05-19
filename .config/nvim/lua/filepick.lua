@@ -1,10 +1,14 @@
 local M = {}
 
 local cmd = "git ls-files -c -o --exclude-standard"
+local cmd_non_git = "find . -type f"
 
 local function get_file_completion(arg_lead, cmdline, cur_pos)
-  local cmdout = vim.trim(io.popen(cmd):read("*a"))
-  return vim.split(cmdout, "\n")
+  local cmdout = io.popen(cmd):read("*a")
+  if cmdout == "" then
+    cmdout = io.popen(cmd_non_git):read("*a")
+  end
+  return vim.split(vim.trim(cmdout), "\n")
 end
 
 local function cmd_handler(opts)
