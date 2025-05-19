@@ -86,7 +86,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.diagnostic.jump{count = 1, float = true}
       end
     end, { buffer = args.buf })
-    vim.keymap.set('n', '<leader>D', vim.diagnostic.setqflist, { buffer = args.buf })
+    vim.keymap.set('n', '<leader>D', function ()
+      local clients = vim.lsp.get_clients({bufnr = 0})
+      for _, client in ipairs(clients) do
+        local ns = vim.lsp.diagnostic.get_namespace(client.id)
+        vim.diagnostic.setqflist({namespace = ns, title = client.name})
+      end
+    end, { buffer = args.buf })
   end
 })
 
