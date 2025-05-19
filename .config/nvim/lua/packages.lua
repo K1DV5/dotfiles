@@ -14,7 +14,7 @@ vim.opt.rtp:prepend(lazypath)
 
 require "lazy".setup {
 
-  "kyazdani42/nvim-web-devicons",   -- pretty icons
+  "nvim-tree/nvim-web-devicons",   -- pretty icons
 
   { "mason-org/mason.nvim", config = true },
 
@@ -127,6 +127,9 @@ require "lazy".setup {
           ['<c-s-tab>'] = { 'snippet_backward', 'fallback' },
           ['<cr>'] = { 'accept', 'fallback' },
         },
+        fuzzy = {
+          max_typos = function() return 0 end,
+        },
         completion = {
           list = {
             selection = { preselect = false },
@@ -148,35 +151,6 @@ require "lazy".setup {
           keymap = {
             ['<cr>'] = { 'accept_and_enter', 'fallback' },
           }
-        },
-        appearance = {
-          kind_icons = {
-            Text = '',
-            Method = '',
-            Function = '',
-            Constructor = '',
-            Field = '',
-            Variable = '',
-            Class = '',
-            Interface = '',
-            Module = '',
-            Property = '',
-            Unit = '',
-            Value = '',
-            Enum = '',
-            Keyword = '',
-            Snippet = '',
-            Color = '',
-            File = '',
-            Reference = '',
-            Folder = '',
-            EnumMember = '',
-            Constant = '',
-            Struct = '',
-            Event = '',
-            Operator = '',
-            TypeParameter = '',
-          },
         },
       })
       -- setup lsp capabilities
