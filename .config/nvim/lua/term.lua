@@ -169,9 +169,9 @@ function M.setup()
     command = "setlocal nonumber norelativenumber nowrap",
   })
   -- open/close terminal pane
-  vim.keymap.set('n', '<leader>t', M.open)
+  vim.keymap.set('n', 't', M.open)
   -- open big terminal window / maximize
-  vim.keymap.set('n', '<leader>T', function() M.open(1) end)
+  vim.keymap.set('n', 'T', function() M.open(1) end)
 end
 
 return M
