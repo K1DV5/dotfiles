@@ -3,4 +3,4 @@
 	email = kidusadugna@gmail.com
 
 [fetch]
-    prune = true
+  prune = true

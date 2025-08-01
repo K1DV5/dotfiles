@@ -1,1 +1,8 @@
-misc/open-nvim.ico
+*
+!.bashrc
+!.config/lazygit/config.yml
+!.config/nvim/**/*.lua
+!.config/nvim/lazy-lock.json
+!.gitconfig
+!.gitignore
+!.inputrc
