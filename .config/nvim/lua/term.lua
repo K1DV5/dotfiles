@@ -112,7 +112,7 @@ function M.open(opts)
   local opts = opts or {}
   local term_height = opts.height or default_height
   local cmd = opts.cmd
-  if opts.cmd == nil then
+  if cmd == nil or cmd == '' then
     if toggle(term_height) then
       return
     end
@@ -123,12 +123,6 @@ function M.open(opts)
     -- not in a terminal buffer and no terminal window to go to.
     -- prepare split window
     vim.api.nvim_command('belowright ' .. get_height(term_height) .. ' split')
-    if cmd == 1 then
-      local h = get_height(term_height)
-      if vim.api.nvim_win_get_height(0) < h then       -- maximize
-        vim.api.nvim_command('resize ' .. h)
-      end
-    end
   end
   -- terminal buffer numbers like [1, 56, 78]
   local tbuflist = get_terminals()
