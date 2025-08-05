@@ -107,15 +107,16 @@ local function clear_existing(tbuflist, cmd, dir)
   end
 end
 
-function M.open(opts)
-  -- cmd - string | number - the cmd name or the desired win height
+function M.open(opts) -- cmd, height, dir
   local opts = opts or {}
   local term_height = opts.height or default_height
   local cmd = opts.cmd
-  if cmd == nil or cmd == '' then
+  if cmd == nil then
     if toggle(term_height) then
       return
     end
+    cmd = default_shell
+  elseif cmd == '' then
     cmd = default_shell
   end
   -- NEW TERMINAL
