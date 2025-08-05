@@ -115,12 +115,17 @@ vim.keymap.set("n", "<c-p>", function ()
     if string.sub(first_line, i_start_cmd, i_start_cmd) == ' ' then
         i_start_cmd = i_start_cmd + 1     -- without the preceding space
     end
+    local height = nil
+    if string.sub(first_line, i_start_cmd, i_start_cmd) == '$' then
+        height = 1 -- big terminal
+        i_start_cmd = i_start_cmd + 1     -- without the preceding $
+    end
     local cmd = string.sub(first_line, i_start_cmd)
     cmd = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
     cmd = string.gsub(cmd, '%%f', vim.fn.expand('%:p'))
     cmd = string.gsub(cmd, '%%n', vim.fn.expand('%:t:r'))
     local dir = vim.fn.expand('%:h')
-    term.open(cmd, dir)
+    term.open({cmd = cmd, dir = dir, height = height})
     vim.cmd [[norm i]]
 end)
 

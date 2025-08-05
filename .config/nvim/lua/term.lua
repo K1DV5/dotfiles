@@ -107,16 +107,15 @@ local function clear_existing(tbuflist, cmd, dir)
   end
 end
 
-function M.open(cmd, dir)
+function M.open(opts)
   -- cmd - string | number - the cmd name or the desired win height
-  local term_height = default_height
-  if type(cmd) == 'number' or cmd == nil then
-    if toggle(cmd) then
+  local opts = opts or {}
+  local term_height = opts.height or default_height
+  local cmd = opts.cmd
+  if opts.cmd == nil then
+    if toggle(term_height) then
       return
     end
-    term_height = cmd or term_height
-    cmd = default_shell
-  elseif cmd == '' then
     cmd = default_shell
   end
   -- NEW TERMINAL
@@ -134,6 +133,7 @@ function M.open(cmd, dir)
   -- terminal buffer numbers like [1, 56, 78]
   local tbuflist = get_terminals()
   -- same command terminal buffers
+  local dir = opts and opts.dir
   if not dir then
     dir = vim.fn.fnamemodify('.', ':p')
   end
@@ -160,7 +160,11 @@ function M.setup()
     if vim.tbl_count(opts.fargs) == 0 then
       opts.fargs = { '' }
     end
-    M.open(unpack(opts.fargs))
+    M.open({
+      cmd = opts.fargs[1],
+      dir = opts.fargs[2],
+      height = opts.fargs[3] and tonumber(opts.fargs[3]),
+    })
   end, { complete = 'dir', nargs = '*' })
 
   local augroup = vim.api.nvim_create_augroup("term", {})
@@ -171,7 +175,7 @@ function M.setup()
   -- open/close terminal pane
   vim.keymap.set('n', 't', M.open)
   -- open big terminal window / maximize
-  vim.keymap.set('n', 'T', function() M.open(1) end)
+  vim.keymap.set('n', 'T', function() M.open({height = 1}) end)
 end
 
 return M
