@@ -203,6 +203,11 @@ local servers = {
     root_markers = { '.git' },
     single_file_support = true,
   },
+  svelte = {
+    cmd = { 'svelteserver', '--stdio' },
+    filetypes = { 'svelte' },
+    root_markers = { 'package.json', '.git' },
+  },
   gopls = {
     cmd = { 'gopls' },
     filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
