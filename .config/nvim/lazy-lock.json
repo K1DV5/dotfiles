@@ -3,7 +3,6 @@
   "blink.cmp": { "branch": "main", "commit": "022521a8910a5543b0251b21c9e1a1e989745796" },
   "lazy.nvim": { "branch": "main", "commit": "6c3bda4aca61a13a9c63f1c1d1b16b9d3be90d7a" },
   "mason.nvim": { "branch": "main", "commit": "1aceba8bc158b5aaf90649077cad06744bc23ac4" },
-  "neogit": { "branch": "master", "commit": "337447c4b0467a0904795b50ce44f715de760a5d" },
   "nvim-autopairs": { "branch": "master", "commit": "4d74e75913832866aa7de35e4202463ddf6efd1b" },
   "nvim-surround": { "branch": "main", "commit": "0e62500b98f4513feaaf7425c135472457ea5b7d" },
   "nvim-treesitter": { "branch": "master", "commit": "066fd6505377e3fd4aa219e61ce94c2b8bdb0b79" },
@@ -12,6 +11,7 @@
   "plenary.nvim": { "branch": "master", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
   "supermaven-nvim": { "branch": "main", "commit": "07d20fce48a5629686aefb0a7cd4b25e33947d50" },
   "undotree": { "branch": "main", "commit": "eab459ab87dd249617b5f7187bb69e614a083047" },
+  "vim-fugitive": { "branch": "master", "commit": "61b51c09b7c9ce04e821f6cf76ea4f6f903e3cf4" },
   "vim-illuminate": { "branch": "master", "commit": "fbc16dee336d8cc0d3d2382ea4a53f4a29725abf" },
   "vscode.nvim": { "branch": "main", "commit": "57cec1509bfb57dfc3c4d5ba5e8db9a5b5e42be2" }
 }

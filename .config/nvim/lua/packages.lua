@@ -16,6 +16,30 @@ require "lazy".setup {
 
   "nvim-tree/nvim-web-devicons",   -- pretty icons
 
+  {
+    "tpope/vim-fugitive",
+    keys = {
+      {
+        '<leader>g',
+        function()
+          -- show git status
+          local ft = vim.api.nvim_get_option_value('filetype', { buf = 0 })
+          if ft == 'fugitive' or ft == 'gitcommit' then
+            -- already showing git, close/hide
+            vim.api.nvim_buf_delete(0, { force = false })
+          elseif vim.api.nvim_get_option_value('modifiable', { buf = 0 }) == true then
+            -- new
+            local dir = vim.fn.expand('%:h')
+            vim.cmd'vertical Git'
+            vim.keymap.set('n', '<tab>', '=', { buffer = 0, remap = true })
+          else
+            print('Must be on a file')
+          end
+        end
+      }
+    }
+  },
+
   { "mason-org/mason.nvim", config = true },
 
   {
@@ -178,43 +202,6 @@ require "lazy".setup {
       })
       vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
-  },
-
-  {
-    "NeogitOrg/neogit",
-    dependencies = {
-      "nvim-lua/plenary.nvim", -- required
-    },
-    config = {
-      graph_style = "unicode",
-      process_spinner = true,
-      disable_hint = true,
-      kind = "auto",
-      commit_editor = {
-        show_staged_diff = false,
-        kind = "split"
-      }
-    },
-    keys = {
-      {
-        '<leader>g',
-        function()
-          -- show git status
-          local ng = require 'neogit'
-          local ft = vim.api.nvim_get_option_value('filetype', { buf = 0 })
-          if ft == 'NeogitStatus' or ft == 'NeogitConsole' then
-            -- already showing git, close/hide
-            vim.api.nvim_buf_delete(0, { force = false })
-          elseif vim.api.nvim_get_option_value('modifiable', { buf = 0 }) == true then
-            -- new
-            local dir = vim.fn.expand('%:h')
-            ng.open({ cwd = dir })
-          else
-            print('Must be on a file')
-          end
-        end
-      }
-    }
   },
 
 }
