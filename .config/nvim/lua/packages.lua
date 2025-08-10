@@ -32,6 +32,8 @@ require "lazy".setup {
             local dir = vim.fn.expand('%:h')
             vim.cmd'vertical Git'
             vim.keymap.set('n', '<tab>', '=', { buffer = 0, remap = true })
+            vim.keymap.set('n', 'P', '<cmd>Git push<cr>', { buffer = 0 })
+            vim.keymap.set('n', 'p', '<cmd>Git pull<cr>', { buffer = 0 })
           else
             print('Must be on a file')
           end
