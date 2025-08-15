@@ -18,22 +18,26 @@ require "lazy".setup {
 
   {
     "tpope/vim-fugitive",
+    config = function ()
+      vim.api.nvim_create_autocmd('FileType', {
+        group = 'fugitive',
+        pattern = 'fugitive',
+        callback = function()
+          vim.keymap.set('n', '<tab>', '=', { buffer = 0, remap = true })
+          vim.keymap.set('n', 'P', '<cmd>G push<cr>', { buffer = 0 })
+          vim.keymap.set('n', 'p', '<cmd>G pull<cr>', { buffer = 0 })
+        end
+      })
+    end,
     keys = {
       {
         '<leader>g',
         function()
-          -- show git status
           local ft = vim.api.nvim_get_option_value('filetype', { buf = 0 })
           if ft == 'fugitive' or ft == 'gitcommit' then
-            -- already showing git, close/hide
             vim.api.nvim_buf_delete(0, { force = false })
           elseif vim.api.nvim_get_option_value('modifiable', { buf = 0 }) == true then
-            -- new
-            local dir = vim.fn.expand('%:h')
             vim.cmd'vertical Git'
-            vim.keymap.set('n', '<tab>', '=', { buffer = 0, remap = true })
-            vim.keymap.set('n', 'P', '<cmd>Git push<cr>', { buffer = 0 })
-            vim.keymap.set('n', 'p', '<cmd>Git pull<cr>', { buffer = 0 })
           else
             print('Must be on a file')
           end
