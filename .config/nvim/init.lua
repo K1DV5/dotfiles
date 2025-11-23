@@ -107,7 +107,10 @@ vim.keymap.set("n", "<c-p>", function ()
     if first_line == '' then
         return
     end
-    local i_start_cmd = string.find(first_line, ' $', 1, true)
+    local prefix, suffix = vim.bo.commentstring:match("^(.*)%%s(.*)$")
+    local body_start = #prefix
+    local body_end = #first_line - #suffix
+    local i_start_cmd = string.find(first_line, ' $', body_start, true)
     if i_start_cmd == nil then
         return
     end
@@ -120,7 +123,7 @@ vim.keymap.set("n", "<c-p>", function ()
         height = 1 -- big terminal
         i_start_cmd = i_start_cmd + 1     -- without the preceding $
     end
-    local cmd = string.sub(first_line, i_start_cmd)
+    local cmd = string.sub(first_line, i_start_cmd, body_end)
     cmd = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
     cmd = string.gsub(cmd, '%%f', vim.fn.expand('%:p'))
     cmd = string.gsub(cmd, '%%n', vim.fn.expand('%:t:r'))
@@ -184,12 +187,6 @@ vim.cmd [[
 
 -- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
--- source configs on save
-vim.api.nvim_create_autocmd('BufWritePost', {
-  group = augroup,
-  pattern = { '*.vim', '*.lua' },
-  command = 'source %',
-})
 -- toggle line number formats
 vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'InsertLeave', 'WinEnter' }, {
   group = augroup,
