@@ -1,6 +1,6 @@
 local M = {}
 
-local cmd = "git ls-files -c -o --exclude-standard"
+local cmd = "git ls-files -c -o --exclude-standard --deduplicate"
 local cmd_non_git = "find . -type f"
 
 local function get_file_completion(arg_lead, cmdline, cur_pos)
