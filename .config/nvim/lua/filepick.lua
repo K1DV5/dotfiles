@@ -20,7 +20,7 @@ local manifest = {
     cmd = cmd_non_git_dirs,
     key = '1-',
     handle = function(dir)
-      local path = vim.fn.input('In: ', dir)
+      local path = vim.fn.input('In: ', dir, 'dir')
       vim.fn.mkdir(vim.fn.fnamemodify(path, ':h'), "p")
       vim.cmd.edit({args = {path}}) 
     end
@@ -29,14 +29,23 @@ local manifest = {
     cmd = cmd_non_git_all,
     key = '2-',
     handle = function(path)
-      vim.fn.rename(path, vim.fn.input('To: ', path))
+      local dest = vim.fn.input('To: ', path, 'dir')
+      vim.fn.mkdir(vim.fn.fnamemodify(dest, ':h'), "p")
+      vim.fn.rename(path, dest)
+      if string.sub(path, -1) == '/' then
+        return
+      end
+      local currb = vim.fn.bufnr(path)
+      if currb ~= -1 then
+        vim.api.nvim_buf_set_name(currb, dest)
+      end
     end
   },
   FilePickCopy = {
     cmd = cmd_non_git_all,
     key = '3-',
     handle = function(path)
-      vim.uv.fs_copyfile(path, vim.fn.input('To: ', path))
+      vim.uv.fs_copyfile(path, vim.fn.input('To: ', path, 'file'))
     end
   },
   FilePickDelete = {
