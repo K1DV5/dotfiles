@@ -149,6 +149,7 @@ require "lazy".setup {
     version = '1.*',
     config = function()
       local blink = require('blink.cmp')
+      local fuzzy = require('fuzzy')
       blink.setup({
         keymap = {
           preset = 'default',
@@ -172,10 +173,10 @@ require "lazy".setup {
         cmdline = {
           completion = {
             menu = {
-              auto_show = require 'filepick'.blink_check_assist,
+              auto_show = fuzzy.blink_check_assist,
             },
             list = {
-              selection = { preselect = require 'filepick'.blink_check_assist }
+              selection = { preselect = fuzzy.blink_check_assist }
             },
           },
           keymap = {

@@ -57,6 +57,9 @@ local manifest = {
       end
     end
   },
+  ['AutoSession restore'] = {
+    key = '_',
+  }
 }
 
 local function get_file_completion(arg_lead, cmdline, cur_pos)
@@ -77,16 +80,29 @@ local function cmd_handler(opts)
 end
 
 function M.blink_check_assist(ctx)
-  return manifest[vim.split(ctx.line, " ")[1]] ~= nil
+  local base_cmd = ''
+  for _, word in ipairs(vim.split(ctx.line, " ")) do
+    if base_cmd == '' then
+      base_cmd = word
+    else
+      base_cmd = base_cmd .. " " .. word
+    end
+    if manifest[base_cmd] ~= nil then
+      return true
+    end
+  end
+  return false
 end
 
 function M.setup()
   for cmd, conf in pairs(manifest) do
-    vim.api.nvim_create_user_command(
-      cmd,
-      cmd_handler,
-      { complete = get_file_completion, nargs = '*', force = true }
-    )
+    if cmd_handler ~= nil then
+      vim.api.nvim_create_user_command(
+        cmd,
+        cmd_handler,
+        { complete = get_file_completion, nargs = '*', force = true }
+      )
+    end
     vim.keymap.set('n', conf.key, function () vim.api.nvim_input(':' .. cmd .. ' ') end)
   end
 end
