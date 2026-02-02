@@ -96,7 +96,7 @@ end
 
 function M.setup()
   for cmd, conf in pairs(manifest) do
-    if cmd_handler ~= nil then
+    if conf.handle ~= nil then
       vim.api.nvim_create_user_command(
         cmd,
         cmd_handler,

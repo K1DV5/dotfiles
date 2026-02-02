@@ -137,6 +137,8 @@ require "lazy".setup {
       enabled = true,
       log_level = 'info',
       suppressed_dirs = { "~/", "~/projects" },
+      auto_delete_empty_sessions = true,
+      purge_after_minutes = 30 * 24 * 60, -- a month
       pre_save_cmds = { 'lua require"term".clear()' },
       session_lens = {
         load_on_setup = false,
