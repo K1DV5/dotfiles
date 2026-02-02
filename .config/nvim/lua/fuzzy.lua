@@ -3,7 +3,7 @@
 local M = {}
 
 local cmd = "git ls-files -c -o --exclude-standard --deduplicate"
-local ignore = '\\( -path ./node_modules -o -path ./.git \\) -prune -o '
+local ignore = '\\( -name node_modules -o -name .git \\) -prune -o '
 local find_f = "-type f -printf '%P\\n'"
 local find_d = "-type d -printf '%P/\\n'"
 local cmd_non_git = "find . " .. ignore .. find_f
