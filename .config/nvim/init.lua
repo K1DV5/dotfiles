@@ -185,6 +185,37 @@ vim.cmd [[
   hi! DiagnosticUnderlineInfo gui=undercurl guisp=Green
 ]]
 
+-- === CMDs ===
+vim.api.nvim_create_user_command('Prco', function(opts)
+  local args = vim.split(opts.args, '%s+')
+  local pr = args[1]
+  if not pr or pr == '' then
+    vim.notify('Usage: Prco <pr_number> [user:branch]', vim.log.levels.ERROR)
+    return
+  end
+  local userbranch = args[2]
+  if userbranch then
+    local user, branch = userbranch:match('(.+):(.+)')
+    if not user or not branch then
+      vim.notify('Invalid format. Use user:branch', vim.log.levels.ERROR)
+      return
+    end
+    local repo = vim.fn.system('basename $(git remote get-url origin) .git'):gsub('%s+', '')
+    vim.cmd('Git remote add ' .. user .. ' git@github.com:' .. user .. '/' .. repo .. '.git')
+    vim.cmd('Git fetch ' .. user)
+    vim.cmd('Git checkout -b ' .. branch .. ' ' .. user .. '/' .. branch)
+  else
+    vim.cmd('Git fetch origin pull/' .. pr .. '/head:pr-' .. pr)
+    vim.cmd('Git checkout pr-' .. pr)
+  end
+end, { nargs = '+' })
+
+vim.api.nvim_create_user_command(
+  'Prclean',
+  '!git checkout main && git remote | grep -v origin | xargs -n1 git remote remove',
+  { force = true }
+)
+
 -- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
 -- toggle line number formats
