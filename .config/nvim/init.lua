@@ -57,6 +57,8 @@ o.showtabline = 0
 o.ssop = 'buffers,curdir,localoptions'
 -- hide commandline normally
 o.cmdheight = 0
+-- for when maximizing terminal
+o.winminheight = 0
 
 -- performance
 -- disable builtins plugins
