@@ -7,22 +7,19 @@ local default_height = 0.3
 
 local M = {}
 
-local function get_height(size)
-  -- if the size is less than 1, it will be taken as the fraction of the file
-  -- window
-  local term_height
-  size = size or default_height
-  if size > 1 then
-    term_height = size
-  else
-    if vim.api.nvim_get_option_value('buftype', { buf = 0 }) == 'terminal' then
-      local total_win_lines = vim.api.nvim_get_option_value('lines', { scope = 'global' })
-      term_height = math.floor((total_win_lines - 2) * size)
-    else
-      term_height = vim.api.nvim_win_get_height(0) * size
+local function get_height(big)
+  if vim.api.nvim_get_option_value('buftype', { buf = 0 }) ~= 'terminal' then
+    local height = vim.api.nvim_win_get_height(0)
+    if big then
+      return height
     end
+    return height * default_height
   end
-  return term_height
+  local height = vim.api.nvim_get_option_value('lines', { scope = 'global' }) - 2
+  if big then
+    return height
+  end
+  return math.floor(height * default_height)
 end
 
 -- get terminal buffers or windows
@@ -57,15 +54,15 @@ local function go()
   return false
 end
 
-local function toggle(size)
-  -- size - number | float - the desired size of the pane
+local function toggle(big)
+  -- big - boolean - the desired size of the pane
   -- work only if buffer is a normal file or a terminal
   local current_is_terminal = vim.api.nvim_get_option_value('buftype', { buf = 0 }) == 'terminal'
   if not vim.api.nvim_get_option_value('modifiable', { buf = 0 }) and not current_is_terminal then
     print("Not a file buffer, aborted")
     return true
   end
-  local term_height = get_height(size)
+  local term_height = get_height(big)
   -- if in terminal pane
   if current_is_terminal then
     if vim.api.nvim_win_get_height(0) < term_height then     -- maximize
@@ -107,12 +104,11 @@ local function clear_existing(tbuflist, cmd, dir)
   end
 end
 
-function M.open(opts) -- cmd, height, dir
+function M.open(opts) -- cmd, big, dir
   local opts = opts or {}
-  local term_height = opts.height or default_height
   local cmd = opts.cmd
   if cmd == nil then
-    if toggle(term_height) then
+    if toggle(opts.big) then
       return
     end
     cmd = default_shell
@@ -123,7 +119,7 @@ function M.open(opts) -- cmd, height, dir
   if vim.api.nvim_get_option_value('buftype', { buf = 0 }) ~= 'terminal' and not go() then
     -- not in a terminal buffer and no terminal window to go to.
     -- prepare split window
-    vim.api.nvim_command('belowright ' .. get_height(term_height) .. ' split')
+    vim.api.nvim_command('belowright ' .. get_height(opts.big) .. ' split')
   end
   -- terminal buffer numbers like [1, 56, 78]
   local tbuflist = get_terminals()
@@ -158,7 +154,7 @@ function M.setup()
     M.open({
       cmd = opts.fargs[1],
       dir = opts.fargs[2],
-      height = opts.fargs[3] and tonumber(opts.fargs[3]),
+      big = opts.fargs[3] and tonumber(opts.fargs[3]) > 0,
     })
   end, { complete = 'dir', nargs = '*' })
 
@@ -170,7 +166,7 @@ function M.setup()
   -- open/close terminal pane
   vim.keymap.set('n', 't', M.open)
   -- open big terminal window / maximize
-  vim.keymap.set('n', 'T', function() M.open({height = 1}) end)
+  vim.keymap.set('n', 'T', function() M.open({big = true}) end)
 end
 
 return M
