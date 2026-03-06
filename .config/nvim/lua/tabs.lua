@@ -162,7 +162,11 @@ function M.status_text_bufs()
       else
         name = sname
       end
-      text = text .. string.format(' %s%%-.%d(%s%s%%) ', num, maxwid_inactive, name, exticon)
+      local modified = ''
+      if vim.api.nvim_get_option_value('modified', { buf = buf }) then
+        modified = '*'
+      end
+      text = text .. string.format(' %s%%-.%d(%s%s%%)%s ', num, maxwid_inactive, name, exticon, modified)
     end
   end
   return text
