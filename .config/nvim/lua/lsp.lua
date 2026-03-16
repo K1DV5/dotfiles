@@ -193,6 +193,16 @@ local servers = {
     filetypes = { 'typst' },
     single_file_support = true,
   },
+  astro = {
+    cmd = { 'astro-ls', '--stdio' },
+    filetypes = { 'astro' },
+    root_markers = { 'package.json', 'tsconfig.json', 'jsconfig.json', '.git' },
+    init_options = {
+      typescript = {
+        tsdk = 'node_modules/typescript/lib',
+      },
+    },
+  },
   jsonls = {
     'json-lsp',
     cmd = { 'vscode-json-language-server', '--stdio' },

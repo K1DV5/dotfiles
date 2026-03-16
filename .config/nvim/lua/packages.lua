@@ -161,6 +161,7 @@ require "lazy".setup {
           ['<cr>'] = { 'accept', 'fallback' },
         },
         fuzzy = {
+          max_typos = function() return 0 end,
           sorts = {
             'exact',
             -- defaults
