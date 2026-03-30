@@ -1,26 +1,30 @@
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
----@diagnostic disable-next-line: undefined-field
-if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable",     -- latest stable release
-    lazypath,
-  })
+-- $$ nvim -l %f
+
+local gh = "https://github.com/"
+
+local function pack_add(spec)
+  vim.pack.add(spec)
+  for i, val in ipairs(spec) do
+    if type(val) == "string" then
+      goto continue
+    end
+    if val.config == true then
+      require(val.name).setup{}
+    elseif type(val.config) == "function" then
+      val.config()
+    end
+    ::continue::
+  end
 end
-vim.opt.rtp:prepend(lazypath)
 
-require "lazy".setup {
+pack_add{
 
-  "nvim-tree/nvim-web-devicons",   -- pretty icons
+  gh .. "nvim-tree/nvim-web-devicons",   -- pretty icons
 
   {
-    "tpope/vim-fugitive",
+    src = gh .. "tpope/vim-fugitive",
     config = function ()
       vim.api.nvim_create_autocmd('FileType', {
-        group = 'fugitive',
         pattern = 'fugitive',
         callback = function()
           vim.keymap.set('n', '<tab>', '=', { buffer = 0, remap = true })
@@ -28,33 +32,30 @@ require "lazy".setup {
           vim.keymap.set('n', 'p', '<cmd>G pull<cr>', { buffer = 0 })
         end
       })
-    end,
-    keys = {
-      {
-        '<leader>g',
-        function()
-          local ft = vim.api.nvim_get_option_value('filetype', { buf = 0 })
-          if ft == 'fugitive' or ft == 'gitcommit' then
-            vim.api.nvim_buf_delete(0, { force = false })
-          elseif vim.api.nvim_get_option_value('modifiable', { buf = 0 }) == true then
-            vim.cmd'vertical Git'
-          else
-            print('Must be on a file')
-          end
+      vim.keymap.set('n', '<leader>g', function()
+        local ft = vim.api.nvim_get_option_value('filetype', { buf = 0 })
+        if ft == 'fugitive' or ft == 'gitcommit' then
+          vim.api.nvim_buf_delete(0, { force = false })
+        elseif vim.api.nvim_get_option_value('modifiable', { buf = 0 }) == true then
+          vim.cmd'vertical Git'
+        else
+          print('Must be on a file')
         end
-      }
-    }
+      end)
+    end,
   },
 
-  { "mason-org/mason.nvim", config = true },
+  {
+    src = gh .. "mason-org/mason.nvim",
+    name = 'mason',
+    config = true
+  },
 
   {
-    "RRethy/vim-illuminate",
+    src = gh .. "RRethy/vim-illuminate",
+    name = 'illuminate',
     config = function ()
-      local illuminate = require 'illuminate'
-      -- illuminate.configure({
-      --   disable_keymaps = true,
-      -- })
+      local illuminate = require'illuminate'
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('illuminate-lsp', {}),
         callback = function (args)
@@ -65,61 +66,46 @@ require "lazy".setup {
   },
 
   {
-    "windwp/nvim-autopairs",
-    event = 'InsertEnter',
-    config = { check_ts = true }
+    src = gh .. "windwp/nvim-autopairs",
+    name = 'nvim-autopairs',
+    config = function() require'nvim-autopairs'.setup{ check_ts = true } end
   },
 
   {
-    "supermaven-inc/supermaven-nvim",
-    config = {
-      disable_keymaps = true,
-    },
-    keys = {
-      { "<c-j>", function ()
-        local suggestion = require('supermaven-nvim.completion_preview')
-        if suggestion.has_suggestion() then
-          suggestion.on_accept_suggestion()
-        else
-          require("supermaven-nvim.api").toggle()
-        end
-      end, mode = 'i'},
-      { "<c-J", function ()
-         require('supermaven-nvim.completion_preview').on_accept_word()
-      end, mode = 'i'},
-    },
+    src = gh .. "chrisgrieser/nvim-various-textobjs",
+    name = 'various-textobjs',
+    config = function()
+      require'various-textobjs'.setup{
+        keymaps = {
+          useDefaults = true,
+          disabledKeymaps = { "gc" },
+        },
+      }
+    end
   },
 
   {
-    "chrisgrieser/nvim-various-textobjs",
-    config = {
-      keymaps = {
-        useDefaults = true,
-        disabledKeymaps = { "gc" },
-      },
-    }
-  },
-
-  {
-    "kylechui/nvim-surround",
-    event = 'VeryLazy',
+    src = gh .. "kylechui/nvim-surround",
+    name = 'nvim-surround',
     config = true,
   },
 
+  gh .. "nvim-lua/plenary.nvim",
+
   {
-    "jiaoshijie/undotree",
-    dependencies = "nvim-lua/plenary.nvim",
-    config = true,
-    keys = {
-      { "<leader>u", "<cmd>lua require('undotree').toggle()<cr>" },
-    },
+    src = gh .. "jiaoshijie/undotree",
+    name = 'undotree',
+    config = function()
+        local ut = require'undotree'
+        ut.setup{}
+        vim.keymap.set('n', '<leader>u', ut.toggle)
+    end,
   },
 
   {
-    "Mofiqul/vscode.nvim",
+    src = gh .. "Mofiqul/vscode.nvim",
     config = function()
       if vim.g.vscode_style == nil then
-
         vim.g.vscode_style = "dark"
         vim.cmd.colorscheme('vscode')
       end
@@ -127,28 +113,26 @@ require "lazy".setup {
   },
 
   {
-    "rmagatti/auto-session",
-    lazy = false,
-    ---enables autocomplete for opts
-    ---@module "auto-session"
-    ---@diagnostic disable-next-line: undefined-doc-name
-    ---@type AutoSession.Config
-    opts = {
-      enabled = true,
-      log_level = 'info',
-      suppressed_dirs = { "~/", "~/projects" },
-      auto_delete_empty_sessions = true,
-      purge_after_minutes = 30 * 24 * 60, -- a month
-      pre_save_cmds = { 'lua require"term".clear()' },
-      session_lens = {
-        load_on_setup = false,
-      },
-    }
+    src = gh .. "rmagatti/auto-session",
+    name = 'auto-session',
+    config = function()
+      require'auto-session'.setup{
+        enabled = true,
+        log_level = 'info',
+        suppressed_dirs = { "~/", "~/projects" },
+        auto_delete_empty_sessions = true,
+        purge_after_minutes = 30 * 24 * 60, -- a month
+        pre_save_cmds = { 'lua require"term".clear()' },
+        session_lens = {
+          load_on_setup = false,
+        },
+      }
+    end
   },
 
   {
-    "saghen/blink.cmp",
-    version = '1.*',
+    src = gh .. "saghen/blink.cmp",
+    version = 'v1.10.1',
     config = function()
       local blink = require('blink.cmp')
       local fuzzy = require('fuzzy')
@@ -200,22 +184,21 @@ require "lazy".setup {
   },
 
   {
-    "nvim-treesitter/nvim-treesitter",
+    src = gh .. "nvim-treesitter/nvim-treesitter",
+    name = 'nvim-treesitter',
     config = function()
-      require 'nvim-treesitter.configs'.setup({
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = false,
-        },
-        incremental_selection = { enable = true },
-        rainbow = {
-          enable = true,
-        },
-        indent = {
-          enable = true
-        },
+      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css' }
+      require('nvim-treesitter').install(filetypes)
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = filetypes,
+        callback = function() 
+          vim.treesitter.start()
+          vim.wo[0][0].foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+          vim.wo[0][0].foldmethod = 'expr'
+          vim.wo[0][0].foldlevel = 99
+          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end,
       })
-      vim.cmd('set foldmethod=expr foldexpr=nvim_treesitter#foldexpr() foldlevel=99')
     end
   },
 
