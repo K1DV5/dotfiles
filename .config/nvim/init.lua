@@ -59,6 +59,8 @@ o.ssop = 'buffers,curdir,localoptions'
 o.cmdheight = 0
 -- for when maximizing terminal
 o.winminheight = 0
+-- open builtin help by default
+o.keywordprg = ':help'
 
 -- performance
 -- disable builtins plugins
@@ -256,3 +258,7 @@ vim.api.nvim_create_autocmd({ 'Filetype' }, {
     vim.o.shiftwidth = 2
   end
 })
+
+-- === FEATURES ===
+
+require('vim._core.ui2').enable({})

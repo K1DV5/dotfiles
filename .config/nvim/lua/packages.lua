@@ -132,7 +132,7 @@ pack_add{
 
   {
     src = gh .. "saghen/blink.cmp",
-    version = 'v1.10.1',
+    version = vim.version.range('1.x'),
     config = function()
       local blink = require('blink.cmp')
       local fuzzy = require('fuzzy')
@@ -187,7 +187,7 @@ pack_add{
     src = gh .. "nvim-treesitter/nvim-treesitter",
     name = 'nvim-treesitter',
     config = function()
-      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css' }
+      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,

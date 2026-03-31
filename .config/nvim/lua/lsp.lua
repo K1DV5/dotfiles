@@ -21,9 +21,12 @@ local diagnostic_config = {
   }
 }
 
--------------------- SETUP ------------------------
+-------------------- FEATURES ------------------------
 
 vim.lsp.inlay_hint.enable(true)
+vim.lsp.document_color.enable(true, nil, {style = 'virtual'})
+
+-------------------- SETUP ------------------------
 
 local function restart_buffer_clients()
   local clients = vim.lsp.get_clients({ bufnr = 0 })
