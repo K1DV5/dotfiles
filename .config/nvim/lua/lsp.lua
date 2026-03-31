@@ -17,7 +17,7 @@ local diagnostic_config = {
     header = '',
   },
   jump = {
-    float = true,
+    on_jump = function() vim.diagnostic.open_float() end,
   }
 }
 
@@ -81,13 +81,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'gq', format_range_operator, { buffer = args.buf })
     vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = args.buf })
     vim.keymap.set('n', '<leader>d', function ()
-      local line = vim.api.nvim_win_get_cursor(0)[1]
-      local count = vim.diagnostic.count(args.buf, {lnum = line - 1})
-      if #count > 0 then
-        vim.diagnostic.open_float()
-      else
-        vim.diagnostic.jump{count = 1, float = true}
-      end
+      vim.diagnostic.jump{count = 1}
     end, { buffer = args.buf })
     vim.keymap.set('n', '<leader>D', function ()
       local clients = vim.lsp.get_clients({bufnr = 0})

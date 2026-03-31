@@ -60,7 +60,7 @@ o.cmdheight = 0
 -- for when maximizing terminal
 o.winminheight = 0
 -- open builtin help by default
-o.keywordprg = ':help'
+o.keywordprg = ':help!'
 
 -- performance
 -- disable builtins plugins
