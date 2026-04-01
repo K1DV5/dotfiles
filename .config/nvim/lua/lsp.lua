@@ -200,6 +200,10 @@ local servers = {
     cmd = { 'tinymist' },
     filetypes = { 'typst' },
     single_file_support = true,
+    settings = {
+      formatterMode = "typstyle",
+      formatterProseWrap = true,
+    },
   },
   astro = {
     cmd = { 'astro-ls', '--stdio' },
