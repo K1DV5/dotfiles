@@ -203,6 +203,8 @@ local servers = {
     settings = {
       formatterMode = "typstyle",
       formatterProseWrap = true,
+      exportPdf = "onSave",
+      outputPath = "$root/target/$dir/$name",
     },
   },
   astro = {
