@@ -21,11 +21,6 @@ local diagnostic_config = {
   }
 }
 
--------------------- FEATURES ------------------------
-
-vim.lsp.inlay_hint.enable(true)
-vim.lsp.document_color.enable(true, nil, {style = 'virtual'})
-
 -------------------- SETUP ------------------------
 
 local function restart_buffer_clients()
@@ -64,34 +59,30 @@ local function format_range_operator()
   vim.api.nvim_feedkeys('g@', 'n', false)
 end
 
--- setup func
-vim.api.nvim_create_autocmd('LspAttach', {
-  group = vim.api.nvim_create_augroup('my-lsp', {}),
-  callback = function (args)
-    -- Mappings
-    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = args.buf })
-    vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = args.buf })
-    vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = args.buf })
-    vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = args.buf })
-    vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = args.buf })
-    vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = args.buf })
-    vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = args.buf })
-    vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = args.buf })
-    vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = args.buf })
-    vim.keymap.set('n', 'gq', format_range_operator, { buffer = args.buf })
-    vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = args.buf })
-    vim.keymap.set('n', '<leader>d', function ()
-      vim.diagnostic.jump{count = 1}
-    end, { buffer = args.buf })
-    vim.keymap.set('n', '<leader>D', function ()
-      local clients = vim.lsp.get_clients({bufnr = 0})
-      for _, client in ipairs(clients) do
-        local ns = vim.lsp.diagnostic.get_namespace(client.id)
-        vim.diagnostic.setqflist({namespace = ns, title = client.name})
-      end
-    end, { buffer = args.buf })
-  end
-})
+local function on_lsp_attach(args)
+  -- Mappings
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, { buffer = args.buf })
+  vim.keymap.set('n', 'gD', vim.lsp.buf.implementation, { buffer = args.buf })
+  vim.keymap.set('n', '<c-]>', vim.lsp.buf.declaration, { buffer = args.buf })
+  vim.keymap.set('n', '1gD', vim.lsp.buf.type_definition, { buffer = args.buf })
+  vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = args.buf })
+  vim.keymap.set('i', '<c-k>', vim.lsp.buf.signature_help, { buffer = args.buf })
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, { buffer = args.buf })
+  vim.keymap.set('n', '<f2>', vim.lsp.buf.rename, { buffer = args.buf })
+  vim.keymap.set('n', 'ga', vim.lsp.buf.code_action, { buffer = args.buf })
+  vim.keymap.set('n', 'gq', format_range_operator, { buffer = args.buf })
+  vim.keymap.set('n', 'gx', restart_buffer_clients, { buffer = args.buf })
+  vim.keymap.set('n', '<leader>d', function ()
+    vim.diagnostic.jump{count = 1}
+  end, { buffer = args.buf })
+  vim.keymap.set('n', '<leader>D', function ()
+    local clients = vim.lsp.get_clients({bufnr = 0})
+    for _, client in ipairs(clients) do
+      local ns = vim.lsp.diagnostic.get_namespace(client.id)
+      vim.diagnostic.setqflist({namespace = ns, title = client.name})
+    end
+  end, { buffer = args.buf })
+end
 
 -- setup language servers
 local servers = {
@@ -283,7 +274,10 @@ function M.setup()
   -- config diagnostics
   vim.diagnostic.config(diagnostic_config)
   -- enable inlay hints
-  vim.lsp.inlay_hint.enable()
+  -- vim.lsp.inlay_hint.enable()
+  -- colors from code, e.g. css
+  vim.lsp.document_color.enable(true, nil, { style = 'virtual' })
+  vim.api.nvim_create_autocmd('LspAttach', { callback = on_lsp_attach })
   -- common config
   vim.lsp.config['*'] = {
     flags = {

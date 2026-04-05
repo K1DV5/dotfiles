@@ -187,7 +187,7 @@ pack_add{
     src = gh .. "nvim-treesitter/nvim-treesitter",
     name = 'nvim-treesitter',
     config = function()
-      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'typst' }
+      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,

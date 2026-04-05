@@ -227,6 +227,8 @@ vim.api.nvim_create_user_command('Prclean', function(opts)
   vim.cmd('Git remote remove ' .. user)
 end, { nargs = '+' })
 
+vim.api.nvim_create_user_command('UpdatePackages', function(opts) vim.pack.update() end, {})
+
 -- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
 -- toggle line number formats
