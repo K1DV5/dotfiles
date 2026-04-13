@@ -220,26 +220,32 @@ function M.go_win(where)
   end
 end
 
+local function delete_listed_buf(buf, force)
+  if vim.bo[buf].buflisted then
+    vim.cmd.bdelete { count = buf, bang = force }
+  end
+end
+
 function M.close()
   -- close current tab
-  if vim.api.nvim_get_option_value('modified', { buf = 0 }) then
+  local current = vim.api.nvim_get_current_buf()
+  if vim.api.nvim_get_option_value('modified', { buf = current }) then
     print("File modified")
     return
   end
-  local buftype = vim.api.nvim_get_option_value('buftype', { buf = 0 })
-  local current = vim.api.nvim_get_current_buf()
+  local force = vim.api.nvim_get_option_value('buftype', { buf = current }) == 'terminal'
   local bufs = M.get_sibling_buffers(current)
   local alt = get_alt_buf(current, bufs)
   local wins = vim.api.nvim_list_wins()
   if not alt then
     if #wins == 1 then
-      vim.cmd.bdelete { count = current, bang = buftype == 'terminal' }
+      delete_listed_buf(current, force)
       return
     end
     vim.api.nvim_win_close(0, false)
     local next = vim.api.nvim_get_current_buf()
     if next ~= current and vim.api.nvim_buf_is_valid(current) then
-      vim.cmd.bdelete { count = current, bang = buftype == 'terminal' }
+      delete_listed_buf(current, force)
     end
     return
   end
@@ -249,7 +255,7 @@ function M.close()
       return
     end
   end
-  vim.cmd.bdelete { count = current, bang = buftype == 'terminal' }
+  delete_listed_buf(current, force)
 end
 
 function M.setup()
