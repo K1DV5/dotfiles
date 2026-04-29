@@ -263,4 +263,9 @@ vim.api.nvim_create_autocmd({ 'Filetype' }, {
 
 -- === FEATURES ===
 
+vim.filetype.add({
+  extension = {
+    mdx = 'markdown',
+  }
+})
 -- require('vim._core.ui2').enable({})

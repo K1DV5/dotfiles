@@ -155,7 +155,12 @@ local servers = {
     },
   },
   ts_ls = {
-    init_options = { hostInfo = 'neovim' },
+    init_options = {
+      hostInfo = 'neovim',
+      tsserver = {
+        path = 'node_modules/typescript/lib/tsserver.js'
+      }
+    },
     cmd = { 'typescript-language-server', '--stdio' },
     filetypes = {
       'javascript',
@@ -167,25 +172,6 @@ local servers = {
     },
     root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json', '.git' },
     single_file_support = true,
-  },
-  biome = {
-    cmd = { 'biome', 'lsp-proxy' },
-    filetypes = {
-      'astro',
-      'css',
-      'graphql',
-      'javascript',
-      'javascriptreact',
-      'json',
-      'jsonc',
-      'svelte',
-      'typescript',
-      'typescript.tsx',
-      'typescriptreact',
-      'vue',
-    },
-    root_markers = { 'biome.json', 'biome.jsonc' },
-    single_file_support = false,
   },
   tinymist = {
     cmd = { 'tinymist' },

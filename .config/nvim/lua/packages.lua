@@ -19,7 +19,7 @@ end
 
 pack_add{
 
-  gh .. "nvim-tree/nvim-web-devicons",   -- pretty icons
+  gh .. "nvim-tree/nvim-web-devicons",
 
   {
     src = gh .. "tpope/vim-fugitive",
@@ -176,7 +176,6 @@ pack_add{
           }
         },
       })
-      -- setup lsp capabilities
       vim.lsp.config['*'] = {
         capabilities = blink.get_lsp_capabilities(),
       }
@@ -187,7 +186,7 @@ pack_add{
     src = gh .. "nvim-treesitter/nvim-treesitter",
     name = 'nvim-treesitter',
     config = function()
-      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python' }
+      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python', 'go' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
