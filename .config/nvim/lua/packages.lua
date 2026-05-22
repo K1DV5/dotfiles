@@ -186,10 +186,18 @@ pack_add{
     src = gh .. "nvim-treesitter/nvim-treesitter",
     name = 'nvim-treesitter',
     config = function()
-      local filetypes = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python', 'go' }
-      require('nvim-treesitter').install(filetypes)
+      local parsers = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python', 'go', typescriptreact = 'tsx', javascriptreact = 'jsx' }
+      require('nvim-treesitter').install(vim.tbl_values(parsers))
       vim.api.nvim_create_autocmd('FileType', {
-        pattern = filetypes,
+        pattern = vim.tbl_map(
+          function(v)
+            if type(v) == 'string' then
+              return v
+            end
+            return parsers[v]
+          end,
+          vim.tbl_keys(parsers)
+        ),
         callback = function() 
           vim.treesitter.start()
           vim.wo[0][0].foldexpr = 'v:lua.vim.treesitter.foldexpr()'
