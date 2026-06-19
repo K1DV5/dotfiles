@@ -6,17 +6,6 @@ local g = vim.g
 -- set mapleader, should be before lazy
 g.mapleader = ','
 
--- system clipboard
-if os.getenv('WSL_DISTRO_NAME') ~= nil then
-    vim.g.clipboard = {
-        name = 'wsl clipboard',
-        copy = { ["+"] = { "clip.exe" }, ["*"] = { "clip.exe" } },
-        paste = { ["+"] = { "nvim_paste" }, ["*"] = { "nvim_paste" } },
-        cache_enabled = true
-    }
-end
-
-
 -- === OPTIONS ===
 -- continue wrapped lines with the same indent
 o.breakindent = true

@@ -51,19 +51,7 @@ pack_add{
     config = true
   },
 
-  {
-    src = gh .. "RRethy/vim-illuminate",
-    name = 'illuminate',
-    config = function ()
-      local illuminate = require'illuminate'
-      vim.api.nvim_create_autocmd('LspAttach', {
-        group = vim.api.nvim_create_augroup('illuminate-lsp', {}),
-        callback = function (args)
-          illuminate.on_attach(vim.lsp.get_client_by_id(args.data.client_id))
-        end
-      })
-    end
-  },
+  gh .. "RRethy/vim-illuminate",
 
   {
     src = gh .. "windwp/nvim-autopairs",
