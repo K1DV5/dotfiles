@@ -182,6 +182,7 @@ local servers = {
       formatterProseWrap = true,
       exportPdf = "onSave",
       outputPath = "$root/target/$dir/$name",
+      fontPaths = {"fonts"},
     },
   },
   astro = {

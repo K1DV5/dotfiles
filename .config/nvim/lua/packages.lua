@@ -2,22 +2,7 @@
 
 local gh = "https://github.com/"
 
-local function pack_add(spec)
-  vim.pack.add(spec)
-  for i, val in ipairs(spec) do
-    if type(val) == "string" then
-      goto continue
-    end
-    if val.config == true then
-      require(val.name).setup{}
-    elseif type(val.config) == "function" then
-      val.config()
-    end
-    ::continue::
-  end
-end
-
-pack_add{
+local spec = {
 
   gh .. "nvim-tree/nvim-web-devicons",
 
@@ -87,6 +72,16 @@ pack_add{
         local ut = require'undotree'
         ut.setup{}
         vim.keymap.set('n', '<leader>u', ut.toggle)
+    end,
+  },
+
+  {
+    src = gh .. "nvim-tree/nvim-tree.lua",
+    name = 'nvim-tree',
+    config = function()
+      require'nvim-tree'.setup()
+      local nt = require'nvim-tree.api'
+      vim.keymap.set('n', '<leader>f', nt.tree.toggle)
     end,
   },
 
@@ -198,3 +193,24 @@ pack_add{
   },
 
 }
+
+local M = {}
+
+function M.setup()
+  vim.pack.add(spec)
+  for i, val in ipairs(spec) do
+    if type(val) == "string" then
+      goto continue
+    end
+    if val.config == true then
+      require(val.name).setup{}
+    elseif type(val.config) == "function" then
+      val.config()
+    end
+    ::continue::
+  end
+  vim.api.nvim_create_user_command('UpdatePackages', function(opts) vim.pack.update() end, {})
+  vim.api.nvim_create_autocmd('PackChanged', { callback = function(ev) print(ev.data.kind, ev.data.spec.name) end })
+end
+
+return M

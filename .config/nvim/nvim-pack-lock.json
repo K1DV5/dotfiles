@@ -1,11 +1,11 @@
 {
   "plugins": {
     "auto-session": {
-      "rev": "62437532b38495551410b3f377bcf4aaac574ebe",
+      "rev": "6cde3874a9283c2db55627acca5f28e4fa402320",
       "src": "https://github.com/rmagatti/auto-session"
     },
     "autopairs": {
-      "rev": "59bce2eef357189c3305e25bc6dd2d138c1683f5",
+      "rev": "7b9923abad60b903ece7c52940e1321d39eccc79",
       "src": "https://github.com/windwp/nvim-autopairs"
     },
     "blink.cmp": {
@@ -14,47 +14,51 @@
       "version": "1.0.0 - 2.0.0"
     },
     "illuminate": {
-      "rev": "0d1e93684da00ab7c057410fecfc24f434698898",
+      "rev": "8629e6b2dfa8c66677b9d489eb02480cbcfa9599",
       "src": "https://github.com/RRethy/vim-illuminate"
     },
     "mason": {
-      "rev": "44d1e90e1f66e077268191e3ee9d2ac97cc18e65",
+      "rev": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d",
       "src": "https://github.com/mason-org/mason.nvim"
     },
     "mason.nvim": {
-      "rev": "44d1e90e1f66e077268191e3ee9d2ac97cc18e65",
+      "rev": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d",
       "src": "https://github.com/mason-org/mason.nvim"
     },
     "nvim-autopairs": {
-      "rev": "59bce2eef357189c3305e25bc6dd2d138c1683f5",
+      "rev": "7b9923abad60b903ece7c52940e1321d39eccc79",
       "src": "https://github.com/windwp/nvim-autopairs"
     },
     "nvim-surround": {
-      "rev": "19e39478ccf5fa2eefdb3595af2f2927d0ff2416",
+      "rev": "8b47db616ef658b8fc27e61db2896aa2f40134de",
       "src": "https://github.com/kylechui/nvim-surround"
+    },
+    "nvim-tree": {
+      "rev": "cf18a662cd5f200361b6fedfb794eed583e075e1",
+      "src": "https://github.com/nvim-tree/nvim-tree.lua"
     },
     "nvim-treesitter": {
       "rev": "4916d6592ede8c07973490d9322f187e07dfefac",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-various-textobjs": {
-      "rev": "e049b24fc2042a424843a8db79af5ceb273be6f6",
+      "rev": "fed132a88454e52c9691f4751090031944af4a7e",
       "src": "https://github.com/chrisgrieser/nvim-various-textobjs"
     },
     "nvim-web-devicons": {
-      "rev": "40e9d5a6cc3db11b309e39593fc7ac03bb844e38",
+      "rev": "dad71387de386a946b123079d0e53f23028f3abd",
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "plenary.nvim": {
-      "rev": "b9fd5226c2f76c951fc8ed5923d85e4de065e509",
+      "rev": "74b06c6c75e4eeb3108ec01852001636d85a932b",
       "src": "https://github.com/nvim-lua/plenary.nvim"
     },
     "undotree": {
-      "rev": "0e6d41d55ad147407e4ba00a292973de8db0b836",
+      "rev": "02b69aed427b848c4dca483fc5e9524b6019c296",
       "src": "https://github.com/jiaoshijie/undotree"
     },
     "various-textobjs": {
-      "rev": "e049b24fc2042a424843a8db79af5ceb273be6f6",
+      "rev": "fed132a88454e52c9691f4751090031944af4a7e",
       "src": "https://github.com/chrisgrieser/nvim-various-textobjs"
     },
     "vim-fugitive": {
@@ -62,7 +66,7 @@
       "src": "https://github.com/tpope/vim-fugitive"
     },
     "vim-illuminate": {
-      "rev": "0d1e93684da00ab7c057410fecfc24f434698898",
+      "rev": "8629e6b2dfa8c66677b9d489eb02480cbcfa9599",
       "src": "https://github.com/RRethy/vim-illuminate"
     },
     "vscode.nvim": {
