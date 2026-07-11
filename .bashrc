@@ -33,13 +33,12 @@ export HISTCONTROL=ignorespace:erasedups
 
 function workon {
     if [ ! -d $1 ]; then
-        read -p "No project named $1. Create it? \(y\)/n: " yn
-        if [ "$yn" == "y" ]; then
-            echo "Creating dir $1"
-            mkdir -p $1
-        else
+        read -p "No project named $1. Create it? (y)/n: " yn
+        if [ "$yn" == "n" ]; then
             return
         fi
+        echo "Creating dir $1"
+        mkdir -p $1
     fi
     cd $1
     # Look for virtual envs up tree
