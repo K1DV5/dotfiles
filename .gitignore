@@ -13,8 +13,7 @@
 !.config/foot/foot.ini
 
 !.config/fontconfig
-!.config/fontconfig/conf.d
-!.config/fontconfig/conf.d/50-custom.conf
+!.config/fontconfig/fonts.conf
 
 !.gitconfig
 !.gitignore
