@@ -15,6 +15,10 @@
 !.config/fontconfig
 !.config/fontconfig/fonts.conf
 
+!.config/pipewire
+!.config/pipewire/pipewire.conf.d
+!.config/pipewire/pipewire.conf.d/eq.conf
+
 !.gitconfig
 !.gitignore
 !.inputrc
