@@ -19,6 +19,8 @@
 !.config/pipewire/pipewire.conf.d
 !.config/pipewire/pipewire.conf.d/eq.conf
 
+!.XCompose
+
 !.gitconfig
 !.gitignore
 !.inputrc
