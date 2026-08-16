@@ -154,14 +154,8 @@ local servers = {
       less = { validate = true },
     },
   },
-  ts_ls = {
-    init_options = {
-      hostInfo = 'neovim',
-      tsserver = {
-        path = 'node_modules/typescript/lib/tsserver.js'
-      }
-    },
-    cmd = { 'typescript-language-server', '--stdio' },
+  tsc = {
+    cmd = { 'tsc', '--lsp', '--stdio' },
     filetypes = {
       'javascript',
       'javascriptreact',
@@ -172,6 +166,21 @@ local servers = {
     },
     root_markers = { 'tsconfig.json', 'jsconfig.json', 'package.json', '.git' },
     single_file_support = true,
+    settings = {
+      typescript = {
+        inlayHints = {
+          parameterNames = {
+            enabled = 'literals',
+            suppressWhenArgumentMatchesName = true,
+          },
+          parameterTypes = { enabled = true },
+          variableTypes = { enabled = true },
+          propertyDeclarationTypes = { enabled = true },
+          functionLikeReturnTypes = { enabled = true },
+          enumMemberValues = { enabled = true },
+        },
+      },
+    },
   },
   tinymist = {
     cmd = { 'tinymist' },

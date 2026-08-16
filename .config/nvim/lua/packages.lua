@@ -30,12 +30,6 @@ local spec = {
     end,
   },
 
-  {
-    src = gh .. "mason-org/mason.nvim",
-    name = 'mason',
-    config = true
-  },
-
   gh .. "RRethy/vim-illuminate",
 
   {
@@ -196,6 +190,25 @@ local spec = {
 
 local M = {}
 
+local function pack_clean()
+    local active_plugins = {}
+    for i, val in ipairs(spec) do
+      if type(val) == "string" then
+        active_plugins[val] = true
+      else
+        active_plugins[val.src] = true
+      end
+    end
+    for _, plugin in ipairs(vim.pack.get()) do
+      if not active_plugins[plugin.spec.src] then
+        local choice = vim.fn.confirm("Remove " .. plugin.spec.name .. "?", "&Yes\n&No", 1)
+        if choice == 1 then
+            vim.pack.del({plugin.spec.name})
+        end
+      end
+    end
+end
+
 function M.setup()
   vim.pack.add(spec)
   for i, val in ipairs(spec) do
@@ -209,7 +222,8 @@ function M.setup()
     end
     ::continue::
   end
-  vim.api.nvim_create_user_command('UpdatePackages', function(opts) vim.pack.update() end, {})
+  vim.api.nvim_create_user_command('PackUpdate', function(opts) vim.pack.update() end, {})
+  vim.api.nvim_create_user_command('PackClean', function(opts) pack_clean() end, {})
   vim.api.nvim_create_autocmd('PackChanged', { callback = function(ev) print(ev.data.kind, ev.data.spec.name) end })
 end
 
