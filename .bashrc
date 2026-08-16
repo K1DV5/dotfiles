@@ -120,9 +120,9 @@ fi
 export HISTCONTROL=ignorespace:erasedups
 
 # User specific environment
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
+if ! [[ "$PATH" =~ "$HOME/.local/bin:" ]]
 then
-    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+    PATH="$HOME/.local/bin:$PATH"
 fi
 export PATH
 
@@ -149,7 +149,7 @@ function workon {
         source $DIR/.venv/bin/activate
         inVenv=1
     fi
-    nvim
+    PATH="$HOME/.local/npm-g/bin:$PATH" nvim
     if [ $inVenv == 1 ]; then
         deactivate
     fi
