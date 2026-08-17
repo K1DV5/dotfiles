@@ -124,12 +124,6 @@ local servers = {
       less = { validate = true },
     },
   },
-  ruff = {
-    cmd = { "ruff", "server" },
-    filetypes = { "python" },
-    root_markers = { 'pyproject.toml', 'ruff.toml', '.ruff.toml' },
-    single_file_support = true,
-  },
   html = {
     cmd = { 'vscode-html-language-server', '--stdio' },
     filetypes = { 'html', 'templ', 'gotmpl' },
@@ -140,18 +134,6 @@ local servers = {
       provideFormatter = true,
       embeddedLanguages = { css = true, javascript = true },
       configurationSection = { 'html', 'css', 'javascript' },
-    },
-  },
-  cssls = {
-    cmd = { 'vscode-css-language-server', '--stdio' },
-    filetypes = { 'css', 'scss', 'less' },
-    init_options = { provideFormatter = true },     -- needed to enable formatting capabilities
-    root_markers = { 'package.json', '.git' },
-    single_file_support = true,
-    settings = {
-      css = { validate = true },
-      scss = { validate = true },
-      less = { validate = true },
     },
   },
   tsc = {
@@ -224,38 +206,6 @@ local servers = {
     filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
     root_markers = { 'go.work', 'go.mod', '.git' },
     single_file_support = true,
-  },
-  lua_ls = {
-    cmd = { 'lua-language-server' },
-    single_file_support = true,
-    log_level = vim.lsp.protocol.MessageType.Warning,
-    filetypes = { "lua" },
-    root_markers = { '.luarc.json', '.luarc.jsonc', '.git' },
-    on_init = function(client)
-      if client.workspace_folders then
-        local path = client.workspace_folders[1].name
-        ---@diagnostic disable-next-line: undefined-field
-        if path ~= vim.fn.stdpath('config') and (vim.loop.fs_stat(path .. '/.luarc.json') or vim.loop.fs_stat(path .. '/.luarc.jsonc')) then
-          return
-        end
-      end
-
-      client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
-        runtime = {
-          version = 'LuaJIT'
-        },
-        -- Make the server aware of Neovim runtime files
-        workspace = {
-          checkThirdParty = false,
-          library = {
-            vim.env.VIMRUNTIME
-          }
-        }
-      })
-    end,
-    settings = {
-      Lua = {}
-    }
   },
   docal = {
     cmd = { 'docal', '--lsp' },
