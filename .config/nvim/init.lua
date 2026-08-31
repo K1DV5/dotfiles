@@ -178,6 +178,7 @@ vim.cmd [[
 ]]
 
 -- === CMDs ===
+
 vim.api.nvim_create_user_command('Prco', function(opts)
   local args = vim.split(opts.args, '%s+')
   local pr = args[1]
@@ -201,19 +202,22 @@ vim.api.nvim_create_user_command('Prco', function(opts)
   vim.cmd('Git config --add remote.' .. user .. '.push refs/heads/' .. local_branch .. ':refs/heads/' .. branch)
 end, { nargs = '+' })
 
-vim.api.nvim_create_user_command('Prclean', function(opts)
-  local args = vim.split(opts.args, '%s+')
-  local pr = args[1]
-  local user = args[2]
-  if not pr or pr == '' or not user or user == '' then
-    vim.notify('Usage: Prclean <pr_number> <user>', vim.log.levels.ERROR)
+vim.api.nvim_create_user_command('Prclean', function()
+  local branch = vim.fn.system('git branch --show-current'):gsub('%s+', '')
+  local pr = branch:match('^pr%-(%d+)$')
+  if not pr then
+    vim.notify('Not currently on a pr-<number> branch', vim.log.levels.ERROR)
     return
   end
-  local local_branch = 'pr-' .. pr
+  local user = vim.fn.system('git config branch.' .. branch .. '.remote'):gsub('%s+', '')
+  if not user or user == '' then
+    vim.notify('Could not determine remote for branch ' .. branch, vim.log.levels.ERROR)
+    return
+  end
   vim.cmd('Git checkout main')
-  vim.cmd('Git branch -D ' .. local_branch)
+  vim.cmd('Git branch -D ' .. branch)
   vim.cmd('Git remote remove ' .. user)
-end, { nargs = '+' })
+end, { nargs = 0 })
 
 -- === AUTOCMDS ===
 local augroup = vim.api.nvim_create_augroup('init', {})
