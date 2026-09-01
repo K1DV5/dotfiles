@@ -89,39 +89,43 @@ term.setup()
 
 -- === MAPPINGS ===
 
--- do what needs to be done
+-- exec cmd on first line comment
 vim.keymap.set("n", "<c-p>", function ()
-    vim.cmd [[
-      silent update!
-      wincmd k
-    ]]
-    local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
-    if first_line == '' then
-        return
-    end
-    local prefix, suffix = vim.bo.commentstring:match("^(.*)%%s(.*)$")
-    local body_start = #prefix
-    local body_end = #first_line - #suffix
-    local i_start_cmd = string.find(first_line, ' $', body_start, true)
-    if i_start_cmd == nil then
-        return
-    end
-    i_start_cmd = i_start_cmd + 2         -- without the prompt
-    if string.sub(first_line, i_start_cmd, i_start_cmd) == ' ' then
-        i_start_cmd = i_start_cmd + 1     -- without the preceding space
-    end
-    local big = false
-    if string.sub(first_line, i_start_cmd, i_start_cmd) == '$' then
-        big = true -- maximized
-        i_start_cmd = i_start_cmd + 1     -- without the preceding $
-    end
-    local cmd = string.sub(first_line, i_start_cmd, body_end)
-    cmd = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
-    cmd = string.gsub(cmd, '%%f', vim.fn.expand('%:t'))
-    cmd = string.gsub(cmd, '%%n', vim.fn.expand('%:t:r'))
-    local dir = vim.fn.expand('%:h')
-    term.open({cmd = cmd, dir = dir, big = big})
-    vim.cmd [[norm i]]
+  vim.cmd [[
+  silent update!
+  wincmd k
+  ]]
+  local first_line = vim.api.nvim_buf_get_lines(0, 0, 1, false)[1] or ''
+  if first_line == '' then
+    return
+  end
+  local prefix, suffix = vim.bo.commentstring:match("^(.*)%%s(.*)$")
+  local body_start = #prefix
+  local body_end = #first_line - #suffix
+  local i_start_cmd = string.find(first_line, ' $', body_start, true)
+  if i_start_cmd == nil then
+    return
+  end
+  i_start_cmd = i_start_cmd + 2         -- without the prompt
+  if string.sub(first_line, i_start_cmd, i_start_cmd) == ' ' then
+    i_start_cmd = i_start_cmd + 1     -- without the preceding space
+  end
+  local big = false
+  if string.sub(first_line, i_start_cmd, i_start_cmd) == '$' then
+    big = true -- maximized
+    i_start_cmd = i_start_cmd + 1     -- without the preceding $
+  end
+  local cmd = string.sub(first_line, i_start_cmd, body_end)
+  local fname = vim.fn.expand('%:t')
+  local cmd_ext = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
+  cmd_ext = string.gsub(cmd_ext, '%%f', fname)
+  cmd_ext = string.gsub(cmd_ext, '%%n', vim.fn.expand('%:t:r'))
+  if cmd_ext == cmd then
+    cmd_ext = cmd .. ' ' .. fname
+  end
+  local dir = vim.fn.expand('%:h')
+  term.open({cmd = cmd_ext, dir = dir, big = big})
+  vim.cmd [[norm i]]
 end)
 
 -- scroll by page
