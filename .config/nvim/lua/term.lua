@@ -90,21 +90,25 @@ local function toggle(big)
   return true
 end
 
-local function clear_existing(tbuflist, cmd, dir)
-  -- if the cmd has argumets, delete existing with the same cmd
-  if not string.find(cmd, ' ') then
-    return
-  end
-  for _, buf in pairs(tbuflist) do
+local function get_existing(tbuflist, cmd, dir)
+  local function filter_func(buf)
     local buf_cmd = vim.api.nvim_buf_get_var(buf, 'term_cmd')
     local buf_dir = vim.api.nvim_buf_get_var(buf, 'term_dir')
-    if buf_cmd == cmd and buf_dir == dir then
+    return buf_cmd == cmd and buf_dir == dir
+  end
+  return vim.tbl_filter(filter_func, tbuflist)
+end
+
+local function clear_existing(tbuflist, cmd)
+  -- only if the cmd has argumets, delete existing with the same cmd
+  if string.find(cmd, ' ') then
+    for _, buf in ipairs(tbuflist) do
       vim.api.nvim_buf_delete(buf, { force = true })
     end
   end
 end
 
-function M.open(opts) -- cmd, big, dir
+function M.open(opts) -- cmd: string, big: boolean, dir: string, send: string
   local opts = opts or {}
   local cmd = opts.cmd
   if cmd == nil then
@@ -122,20 +126,27 @@ function M.open(opts) -- cmd, big, dir
     vim.api.nvim_command('belowright ' .. get_height(opts.big) .. ' split')
   end
   -- terminal buffer numbers like [1, 56, 78]
-  local tbuflist = get_terminals()
   -- same command terminal buffers
   local dir = opts and opts.dir
   if not dir then
     dir = vim.fn.fnamemodify('.', ':p')
   end
-  -- avoid buffer modified error
-  local buf = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_win_set_buf(0, buf)
-  vim.fn.jobstart(cmd, { cwd = dir, term = true })
-  clear_existing(tbuflist, cmd, dir)
-  -- for future clears
-  vim.api.nvim_buf_set_var(buf, 'term_cmd', cmd)
-  vim.api.nvim_buf_set_var(buf, 'term_dir', dir)
+  local tbuflist = get_existing(get_terminals(), cmd, dir)
+  local reuse = opts.send ~= nil and #tbuflist > 0
+  if reuse then
+    local buf = tbuflist[1]
+    vim.api.nvim_win_set_buf(0, buf)
+    local jobid = vim.api.nvim_buf_get_var(buf, 'terminal_job_id')
+    vim.fn.chansend(jobid, opts.send .. '\r\n')
+  else
+    clear_existing(tbuflist, cmd)
+    local buf = vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_win_set_buf(0, buf)
+    local jobid = vim.fn.jobstart(cmd, { cwd = dir, term = true })
+    -- for future clears
+    vim.api.nvim_buf_set_var(buf, 'term_cmd', cmd)
+    vim.api.nvim_buf_set_var(buf, 'term_dir', dir)
+  end
 end
 
 function M.clear()

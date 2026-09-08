@@ -90,7 +90,10 @@ term.setup()
 -- === MAPPINGS ===
 
 -- exec cmd on first line comment
-vim.keymap.set("n", "<c-p>", function ()
+-- $ cmd: just cmd in small split
+-- $$ cmd: cmd in big split
+-- $- cmd: send the selected lines (if visual) or all content to existing
+local function exec_first_line()
   vim.cmd [[
   silent update!
   wincmd k
@@ -115,6 +118,19 @@ vim.keymap.set("n", "<c-p>", function ()
     big = true -- maximized
     i_start_cmd = i_start_cmd + 1     -- without the preceding $
   end
+  local send
+  if string.sub(first_line, i_start_cmd, i_start_cmd) == '-' then
+    local startl = 1 -- after first line
+    local endl = -1
+    if vim.api.nvim_get_mode().mode == 'V' then -- only selected lines
+      startl, endl = vim.fn.getpos("v")[2] - 1, vim.fn.getpos(".")[2] - 1
+      if startl > endl then
+        startl, endl = endl, startl
+      end
+    end
+    send = vim.fn.join(vim.api.nvim_buf_get_text(0, startl, 0, endl, -1, {}), '\n')
+    i_start_cmd = i_start_cmd + 1     -- without the preceding -
+  end
   local cmd = string.sub(first_line, i_start_cmd, body_end)
   local fname = vim.fn.expand('%:t')
   local cmd_ext = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
@@ -124,9 +140,12 @@ vim.keymap.set("n", "<c-p>", function ()
     cmd_ext = cmd .. ' ' .. fname
   end
   local dir = vim.fn.expand('%:h')
-  term.open({cmd = cmd_ext, dir = dir, big = big})
+  term.open({cmd = cmd_ext, dir = dir, big = big, send = send})
   vim.cmd [[norm i]]
-end)
+end
+
+vim.keymap.set("n", "<c-p>", exec_first_line)
+vim.keymap.set("v", "<c-p>", exec_first_line)
 
 -- scroll by page
 vim.keymap.set({'n', 'v'}, '<space>', '<c-f>M')
