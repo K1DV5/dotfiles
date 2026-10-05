@@ -136,9 +136,6 @@ vim.keymap.set("n", "<c-p>", function()
   local cmd_ext = string.gsub(cmd, '%%d', vim.fn.expand('%:h'))
   cmd_ext = string.gsub(cmd_ext, '%%f', fname)
   cmd_ext = string.gsub(cmd_ext, '%%n', vim.fn.expand('%:t:r'))
-  if cmd_ext == cmd then
-    cmd_ext = cmd .. ' ' .. fname
-  end
   local dir = vim.fn.expand('%:h')
   term.open({cmd = cmd_ext, dir = dir, big = big, send = send})
   vim.cmd [[norm i]]
