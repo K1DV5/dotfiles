@@ -163,7 +163,7 @@ local spec = {
     src = gh .. "nvim-treesitter/nvim-treesitter",
     name = 'nvim-treesitter',
     config = function()
-      local parsers = { 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python', 'go', typescriptreact = 'tsx', javascriptreact = 'jsx' }
+      local parsers = { 'c', 'svelte', 'markdown', 'javascript', 'typescript', 'html', 'css', 'scss', 'astro', 'typst', 'python', 'go', typescriptreact = 'tsx', javascriptreact = 'jsx' }
       require('nvim-treesitter').install(vim.tbl_values(parsers))
       vim.api.nvim_create_autocmd('FileType', {
         pattern = vim.tbl_map(

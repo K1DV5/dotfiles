@@ -168,7 +168,7 @@ vim.keymap.set('t', 'kj', '<C-\\><C-n>')
 -- save file if changed
 vim.keymap.set('n', '<leader><leader>', function() vim.cmd('update!') end)
 -- toggle spell check
-vim.keymap.set('n', '<leader>z', function() vim.cmd('setlocal spell! spelllang=en_us') end)
+vim.keymap.set('n', '<leader>z', function() vim.cmd('setlocal spell!') end)
 -- quit
 vim.keymap.set('n', '<leader><esc>', function() vim.cmd('qa') end)
 -- enter window commands

@@ -86,33 +86,38 @@ end
 
 -- setup language servers
 local servers = {
-  pyright = {
-    cmd = { "pyright-langserver", "--stdio" },
+  ty = {
+    cmd = { 'ty', 'server' },
     filetypes = { 'python' },
-    root_markers = {
-      'pyproject.toml',
-      'setup.py',
-      'setup.cfg',
-      'requirements.txt',
-      'Pipfile',
-      'pyrightconfig.json',
-      '.git',
-    },
-    single_file_support = true,
-    settings = {
-      pyright = {
-        autoImportCompletion = true,
-      },
-      python = {
-        analysis = {
-          autoSearchPaths = true,
-          diagnosticMode = 'openFilesOnly',
-          useLibraryCodeForTypes = true,
-          typeCheckingMode = 'off',
-        }
-      }
-    }
+    root_markers = { 'ty.toml', 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', '.git' },
   },
+  -- pyright = {
+  --   cmd = { "pyright-langserver", "--stdio" },
+  --   filetypes = { 'python' },
+  --   root_markers = {
+  --     'pyproject.toml',
+  --     'setup.py',
+  --     'setup.cfg',
+  --     'requirements.txt',
+  --     'Pipfile',
+  --     'pyrightconfig.json',
+  --     '.git',
+  --   },
+  --   single_file_support = true,
+  --   settings = {
+  --     pyright = {
+  --       autoImportCompletion = true,
+  --     },
+  --     python = {
+  --       analysis = {
+  --         autoSearchPaths = true,
+  --         diagnosticMode = 'openFilesOnly',
+  --         useLibraryCodeForTypes = true,
+  --         -- typeCheckingMode = 'off',
+  --       }
+  --     }
+  --   }
+  -- },
   cssls = {
     cmd = { 'vscode-css-language-server', '--stdio' },
     filetypes = { 'css', 'scss', 'less' },
